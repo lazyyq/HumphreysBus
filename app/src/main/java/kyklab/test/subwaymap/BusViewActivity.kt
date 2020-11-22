@@ -23,9 +23,10 @@ import java.util.*
 class BusViewActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "BusViewActivity"
-
-
     }
+
+    private var busIndex: Int? = null
+    private var stopToHighlightIndex: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,13 +34,19 @@ class BusViewActivity : AppCompatActivity() {
 
         val intent = intent
 
-        val busIndex = intent.extras?.getInt("busindex")
-        val stopToHighlightIndex = intent.extras?.getString("highlightstopindex")
+        busIndex = intent.extras?.getInt("busindex")
+        stopToHighlightIndex = intent.extras?.getString("highlightstopindex")
         if (busIndex == null) {
             Toast.makeText(this, "Bus not found", Toast.LENGTH_SHORT).show()
             finish()
         }
 
+        Thread {
+            showBusTimeTable()
+        }.start()
+    }
+
+    fun showBusTimeTable() {
         // TODO: Generify
         var tintColor: Int? = null
         var title: String? = null
@@ -58,9 +65,11 @@ class BusViewActivity : AppCompatActivity() {
             }
         }
         tintColor?.let {
-            ivBus.imageTintList = ColorStateList.valueOf(resources.getColor(it, this.theme))
-            tvBus.text = title
-            tvBus.setTextColor(resources.getColor(it, this.theme))
+            runOnUiThread {
+                ivBus.imageTintList = ColorStateList.valueOf(resources.getColor(it, this.theme))
+                tvBus.text = title
+                tvBus.setTextColor(resources.getColor(it, this.theme))
+            }
         }
 
         val sdfWithoutColon = SimpleDateFormat("HHmm")
@@ -88,34 +97,36 @@ class BusViewActivity : AppCompatActivity() {
                         0
                     )
                 }
+                gravity = Gravity.CENTER
 
                 val strStops = SpannableStringBuilder()
                 for (stop in busInstance.stops) {
-                    val stopTime = stop.time.toInt()
+                    val stopTime = stop.stopTime.toInt()
                     val timeLeft = calcTimeLeft(curTime, stopTime)
                     if (stop.stopNo == stopToHighlightIndex) {
                         if (closestBusTimeLeft > timeLeft) {
                             closestBusTimeLeft = timeLeft
                             closestBusTextView = this
                             text = strStops
-                            this.measure(0,0)
+                            this.measure(0, 0)
                             y1 = this.measuredHeight.toFloat()
                             scrollY = strStops.lines().size
                         }
-                        strStops.bold{scale(1.5f) { append("${MapManager.getStationWithMapNo(stop.stopNo)?.name ?: "Unknown"} (${stop.time})\n($timeLeft mins)\n\n") } }
+                        strStops.bold { scale(1.5f) { append("${BusMapManager.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n") } }
                     } else {
-                        strStops.append("${MapManager.getStationWithMapNo(stop.stopNo)?.name ?: "Unknown"} (${stop.time})\n($timeLeft mins)\n\n")
+                        strStops.append("${BusMapManager.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
                     }
                 }
                 text = strStops
-                this.measure(0,0)
+                this.measure(0, 0)
                 y2 = this.measuredHeight.toFloat()
                 scrollYFinal = strStops.lines().size
 //                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-                gravity = Gravity.CENTER
 //                setLineSpacing(1f, 2f)
             }
-            timeTableContainer.addView(textView)
+            runOnUiThread {
+                timeTableContainer.addView(textView)
+            }
         }
 
         // Scroll to instance with closest bus for selected stop
@@ -123,16 +134,22 @@ class BusViewActivity : AppCompatActivity() {
 //        Handler().postDelayed({ scrollView.scrollTo(closestBusTextView!!.left, 0) }, 500)
         horizontalScrollView.viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener{
             override fun onGlobalLayout() {
-                val scrollX = (closestBusTextView!!.left + closestBusTextView!!.right  - horizontalScrollView.width)/2
+                val scrollX =
+                    (closestBusTextView!!.left + closestBusTextView!!.right - horizontalScrollView.width) / 2
 //                val scrollX = closestBusTextView!!.left
-                val baseHeight = closestBusTextView!!.bottom-closestBusTextView!!.top/*-verticalScrollView.height*/
-                val scrollYnew = /*closestBusTextView!!.top+*/(if (baseHeight<0) 0 else baseHeight)*(y1!!/y2!!)/*closestBusTextView!!.lineCount*/
+                val baseHeight =
+                    closestBusTextView!!.bottom - closestBusTextView!!.top/*-verticalScrollView.height*/
+                val scrollYnew = /*closestBusTextView!!.top+*/
+                    (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)/*closestBusTextView!!.lineCount*/
 //                scrollView.scrollTo(scrollX, 0)
 //                Handler().postDelayed (
 //                    {
-                        horizontalScrollView.scrollTo(scrollX, 0)
+                horizontalScrollView.scrollTo(scrollX, 0)
 //                        timeTableContainer.scrollTo(0, scrollYnew.toInt())
-                        verticalScrollView.scrollTo(0, y1!!.toInt()-verticalScrollView.marginTop-(verticalScrollView.height*0.4).toInt())
+                verticalScrollView.scrollTo(
+                    0,
+                    y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
+                )
 //                    }, 1000)
                 horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
             }

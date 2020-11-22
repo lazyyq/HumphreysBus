@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         imageView.setImage(ImageSource.asset("subway.webp"))
         imageView.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
-        val stationManager = MapManager
+        val stationManager = BusMapManager
         stationManager.loadFromDB()
 
         //TODO: For Debug
@@ -131,16 +131,16 @@ class MainActivity : AppCompatActivity() {
 
                     Log.e(TAG, "x: $xCor, y: $yCor")
 
-                    val station = stationManager.getStationFromCoord(xCor, yCor)
+                    val station = stationManager.getStopFromCoord(xCor, yCor)
                     if (station != null) {
                         val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
                         imageView.setPin(pinCoord)
                         /*val times = StringBuilder(station.name)
                         station.times.forEach { t -> times.append('\n').append(t) }
                         toast(this@MainActivity, times.toString())*/
-                        val fragment = StationInfoBottomSheetDialog()
+                        val fragment = StopInfoDialog()
                         val bundle = Bundle()
-                        bundle.putInt(StationInfoBottomSheetDialog.ARGUMENT_STATION_ID, station.id)
+                        bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, station.id)
                         fragment.arguments = bundle
                         fragment.show(supportFragmentManager, fragment.tag)
                     }

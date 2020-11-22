@@ -46,3 +46,5 @@ fun gMapCoordToLocalMapCoord(x: Double, y: Double): Array<Double>? {
         arrayOf(xCalculated, yCalculated)
     } else null
 }
+
+fun Int.format(format: String): String = String.format(format, this)
