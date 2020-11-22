@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/ivBus"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/bus" />
+
+    <TextView
+        android:id="@+id/tvBus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Bus"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/ivBus"
+        app:layout_constraintStart_toEndOf="@+id/ivBus"
+        app:layout_constraintTop_toTopOf="@id/ivBus" />
+
+    <ScrollView
+        android:id="@+id/verticalScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivBus">
+
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/timeTableContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:divider="?android:attr/listDivider"
+                android:orientation="horizontal"
+                android:showDividers="middle" />
+        </HorizontalScrollView>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
