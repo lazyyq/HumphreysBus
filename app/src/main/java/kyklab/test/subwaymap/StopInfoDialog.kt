@@ -51,8 +51,17 @@ class StopInfoDialog : BottomSheetDialogFragment() {
             activity.runOnUiThread {
                 v.vpTimeTable.adapter = adapter
                 TabLayoutMediator(v.busTabLayout, v.vpTimeTable) { tab, position ->
-                    tab.text = items[position].bus.name
+                    tab.text = adapter.items[position].bus.name
                 }.attach()
+
+                /*val pageMarginPx = resources.getDimensionPixelOffset(R.dimen.pageMargin)
+                val pagerWidth = resources.getDimensionPixelOffset(R.dimen.pagerWidth)
+                val screenWidth = resources.displayMetrics.widthPixels
+                val offsetPx = screenWidth - pageMarginPx - pagerWidth*/
+
+                v.vpTimeTable.setPageTransformer { page, position ->
+                    page.translationX = position * -dpToPx(activity, 96f)
+                }
 
                 v.vpTimeTable.offscreenPageLimit = 1
             }
@@ -62,10 +71,10 @@ class StopInfoDialog : BottomSheetDialogFragment() {
     companion object {
         const val ARGUMENT_STOP_ID = "argument_id"
 
-        fun showBusSchedules(activity: Activity, busIndex: Int, mapNo: String) {
+        fun showBusSchedules(activity: Activity, busName: String, stopIndex: Int) {
             val intent = Intent(activity, BusViewActivity::class.java).apply {
-                putExtra("busindex", busIndex)
-                putExtra("highlightstopindex", mapNo)
+                putExtra("busname", busName)
+                putExtra("highlightstopindex", stopIndex)
             }
             activity.startActivity(intent)
         }

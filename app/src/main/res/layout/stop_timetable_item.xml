@@ -3,8 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
     android:clickable="true"
     android:maxWidth="300dp"
     android:orientation="vertical">
@@ -13,7 +11,7 @@
         android:id="@+id/tvStopsInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:lineSpacingMultiplier="1.2"
         android:layout_gravity="center"
         android:gravity="center"
@@ -21,7 +19,7 @@
 
     <ScrollView
         android:id="@+id/scrollView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_gravity="center">
@@ -31,8 +29,11 @@
             android:layout_width="match_parent"
             android:lineSpacingMultiplier="1.2"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:gravity="center_horizontal|top"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:textSize="18sp"
+            android:gravity="start"
+            android:layout_gravity="center_horizontal|top"
             android:text="TimeTable" />
     </ScrollView>
 </LinearLayout>

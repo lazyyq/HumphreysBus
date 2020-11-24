@@ -15,8 +15,20 @@ import kotlinx.android.synthetic.main.stop_timetable_item.view.*
 import kyklab.test.subwaymap.BusMapManager.getBusStop
 import java.util.*
 
-class MyAdapter(private val context: Context, private val items: List<AdapterItem>) :
+class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
     RecyclerView.Adapter<MyAdapter.ViewHolder>() {
+    val items: List<InternalItem>
+    //val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>
+    init {
+        items = LinkedList()
+        for (adapterItem in adapterItems) {
+            val m = adapterItem.bus.getAllStopTimes(adapterItem.curStopNo)
+            for (stopIndex in m.keys) {
+                m[stopIndex]?.let { items.add(InternalItem(adapterItem.bus, stopIndex, it)) }
+            }
+        }
+    }
+
     private var curTime: Int? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -35,7 +47,10 @@ class MyAdapter(private val context: Context, private val items: List<AdapterIte
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         Thread {
-            val bus = items[position].bus
+            val item = items[position]
+            val bus = item.bus
+            val stopIndex = item.stopIndex
+            val stopTimes = item.stopTimes
 
             if (bus.instances.isEmpty()) return@Thread
 
@@ -46,12 +61,16 @@ class MyAdapter(private val context: Context, private val items: List<AdapterIte
                 else -> null
             }
 
-            val curStopNo = items[position].stopNo
-            val stopAndTimes = bus.getAllStopTimes(curStopNo)
-
             val tables = LinkedList<View>()
 
-            for (stopIndex in stopAndTimes.keys) {
+            val tableOnClickListener = { v: View ->
+                StopInfoDialog.showBusSchedules(
+                    context as Activity,
+                    bus.name,
+                    stopIndex
+                )
+            }
+
                 var prevStop: BusMapManager.BusStop?
                 var currStop: BusMapManager.BusStop?
                 var nextStop: BusMapManager.BusStop?
@@ -98,32 +117,22 @@ class MyAdapter(private val context: Context, private val items: List<AdapterIte
                         tvTimeTable.text = SpannableStringBuilder().apply {
                             var closestFound = false
                             var secondItem = false
-                            stopAndTimes[stopIndex]?.let {
-                                for (i in it.indices) {
-                                    if (!closestFound && it[if (i == 0) it.size - 1 else i - 1] < curTime!! && curTime!! <= it[i]) {
-                                        bold { scale(1.2f) { append(it[i].format("%04d")) } }
+                                for (i in item.stopTimes.indices) {
+                                    if (!closestFound && stopTimes[if (i == 0) stopTimes.size - 1 else i - 1] < curTime!! && curTime!! <= stopTimes[i]) {
+                                        bold { scale(1f) { append(stopTimes[i].format("%04d")) } }
                                         closestFound = true
                                     } else {
-                                        append(it[i].format("%04d"))
+                                        append(stopTimes[i].format("%04d"))
                                     }
                                     append(if (secondItem) "\n" else "    ")
                                     secondItem = !secondItem
                                 }
-                            }
                         }
 
-                        isClickable = true
-                        setOnClickListener { v ->
-                            StopInfoDialog.showBusSchedules(
-                                context as Activity,
-                                position,
-                                curStopNo
-                            )
-                        }
+                        tvStopsInfo.setOnClickListener(tableOnClickListener)
 
                     }
                 tables.add(timeTableItem)
-            }
 
             (context as Activity).runOnUiThread {
                 for ((index, view) in tables.withIndex()) {
@@ -151,5 +160,7 @@ class MyAdapter(private val context: Context, private val items: List<AdapterIte
         val container = itemView.findViewById<LinearLayout>(R.id.items_container)
     }
 
-    data class AdapterItem(val bus: Buses.Bus, val stopNo: String)
+    data class AdapterItem(val bus: Buses.Bus, val curStopNo: String)
+
+    data class InternalItem(val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>)
 }

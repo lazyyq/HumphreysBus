@@ -25,8 +25,9 @@ class BusViewActivity : AppCompatActivity() {
         private const val TAG = "BusViewActivity"
     }
 
-    private var busIndex: Int? = null
-    private var stopToHighlightIndex: String? = null
+    private var busName: String? = null
+    private var stopToHighlightIndex: Int? = null
+    private var busToShow: Buses.Bus? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,9 +35,16 @@ class BusViewActivity : AppCompatActivity() {
 
         val intent = intent
 
-        busIndex = intent.extras?.getInt("busindex")
-        stopToHighlightIndex = intent.extras?.getString("highlightstopindex")
-        if (busIndex == null) {
+        busName = intent.extras?.getString("busname")
+        stopToHighlightIndex = intent.extras?.getInt("highlightstopindex")
+
+        for (b in Buses.buses) {
+            if (b.name == busName) {
+                busToShow = b
+                break
+            }
+        }
+        if (busToShow == null) {
             Toast.makeText(this, "Bus not found", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -49,25 +57,21 @@ class BusViewActivity : AppCompatActivity() {
     fun showBusTimeTable() {
         // TODO: Generify
         var tintColor: Int? = null
-        var title: String? = null
-        when (busIndex) {
-            0 -> { // Red
+        when (busName) {
+            "Red" -> { // Red
                 tintColor = android.R.color.holo_red_dark
-                title = "Red"
             }
-            1 -> {  // Blue
+            "Blue" -> {  // Blue
                 tintColor = android.R.color.holo_blue_dark
-                title = "Blue"
             }
-            2 -> { // Green
+            "Green" -> { // Green
                 tintColor = android.R.color.holo_green_dark
-                title = "Green"
             }
         }
         tintColor?.let {
             runOnUiThread {
                 ivBus.imageTintList = ColorStateList.valueOf(resources.getColor(it, this.theme))
-                tvBus.text = title
+                tvBus.text = busName
                 tvBus.setTextColor(resources.getColor(it, this.theme))
             }
         }
@@ -84,7 +88,7 @@ class BusViewActivity : AppCompatActivity() {
         var tempPosition: Int = 0
         var y1: Float? = null
         var y2: Float? = null
-        for (busInstance in Buses.buses[busIndex!!].instances) {
+        for (busInstance in busToShow!!.instances) {
             val textView = MaterialTextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -100,10 +104,10 @@ class BusViewActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
 
                 val strStops = SpannableStringBuilder()
-                for (stop in busInstance.stops) {
+                for ((i, stop) in busInstance.stops.withIndex()) {
                     val stopTime = stop.stopTime.toInt()
                     val timeLeft = calcTimeLeft(curTime, stopTime)
-                    if (stop.stopNo == stopToHighlightIndex) {
+                    if (i == stopToHighlightIndex) {
                         if (closestBusTimeLeft > timeLeft) {
                             closestBusTimeLeft = timeLeft
                             closestBusTextView = this
