@@ -96,15 +96,18 @@ class MyAdapter(private val context: Context, private val items: List<AdapterIte
 
                         // Show times for current stop, with the closest one in bold
                         tvTimeTable.text = SpannableStringBuilder().apply {
-                            var first = true
+                            var closestFound = false
+                            var secondItem = false
                             stopAndTimes[stopIndex]?.let {
                                 for (i in it.indices) {
-                                    if (first && it[if (i == 0) it.size - 1 else i - 1] < curTime!! && curTime!! <= it[i]) {
-                                        bold { scale(1.2f) { appendLine(it[i].format("%04d")) } }
-                                        first = false
+                                    if (!closestFound && it[if (i == 0) it.size - 1 else i - 1] < curTime!! && curTime!! <= it[i]) {
+                                        bold { scale(1.2f) { append(it[i].format("%04d")) } }
+                                        closestFound = true
                                     } else {
-                                        appendLine(it[i].format("%04d"))
+                                        append(it[i].format("%04d"))
                                     }
+                                    append(if (secondItem) "\n" else "    ")
+                                    secondItem = !secondItem
                                 }
                             }
                         }
