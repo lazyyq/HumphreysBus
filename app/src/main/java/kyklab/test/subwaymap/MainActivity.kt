@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.davemorrissey.labs.subscaleview.ImageSource
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -157,20 +158,28 @@ class MainActivity : AppCompatActivity() {
 
                     val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
                     imageView.setPin(pinCoord)
-                    if (imageView.scale < 1.0f) {
-                        imageView.animateScaleAndCenter(1f, pinCoord)?.start()
-                    } else {
-                        imageView.animateCenter(pinCoord)?.start()
+                    val listener = object: SubsamplingScaleImageView.OnAnimationEventListener {
+                        override fun onComplete() {
+                            showStopInfoDialog(station.id)
+                        }
+
+                        override fun onInterruptedByUser() {
+                        }
+
+                        override fun onInterruptedByNewAnim() {
+                        }
+
                     }
+                    val animationBuilder =
+                        if (imageView.scale < 1.0f)
+                            imageView.animateScaleAndCenter(1f, pinCoord)
+                        else
+                            imageView.animateCenter(pinCoord)
+                    animationBuilder?.withOnAnimationEventListener(listener)?.withDuration(250)?.start()
+
                     /*val times = StringBuilder(station.name)
                     station.times.forEach { t -> times.append('\n').append(t) }
                     toast(this@MainActivity, times.toString())*/
-                    StopInfoDialog().apply {
-                        val bundle = Bundle()
-                        bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, station.id)
-                        arguments = bundle
-                        show(supportFragmentManager, this.tag)
-                    }
                 }
                 return super.onSingleTapConfirmed(e)
             }
@@ -179,10 +188,6 @@ class MainActivity : AppCompatActivity() {
             gestureDetector.onTouchEvent(event)
             false
         }
-
-        // Test
-        var bundle = Bundle()
-
     }
 
     override fun onPause() {
@@ -192,5 +197,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
+    private fun showStopInfoDialog(stopId: Int) {
+        StopInfoDialog().apply {
+            val bundle = Bundle()
+            bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, stopId)
+            arguments = bundle
+            show(supportFragmentManager, this.tag)
+        }
     }
 }
