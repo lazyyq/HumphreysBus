@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.text.bold
 import androidx.core.text.scale
+import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.stop_timetable_item.view.*
 import kyklab.test.subwaymap.BusMapManager.getBusStop
@@ -23,9 +24,7 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
         items = LinkedList()
         for (adapterItem in adapterItems) {
             val m = adapterItem.bus.getAllStopTimes(adapterItem.curStopNo)
-            for (stopIndex in m.keys) {
-                m[stopIndex]?.let { items.add(InternalItem(adapterItem.bus, stopIndex, it)) }
-            }
+            items.add(InternalItem(adapterItem.bus, m))
         }
     }
 
@@ -49,8 +48,6 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
         Thread {
             val item = items[position]
             val bus = item.bus
-            val stopIndex = item.stopIndex
-            val stopTimes = item.stopTimes
 
             if (bus.instances.isEmpty()) return@Thread
 
@@ -62,14 +59,10 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
             }
 
             val tables = LinkedList<View>()
-
-            val tableOnClickListener = { v: View ->
-                StopInfoDialog.showBusSchedules(
-                    context as Activity,
-                    bus.name,
-                    stopIndex
-                )
-            }
+            for (stopIndex in item.stopIndexAndTimes.keys)
+            {
+                val stopTimes = item.stopIndexAndTimes[stopIndex]
+                val timeTextsPerLine: Int = 4 / item.stopIndexAndTimes.keys.size
 
                 var prevStop: BusMapManager.BusStop?
                 var currStop: BusMapManager.BusStop?
@@ -116,24 +109,32 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                         // Show times for current stop, with the closest one in bold
                         tvTimeTable.text = SpannableStringBuilder().apply {
                             var closestFound = false
-                            var secondItem = false
-                                for (i in item.stopTimes.indices) {
-                                    if (!closestFound && stopTimes[if (i == 0) stopTimes.size - 1 else i - 1] < curTime!! && curTime!! <= stopTimes[i]) {
-                                        bold { scale(1f) { append(stopTimes[i].format("%04d")) } }
+                            var itemNum = 0 // To change line on `timeTextsPerLine`th text
+                            stopTimes?.let {
+                                for (i in it.indices) {
+                                    ++itemNum
+                                    if (!closestFound && it[if (i == 0) it.size - 1 else i - 1] < curTime!! && curTime!! <= it[i]) {
+                                        bold { scale(1f) { append(it[i].format("%04d")) } }
                                         closestFound = true
                                     } else {
-                                        append(stopTimes[i].format("%04d"))
+                                        append(it[i].format("%04d"))
                                     }
-                                    append(if (secondItem) "\n" else "    ")
-                                    secondItem = !secondItem
+                                    append(if (itemNum == timeTextsPerLine) "\n" else "        ")
+                                    itemNum %= timeTextsPerLine
                                 }
+                            }
                         }
 
-                        tvStopsInfo.setOnClickListener(tableOnClickListener)
-
+                        tvStopsInfo.setOnClickListener { v: View ->
+                            StopInfoDialog.showBusSchedules(
+                                context as Activity,
+                                bus.name,
+                                stopIndex
+                            )
+                        }
                     }
                 tables.add(timeTableItem)
-
+            }
             (context as Activity).runOnUiThread {
                 for ((index, view) in tables.withIndex()) {
                     holder.container.addView(view)
@@ -141,7 +142,9 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                     if (index < tables.size - 1)
                         holder.container.addView(View(context).apply {
                             layoutParams =
-                                LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT)
+                                LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT).apply{
+                                    setMargins(0,dpToPx(context, 8f),0,0)
+                                }
                             setBackgroundColor(
                                 context.resources.getColor(
                                     android.R.color.darker_gray,
@@ -162,5 +165,5 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
 
     data class AdapterItem(val bus: Buses.Bus, val curStopNo: String)
 
-    data class InternalItem(val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>)
+    data class InternalItem(val bus: Buses.Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
 }

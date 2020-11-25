@@ -22,6 +22,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+
     companion object {
         private const val TAG = "MainActivity"
 
@@ -31,23 +32,30 @@ class MainActivity : AppCompatActivity() {
 
         var etCustomTime: EditText? = null
     }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object:LocationCallback() {
+        locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult?) {
-                p0?:return
+                p0 ?: return
                 for (location in p0.locations) {
-                    Log.e("LocationCallback", "longitude(x) ${location.longitude} latitude(y) ${location.latitude}")
+                    Log.e(
+                        "LocationCallback",
+                        "longitude(x) ${location.longitude} latitude(y) ${location.latitude}"
+                    )
                 }
 
                 stopLocationUpdates()
 
                 val localMapCoords =
-                    gMapCoordToLocalMapCoord(p0.locations.last().longitude, p0.locations.last().latitude)
+                    gMapCoordToLocalMapCoord(
+                        p0.locations.last().longitude,
+                        p0.locations.last().latitude
+                    )
                 localMapCoords?.let {
                     if (imageView.isReady) {
                         val point = PointF(
@@ -74,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-        fabLocation.setOnClickListener {v ->
+        fabLocation.setOnClickListener { v ->
             // Permission
 
             /*{ isGranted: Boolean ->
@@ -90,21 +98,35 @@ class MainActivity : AppCompatActivity() {
                 }
             }*/
 
-            val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION)
+            val permissions = arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
             var granted = true
             for (p in permissions) {
-                if (ContextCompat.checkSelfPermission(this, p) == PackageManager.PERMISSION_DENIED) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        p
+                    ) == PackageManager.PERMISSION_DENIED
+                ) {
                     granted = false
                     break
                 }
             }
             if (!granted) {
-                requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION))
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
             } else {
                 // Request location
-                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
             }
 
         }
@@ -128,21 +150,26 @@ class MainActivity : AppCompatActivity() {
                     val sCoord = imageView.viewToSourceCoord(e!!.x, e.y)
                     val xCor = sCoord!!.x
                     val yCor = sCoord.y
-
                     Log.e(TAG, "x: $xCor, y: $yCor")
 
                     val station = stationManager.getStopFromCoord(xCor, yCor)
-                    if (station != null) {
-                        val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
-                        imageView.setPin(pinCoord)
-                        /*val times = StringBuilder(station.name)
-                        station.times.forEach { t -> times.append('\n').append(t) }
-                        toast(this@MainActivity, times.toString())*/
-                        val fragment = StopInfoDialog()
+                        ?: return super.onSingleTapConfirmed(e)
+
+                    val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
+                    imageView.setPin(pinCoord)
+                    if (imageView.scale < 1.0f) {
+                        imageView.animateScaleAndCenter(1f, pinCoord)?.start()
+                    } else {
+                        imageView.animateCenter(pinCoord)?.start()
+                    }
+                    /*val times = StringBuilder(station.name)
+                    station.times.forEach { t -> times.append('\n').append(t) }
+                    toast(this@MainActivity, times.toString())*/
+                    StopInfoDialog().apply {
                         val bundle = Bundle()
                         bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, station.id)
-                        fragment.arguments = bundle
-                        fragment.show(supportFragmentManager, fragment.tag)
+                        arguments = bundle
+                        show(supportFragmentManager, this.tag)
                     }
                 }
                 return super.onSingleTapConfirmed(e)

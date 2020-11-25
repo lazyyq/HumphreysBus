@@ -25,15 +25,25 @@
         app:layout_constraintStart_toEndOf="@+id/ivBus"
         app:layout_constraintTop_toTopOf="@id/ivBus" />
 
+    <com.google.android.material.progressindicator.ProgressIndicator
+        android:id="@+id/progressBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.ProgressIndicator.Linear.Indeterminate"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/ivBus"/>
+
+
     <ScrollView
         android:id="@+id/verticalScrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivBus">
+        app:layout_constraintTop_toBottomOf="@+id/progressBar">
 
         <HorizontalScrollView
             android:id="@+id/horizontalScrollView"
