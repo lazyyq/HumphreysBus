@@ -2,22 +2,21 @@ package kyklab.test.subwaymap
 
 import android.content.res.ColorStateList
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.view.Gravity
-import android.view.View
-import android.view.ViewTreeObserver
-import android.widget.HorizontalScrollView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.view.*
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.text.bold
 import androidx.core.text.scale
-import androidx.core.view.marginTop
+import com.evrencoskun.tableview.adapter.AbstractTableAdapter
+import com.evrencoskun.tableview.adapter.recyclerview.holder.AbstractViewHolder
 import com.google.android.material.textview.MaterialTextView
 import kotlinx.android.synthetic.main.activity_bus_view.*
+import kyklab.test.subwaymap.BusMapManager.getBusStop
 import java.util.*
 
 
@@ -26,7 +25,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
         private const val TAG = "BusViewActivity"
     }
 
-    private var busName: String? = null
+    var busName: String? = null
     private var stopToHighlightIndex: Int? = null
     private var busToShow: Buses.Bus? = null
 
@@ -45,7 +44,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                 break
             }
         }
-        if (busToShow == null) {
+        if (busToShow == null || busToShow!!.instances.isEmpty()) {
             Toast.makeText(this, "Bus not found", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -76,6 +75,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                 }
             }
 
+            // Get current time
             val sdfWithoutColon = SimpleDateFormat("HHmm")
             val curTime: Int
             MainActivity.etCustomTime!!.text.toString().let {
@@ -83,6 +83,63 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                     Date()
                 ).toInt() else it.toInt()
             }
+
+            busToShow?.let { bus ->
+                val instances = bus.instances
+                val refInstance = instances[0]
+
+                val tableRowHeaderList = ArrayList<String>(refInstance.stops.size)
+                // Table rows
+                refInstance.stops.forEach { stop ->
+                    tableRowHeaderList.add(stop.stopNo.getBusStop()?.stopName ?: "")
+                }
+                val tableColumnHeaderList = ArrayList<String>(instances.size)
+                val tableCellList =
+                    ArrayList<ArrayList<EntireTimeTableAdapter.TimeData>>(instances[0].stops.size)
+                // Table columns
+                for (j in instances.indices) {
+                    tableColumnHeaderList.add("String")
+                }
+                // Table cells
+                for (i in instances[0].stops.indices) {
+                    val tableCellColumnList =
+                        ArrayList<EntireTimeTableAdapter.TimeData>(instances.size)
+                    for (j in instances.indices) {
+                        val time = instances[j].stops[i].stopTime
+                        val timeLeft = calcTimeLeft(curTime, time.toInt())
+                        tableCellColumnList.add(
+                            EntireTimeTableAdapter.TimeData(
+                                SpannableStringBuilder().apply {
+                                    if (i == stopToHighlightIndex)
+                                        bold { append(time) }
+                                    else
+                                        append(time)
+                                },
+                                SpannableStringBuilder().apply {
+                                    if (i == stopToHighlightIndex)
+                                        bold { append("($timeLeft mins)") }
+                                    else
+                                        append("($timeLeft mins)")
+                                })
+                        )
+                    }
+                    tableCellList.add(tableCellColumnList)
+                }
+
+                val adapter = EntireTimeTableAdapter()
+                runOnUiThread {
+                    entireTimeTable.setAdapter(adapter)
+                    adapter.setAllItems(
+                        tableColumnHeaderList, tableRowHeaderList,
+                        tableCellList as List<MutableList<EntireTimeTableAdapter.TimeData>>?
+                    )
+                    progressBar.visibility = View.INVISIBLE
+                }
+            }
+
+
+
+            /*
             var closestBusTimeLeft = 1440
             var closestBusTextView: TextView? = null
             var scrollY = 0
@@ -156,9 +213,9 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                         (closestBusTextView!!.left + closestBusTextView!!.right - horizontalScrollView.width) / 2
 //                val scrollX = closestBusTextView!!.left
                     val baseHeight =
-                        closestBusTextView!!.bottom - closestBusTextView!!.top/*-verticalScrollView.height*/
-                    val scrollYnew = /*closestBusTextView!!.top+*/
-                        (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)/*closestBusTextView!!.lineCount*/
+                        closestBusTextView!!.bottom - closestBusTextView!!.top*//*-verticalScrollView.height*//*
+                    val scrollYnew = *//*closestBusTextView!!.top+*//*
+                        (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)*//*closestBusTextView!!.lineCount*//*
 //                scrollView.scrollTo(scrollX, 0)
 //                Handler().postDelayed (
 //                    {
@@ -171,7 +228,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
 //                    }, 1000)
                     horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
                 }
-            })
+            })*/
         }.start()
     }
 
@@ -189,5 +246,119 @@ class BusTimeTableViewActivity : AppCompatActivity() {
         }
     }
 
+    private open class TableCell(val data: Any)
 
+    /*private class TableColumnHeader(data: Any): TableCell(data)
+    private class TableRowHeader(data: Any): TableCell(data)*/
+
+    class EntireTimeTableAdapter: AbstractTableAdapter<String, String, EntireTimeTableAdapter.TimeData>() {
+        class TimeData(val time: SpannableStringBuilder, val timeLeft: SpannableStringBuilder)
+
+        class TableCellViewHolder(itemView: View): AbstractViewHolder(itemView) {
+            val cellContainer: ConstraintLayout = itemView.findViewById(R.id.cellContainer)
+            val tvScheduledTime: TextView = itemView.findViewById(R.id.tvScheduledTime)
+            val tvTimeLeft: TextView = itemView.findViewById(R.id.tvTimeLeft)
+        }
+
+        override fun onCreateCellViewHolder(parent: ViewGroup, viewType: Int): AbstractViewHolder {
+            val layout = LayoutInflater.from(parent.context)
+                .inflate(R.layout.entire_timetable_cell, parent, false)
+            return TableCellViewHolder(layout)
+        }
+
+        override fun onBindCellViewHolder(
+            holder: AbstractViewHolder,
+            cellItemModel: TimeData?,
+            columnPosition: Int,
+            rowPosition: Int
+        ) {
+            if (holder is TableCellViewHolder) {
+                holder.tvScheduledTime.text = cellItemModel?.time ?: ""
+                cellItemModel?.let {
+                    holder.tvScheduledTime.text = it.time
+                    holder.tvTimeLeft.text = it.timeLeft
+                    /*holder.tvTimeLeft.text = "(${it.timeLeft} mins)"
+                    holder.tvScheduledTime.setTypeface(holder.tvScheduledTime.typeface, it.typeface)
+                    holder.tvTimeLeft.setTypeface(holder.tvTimeLeft.typeface, it.typeface)*/
+                }
+//                val typeface = if (cellItemModel?.highlight == true) Typeface.BOLD else Typeface.NORMAL
+//                holder.tvScheduledTime.setTypeface(holder.tvScheduledTime.typeface, typeface)
+//                holder.tvTimeLeft.setTypeface(holder.tvTimeLeft.typeface, .typeface)
+
+                // Remeasure
+                holder.cellContainer.layoutParams.width =
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+                holder.tvScheduledTime.requestLayout()
+                holder.tvTimeLeft.requestLayout()
+            }
+        }
+
+        class TableColumnHeaderViewHolder(itemView: View): AbstractViewHolder(itemView) {
+            val columnHeaderContainer: ConstraintLayout = itemView.findViewById(R.id.columnHeaderContainer)
+            val tvColumnHeader: TextView = itemView.findViewById(R.id.tvColumnHeader)
+        }
+
+        override fun onCreateColumnHeaderViewHolder(
+            parent: ViewGroup,
+            viewType: Int
+        ): AbstractViewHolder {
+            val layout = LayoutInflater.from(parent.context)
+                .inflate(R.layout.entire_timetable_column_header, parent, false)
+            return TableColumnHeaderViewHolder(layout)
+        }
+
+        override fun onBindColumnHeaderViewHolder(
+            holder: AbstractViewHolder,
+            columnHeaderItemModel: String?,
+            columnPosition: Int
+        ) {
+            if (holder is TableColumnHeaderViewHolder) {
+                holder.columnHeaderContainer.layoutParams.width =
+                    ConstraintLayout.LayoutParams.WRAP_CONTENT
+                holder.tvColumnHeader.requestLayout()
+            }
+        }
+
+        class TableRowHeaderViewHolder(itemView: View): AbstractViewHolder(itemView) {
+            val rowHeaderContainer: ConstraintLayout = itemView.findViewById(R.id.rowHeaderContainer)
+            val tvRowHeader: TextView = itemView.findViewById(R.id.tvRowHeader)
+        }
+
+        override fun onCreateRowHeaderViewHolder(
+            parent: ViewGroup,
+            viewType: Int
+        ): AbstractViewHolder {
+            val layout = LayoutInflater.from(parent.context)
+                .inflate(R.layout.entire_timetable_row_header, parent, false)
+            return TableRowHeaderViewHolder(layout)
+        }
+
+        override fun onBindRowHeaderViewHolder(
+            holder: AbstractViewHolder,
+            rowHeaderItemModel: String?,
+            rowPosition: Int
+        ) {
+            if (holder is TableRowHeaderViewHolder) {
+                holder.tvRowHeader.isSelected = true // for marquee effect
+                holder.tvRowHeader.text = rowHeaderItemModel
+            }
+        }
+
+        override fun onCreateCornerView(parent: ViewGroup): View {
+            return LayoutInflater.from(parent.context)
+                .inflate(R.layout.entire_timetable_corner, parent, false)
+        }
+
+        override fun getColumnHeaderItemViewType(position: Int): Int {
+            return 0
+        }
+
+        override fun getRowHeaderItemViewType(position: Int): Int {
+            return 0
+        }
+
+        override fun getCellItemViewType(position: Int): Int {
+            return 0
+        }
+    }
 }

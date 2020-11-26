@@ -27,36 +27,24 @@
 
     <com.google.android.material.progressindicator.ProgressIndicator
         android:id="@+id/progressBar"
+        style="@style/Widget.MaterialComponents.ProgressIndicator.Linear.Indeterminate"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        style="@style/Widget.MaterialComponents.ProgressIndicator.Linear.Indeterminate"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/ivBus"/>
+        app:layout_constraintTop_toBottomOf="@+id/ivBus" />
 
-
-    <ScrollView
-        android:id="@+id/verticalScrollView"
+    <com.evrencoskun.tableview.TableView
+        android:id="@+id/entireTimeTable"
         android:layout_width="0dp"
         android:layout_height="0dp"
+
+        app:column_header_height="@dimen/entire_timetable_column_header_height"
+        app:row_header_width="@dimen/entire_timetable_row_header_width"
+        app:allow_click_inside_cell="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar">
-
-        <HorizontalScrollView
-            android:id="@+id/horizontalScrollView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:id="@+id/timeTableContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:divider="?android:attr/listDivider"
-                android:orientation="horizontal"
-                android:showDividers="middle" />
-        </HorizontalScrollView>
-    </ScrollView>
+        app:layout_constraintTop_toBottomOf="@id/progressBar" />
 </androidx.constraintlayout.widget.ConstraintLayout>
