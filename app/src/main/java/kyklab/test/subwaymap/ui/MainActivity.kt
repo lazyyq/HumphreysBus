@@ -19,13 +19,14 @@ import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
-import kyklab.test.subwaymap.bus.BusMapManager
 import kyklab.test.subwaymap.R
+import kyklab.test.subwaymap.bus.BusMapManager
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 
 class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+    private var selectionPin: Int? = null // Pin for current selection on bus map
 
     companion object {
         private const val TAG = "MainActivity"
@@ -66,7 +67,9 @@ class MainActivity : AppCompatActivity() {
                             it[0].toFloat(),
                             it[1].toFloat()
                         )
-                        imageView.setPin(point)
+//                        imageView.setPin(point)
+                        selectionPin?.let { imageView.removePin(it) }
+                        selectionPin = imageView.addPin(MultiplePinView.Pin(point, resources, R.drawable.pushpin_blue))
                         imageView.setScaleAndCenter(2f, point)
                     }
                 } ?: run { toast(this@MainActivity, "Couldn't find location") }
@@ -157,32 +160,44 @@ class MainActivity : AppCompatActivity() {
                     Log.e(TAG, "x: $xCor, y: $yCor")
 
                     val station = BusMapManager.getStopFromCoord(xCor, yCor)
-                        ?: return super.onSingleTapConfirmed(e)
 
-                    val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
-                    imageView.setPin(pinCoord)
-                    val listener = object: SubsamplingScaleImageView.OnAnimationEventListener {
-                        override fun onComplete() {
-                            showStopInfoDialog(station.id)
+                    if (station != null) {
+                        val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
+//                    imageView.setPin(pinCoord)
+                        selectionPin?.let { imageView.removePin(it) }
+                        selectionPin = imageView.addPin(
+                            MultiplePinView.Pin(
+                                pinCoord,
+                                resources,
+                                R.drawable.pushpin_blue
+                            )
+                        )
+                        val listener = object : SubsamplingScaleImageView.OnAnimationEventListener {
+                            override fun onComplete() {
+                                showStopInfoDialog(station.id)
+                            }
+
+                            override fun onInterruptedByUser() {
+                            }
+
+                            override fun onInterruptedByNewAnim() {
+                            }
+
                         }
+                        val animationBuilder =
+                            if (imageView.scale < 1.0f)
+                                imageView.animateScaleAndCenter(1f, pinCoord)
+                            else
+                                imageView.animateCenter(pinCoord)
+                        animationBuilder?.withOnAnimationEventListener(listener)?.withDuration(250)
+                            ?.start()
 
-                        override fun onInterruptedByUser() {
-                        }
-
-                        override fun onInterruptedByNewAnim() {
-                        }
-
+                        /*val times = StringBuilder(station.name)
+                        station.times.forEach { t -> times.append('\n').append(t) }
+                        toast(this@MainActivity, times.toString())*/
+                    } else {
+                        selectionPin?.let { imageView.removePin(it) }
                     }
-                    val animationBuilder =
-                        if (imageView.scale < 1.0f)
-                            imageView.animateScaleAndCenter(1f, pinCoord)
-                        else
-                            imageView.animateCenter(pinCoord)
-                    animationBuilder?.withOnAnimationEventListener(listener)?.withDuration(250)?.start()
-
-                    /*val times = StringBuilder(station.name)
-                    station.times.forEach { t -> times.append('\n').append(t) }
-                    toast(this@MainActivity, times.toString())*/
                 }
                 return super.onSingleTapConfirmed(e)
             }

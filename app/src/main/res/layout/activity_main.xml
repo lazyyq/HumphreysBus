@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <kyklab.test.subwaymap.ui.PinView
+    <kyklab.test.subwaymap.ui.MultiplePinView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/imageView" />
