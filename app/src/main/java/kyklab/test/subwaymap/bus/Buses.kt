@@ -1,7 +1,6 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.bus
 
 import java.util.*
-import kotlin.collections.HashMap
 
 object Buses {
     private const val TAG = "Buses"
@@ -38,9 +37,9 @@ object Buses {
                                             // Create a new instance
                                             val stopTimes = c2.getString(0).split(';')
                                             if (stopPoints.size != stopTimes.size) continue
-                                            val stops = ArrayList<Stop>()
+                                            val stops = ArrayList<Bus.Stop>()
                                             for (i in stopPoints.indices) {
-                                                stops.add(Stop(stopPoints[i], stopTimes[i]))
+                                                stops.add(Bus.Stop(stopPoints[i], stopTimes[i]))
                                             }
                                             instances.add(Bus.BusInstance(stops))
                                         } while (c2.moveToNext())
@@ -56,36 +55,4 @@ object Buses {
         }
     }
 
-    data class Bus(val name: String, val instances: List<BusInstance>) {
-        companion object {
-            private const val TAG = "Bus"
-        }
-
-        fun getAllStopTimes(stopNo: String): Map<Int, List<Int>> {
-            if (instances.isEmpty()) return HashMap()
-
-            val indexes = ArrayList<Int>(4)
-            val map = TreeMap<Int, LinkedList<Int>>()
-            for ((i, stop) in instances[0].stops.withIndex()) {
-                if (stop.stopNo == stopNo) {
-                    indexes.add(i)
-                    map[i] = LinkedList()
-                }
-            }
-
-            for (i in indexes) {
-                for (instance in instances) {
-                    instance.stops[i].let {
-                        map[i]?.add(it.stopTime.toInt())
-                    }
-                }
-            }
-
-            return map
-        }
-
-        data class BusInstance(val stops: List<Stop>)
-    }
-
-    data class Stop(val stopNo: String, val stopTime: String)
 }

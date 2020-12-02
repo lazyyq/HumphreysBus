@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.ui
 
 import android.app.Activity
 import android.content.Intent
@@ -9,6 +9,10 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info.view.*
+import kyklab.test.subwaymap.R
+import kyklab.test.subwaymap.bus.BusMapManager
+import kyklab.test.subwaymap.bus.Buses
+import kyklab.test.subwaymap.ui.BusTimeTableViewActivity
 import java.util.*
 
 class StopInfoDialog : BottomSheetDialogFragment() {

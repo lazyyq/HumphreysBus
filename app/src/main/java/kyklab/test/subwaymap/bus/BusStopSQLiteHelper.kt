@@ -1,10 +1,11 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.bus
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import kyklab.test.subwaymap.App
 import java.io.FileOutputStream
 import java.io.IOException
 

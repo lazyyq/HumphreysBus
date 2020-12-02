@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.bus
 
 import android.database.Cursor
 import android.util.Log
@@ -11,9 +11,9 @@ object BusMapManager {
 
     fun loadFromDB() {
         val start = System.currentTimeMillis()
-        mDBHelper.createDatabase()
-        mDBHelper.openDatabase()
-        mDBHelper.query(BusStopSQLiteHelper.DB_TABLE_STOPS).use {
+        BusStopSQLiteHelper.createDatabase()
+        BusStopSQLiteHelper.openDatabase()
+        BusStopSQLiteHelper.query(BusStopSQLiteHelper.DB_TABLE_STOPS).use {
             if (it.moveToFirst()) {
                 do {
                     mStops.add(BusStop(it))

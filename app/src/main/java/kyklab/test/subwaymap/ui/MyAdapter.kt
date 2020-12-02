@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.ui
 
 import android.app.Activity
 import android.content.Context
@@ -10,10 +10,12 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.text.bold
 import androidx.core.text.scale
-import androidx.core.view.marginTop
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.stop_timetable_item.view.*
-import kyklab.test.subwaymap.BusMapManager.getBusStop
+import kyklab.test.subwaymap.*
+import kyklab.test.subwaymap.bus.BusMapManager.getBusStop
+import kyklab.test.subwaymap.bus.Bus
+import kyklab.test.subwaymap.bus.BusMapManager
 import java.util.*
 
 class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
@@ -143,7 +145,7 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                         holder.container.addView(View(context).apply {
                             layoutParams =
                                 LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT).apply{
-                                    setMargins(0,dpToPx(context, 8f),0,0)
+                                    setMargins(0, dpToPx(context, 8f),0,0)
                                 }
                             setBackgroundColor(
                                 context.resources.getColor(
@@ -163,7 +165,7 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
         val container = itemView.findViewById<LinearLayout>(R.id.items_container)
     }
 
-    data class AdapterItem(val bus: Buses.Bus, val curStopNo: String)
+    data class AdapterItem(val bus: Bus, val curStopNo: String)
 
-    data class InternalItem(val bus: Buses.Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
+    data class InternalItem(val bus: Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
 }

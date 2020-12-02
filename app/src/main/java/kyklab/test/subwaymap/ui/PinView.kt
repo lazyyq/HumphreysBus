@@ -1,9 +1,10 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.ui
 
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+import kyklab.test.subwaymap.R
 
 class PinView @JvmOverloads constructor(context: Context?, attr: AttributeSet? = null) :
     SubsamplingScaleImageView(context, attr) {

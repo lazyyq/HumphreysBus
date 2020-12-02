@@ -1,22 +1,27 @@
-package kyklab.test.subwaymap
+package kyklab.test.subwaymap.ui
 
 import android.content.res.ColorStateList
 import android.graphics.Rect
-import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.HorizontalScrollView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.text.bold
-import androidx.core.text.scale
 import com.evrencoskun.tableview.adapter.AbstractTableAdapter
 import com.evrencoskun.tableview.adapter.recyclerview.holder.AbstractViewHolder
-import com.google.android.material.textview.MaterialTextView
 import kotlinx.android.synthetic.main.activity_bus_view.*
-import kyklab.test.subwaymap.BusMapManager.getBusStop
+import kyklab.test.subwaymap.R
+import kyklab.test.subwaymap.bus.Bus
+import kyklab.test.subwaymap.bus.BusMapManager.getBusStop
+import kyklab.test.subwaymap.bus.Buses
+import kyklab.test.subwaymap.calcTimeLeft
 import java.util.*
 
 
@@ -27,7 +32,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
 
     var busName: String? = null
     private var stopToHighlightIndex: Int? = null
-    private var busToShow: Buses.Bus? = null
+    private var busToShow: Bus? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
