@@ -40,11 +40,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
 
-        app:column_header_height="@dimen/entire_timetable_column_header_height"
-        app:row_header_width="@dimen/entire_timetable_row_header_width"
         app:allow_click_inside_cell="true"
+        app:column_header_height="@dimen/entire_timetable_column_header_height"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar" />
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:row_header_width="@dimen/entire_timetable_row_header_width" />
 </androidx.constraintlayout.widget.ConstraintLayout>
