@@ -7,7 +7,7 @@ class TestClass : AppCompatActivity() {
     fun main() {
         Toast.makeText(this@TestClass, "", Toast.LENGTH_SHORT).show()
 
-        var nullString :String? =null
+        var nullString: String? = null
         for (i in 1..3) {
             nullString = nullString ?: "default"
             nullString = "sdf"

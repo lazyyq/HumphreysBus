@@ -23,7 +23,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusMapManager
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
-import kyklab.test.subwaymap.getWithWrappedIndex
 import kyklab.test.subwaymap.toast
 
 class MainActivity : AppCompatActivity() {

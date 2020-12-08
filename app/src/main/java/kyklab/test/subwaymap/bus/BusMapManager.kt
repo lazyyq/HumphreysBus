@@ -41,7 +41,7 @@ object BusMapManager {
         return nearestStop
     }
 
-    fun getStopWithId(id: Int) = mStops[id-1]
+    fun getStopWithId(id: Int) = mStops[id - 1]
 
     fun getStopWithStopNo(stopNo: String): BusStop? {
         mStops.forEach { t -> if (t.stopNo == stopNo) return t }
@@ -61,7 +61,7 @@ object BusMapManager {
 
     data class BusStop(val cursor: Cursor) {
         companion object {
-            private const val BUS_STOP_TOUCH_RECOGNITION_DISTANCE = 150*150
+            private const val BUS_STOP_TOUCH_RECOGNITION_DISTANCE = 150 * 150
 
             private fun Int.square() = this * this
             private fun Float.square() = this * this
@@ -74,7 +74,7 @@ object BusMapManager {
         val yCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_Y_CENTER)
 
         fun checkDistanceToStop(x: Float, y: Float): Float? {
-            val distance = (x - xCenter).square() + (y-yCenter).square()
+            val distance = (x - xCenter).square() + (y - yCenter).square()
             return if (distance <= BUS_STOP_TOUCH_RECOGNITION_DISTANCE) distance else null
         }
     }

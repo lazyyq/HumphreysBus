@@ -143,7 +143,6 @@ class BusTimeTableViewActivity : AppCompatActivity() {
             }
 
 
-
             /*
             var closestBusTimeLeft = 1440
             var closestBusTextView: TextView? = null
@@ -246,7 +245,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
         val scrollBounds = Rect()
         scrollView.getHitRect(scrollBounds)
         if (!view.getLocalVisibleRect(scrollBounds)) {
-            scrollView.smoothScrollTo(view.getLeft(), 0)
+            scrollView.smoothScrollTo(view.left, 0)
 //            Handler().post(Runnable { scrollView.smoothScrollTo(view.getLeft(), 0) })
         }
     }
@@ -256,10 +255,11 @@ class BusTimeTableViewActivity : AppCompatActivity() {
     /*private class TableColumnHeader(data: Any): TableCell(data)
     private class TableRowHeader(data: Any): TableCell(data)*/
 
-    class EntireTimeTableAdapter: AbstractTableAdapter<String, String, EntireTimeTableAdapter.TimeData>() {
+    class EntireTimeTableAdapter :
+        AbstractTableAdapter<String, String, EntireTimeTableAdapter.TimeData>() {
         class TimeData(val time: SpannableStringBuilder, val timeLeft: SpannableStringBuilder)
 
-        class TableCellViewHolder(itemView: View): AbstractViewHolder(itemView) {
+        class TableCellViewHolder(itemView: View) : AbstractViewHolder(itemView) {
             val cellContainer: ConstraintLayout = itemView.findViewById(R.id.cellContainer)
             val tvScheduledTime: TextView = itemView.findViewById(R.id.tvScheduledTime)
             val tvTimeLeft: TextView = itemView.findViewById(R.id.tvTimeLeft)
@@ -298,8 +298,9 @@ class BusTimeTableViewActivity : AppCompatActivity() {
             }
         }
 
-        class TableColumnHeaderViewHolder(itemView: View): AbstractViewHolder(itemView) {
-            val columnHeaderContainer: ConstraintLayout = itemView.findViewById(R.id.columnHeaderContainer)
+        class TableColumnHeaderViewHolder(itemView: View) : AbstractViewHolder(itemView) {
+            val columnHeaderContainer: ConstraintLayout =
+                itemView.findViewById(R.id.columnHeaderContainer)
             val tvColumnHeader: TextView = itemView.findViewById(R.id.tvColumnHeader)
         }
 
@@ -324,8 +325,9 @@ class BusTimeTableViewActivity : AppCompatActivity() {
             }
         }
 
-        class TableRowHeaderViewHolder(itemView: View): AbstractViewHolder(itemView) {
-            val rowHeaderContainer: ConstraintLayout = itemView.findViewById(R.id.rowHeaderContainer)
+        class TableRowHeaderViewHolder(itemView: View) : AbstractViewHolder(itemView) {
+            val rowHeaderContainer: ConstraintLayout =
+                itemView.findViewById(R.id.rowHeaderContainer)
             val tvRowHeader: TextView = itemView.findViewById(R.id.tvRowHeader)
         }
 

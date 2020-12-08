@@ -21,6 +21,7 @@ import java.util.*
 class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
     RecyclerView.Adapter<MyAdapter.ViewHolder>() {
     val items: List<InternalItem>
+
     //val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>
     init {
         items = LinkedList()
@@ -61,8 +62,7 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
             }
 
             val tables = LinkedList<View>()
-            for (stopIndex in item.stopIndexAndTimes.keys)
-            {
+            for (stopIndex in item.stopIndexAndTimes.keys) {
                 val stopTimes = item.stopIndexAndTimes[stopIndex]
                 val timeTextsPerLine: Int = 4 / item.stopIndexAndTimes.keys.size
 
@@ -141,9 +141,10 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                     if (index < tables.size - 1)
                         holder.container.addView(View(context).apply {
                             layoutParams =
-                                LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT).apply{
-                                    setMargins(0, dpToPx(context, 8f),0,0)
-                                }
+                                LinearLayout.LayoutParams(1, LinearLayout.LayoutParams.MATCH_PARENT)
+                                    .apply {
+                                        setMargins(0, dpToPx(context, 8f), 0, 0)
+                                    }
                             setBackgroundColor(
                                 context.resources.getColor(
                                     android.R.color.darker_gray,

@@ -6,7 +6,7 @@ import android.widget.Toast
 
 
 fun Context.toast(text: String? = null) {
-    Toast.makeText(this ?: App.context, text ?: "", Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, text ?: "", Toast.LENGTH_SHORT).show()
 }
 
 fun dpToPx(context: Context, dp: Float): Int {
