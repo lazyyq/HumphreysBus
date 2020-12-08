@@ -48,10 +48,14 @@ object BusMapManager {
         return null
     }
 
-    fun Int.getBusStop() = mStops[this - 1]
+    fun getBusStop(stopIndex: Int?): BusStop? {
+        return if (stopIndex == null) null
+        else mStops.getOrNull(stopIndex - 1)
+    }
 
-    fun String.getBusStop(): BusStop? {
-        mStops.forEach { t -> if (t.stopNo == this) return t }
+    fun getBusStop(stopNo: String?): BusStop? {
+        stopNo ?: return null
+        mStops.forEach { t -> if (t.stopNo == stopNo) return t }
         return null
     }
 

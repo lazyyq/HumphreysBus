@@ -5,8 +5,8 @@ import android.util.TypedValue
 import android.widget.Toast
 
 
-fun toast(context: Context? = null, text: String? = null) {
-    Toast.makeText(context ?: App.context, text ?: "", Toast.LENGTH_SHORT).show()
+fun Context.toast(text: String? = null) {
+    Toast.makeText(this ?: App.context, text ?: "", Toast.LENGTH_SHORT).show()
 }
 
 fun dpToPx(context: Context, dp: Float): Int {

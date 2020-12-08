@@ -24,27 +24,11 @@ import kyklab.test.subwaymap.bus.BusMapManager
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
-    private var selectionPin: Int? = null // Pin for current selection on bus map
-
-    companion object {
-        private const val TAG = "MainActivity"
-
-        fun toast(context: Context, text: String) {
-            Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-        }
-
-        var etCustomTime: EditText? = null
+    private val fusedLocationClient by lazy {
+        LocationServices.getFusedLocationProviderClient(this)
     }
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object : LocationCallback() {
+    private val locationCallback by lazy {
+        object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult?) {
                 p0 ?: return
                 for (location in p0.locations) {
@@ -68,14 +52,32 @@ class MainActivity : AppCompatActivity() {
                             it[1].toFloat()
                         )
 //                        imageView.setPin(point)
-                        selectionPin?.let { imageView.removePin(it) }
-                        selectionPin = imageView.addPin(MultiplePinView.Pin(point, resources, R.drawable.pushpin_blue))
+                        setStopSelectionPin(point)
                         imageView.setScaleAndCenter(2f, point)
                     }
                 } ?: run { toast(this@MainActivity, "Couldn't find location") }
 
             }
         }
+    }
+    private var selectionPin: Int? = null // Pin for current selection on bus map
+
+    companion object {
+        private const val TAG = "MainActivity"
+
+        fun toast(context: Context, text: String) {
+            Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+        }
+
+        var etCustomTime: EditText? = null
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+
         val locationRequest = LocationRequest.create()?.apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             interval = 10000
@@ -164,14 +166,7 @@ class MainActivity : AppCompatActivity() {
                     if (station != null) {
                         val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
 //                    imageView.setPin(pinCoord)
-                        selectionPin?.let { imageView.removePin(it) }
-                        selectionPin = imageView.addPin(
-                            MultiplePinView.Pin(
-                                pinCoord,
-                                resources,
-                                R.drawable.pushpin_blue
-                            )
-                        )
+                        setStopSelectionPin(pinCoord)
                         val listener = object : SubsamplingScaleImageView.OnAnimationEventListener {
                             override fun onComplete() {
                                 showStopInfoDialog(station.id)
@@ -196,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                         station.times.forEach { t -> times.append('\n').append(t) }
                         toast(this@MainActivity, times.toString())*/
                     } else {
-                        selectionPin?.let { imageView.removePin(it) }
+                        resetStopSelectionPin()
                     }
                 }
                 return super.onSingleTapConfirmed(e)
@@ -211,6 +206,16 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
+    }
+
+    private fun setStopSelectionPin(coord: PointF) {
+        resetStopSelectionPin()
+        selectionPin =
+            imageView.addPin(MultiplePinView.Pin(coord, resources, R.drawable.pushpin_blue))
+    }
+
+    private fun resetStopSelectionPin() {
+        selectionPin?.let { imageView.removePin(it) }
     }
 
     private fun stopLocationUpdates() {

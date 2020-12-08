@@ -13,9 +13,9 @@ import androidx.core.text.scale
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.stop_timetable_item.view.*
 import kyklab.test.subwaymap.*
-import kyklab.test.subwaymap.bus.BusMapManager.getBusStop
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusMapManager
+import kyklab.test.subwaymap.bus.BusMapManager.getBusStop
 import java.util.*
 
 class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
@@ -71,12 +71,9 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                 var nextStop: BusMapManager.BusStop?
                 // Get names of previous, current, next stops
                 bus.instances[0].let {
-                    prevStop =
-                        if (stopIndex > 0) it.stops[stopIndex - 1].stopNo.getBusStop() else null
-                    currStop =
-                        it.stops[stopIndex].stopNo.getBusStop()
-                    nextStop =
-                        if (stopIndex < it.stops.size - 1) it.stops[stopIndex + 1].stopNo.getBusStop() else null
+                    prevStop = getBusStop(it.stops.getOrNull(stopIndex - 1)?.stopNo)
+                    currStop = getBusStop(it.stops.getOrNull(stopIndex)?.stopNo)
+                    nextStop = getBusStop(it.stops.getOrNull(stopIndex + 1)?.stopNo)
                 }
 
                 // Prepare new timetable item
