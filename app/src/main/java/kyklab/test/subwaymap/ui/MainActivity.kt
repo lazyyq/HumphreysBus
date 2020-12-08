@@ -73,6 +73,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar)
+        supportActionBar?.apply {
+            setDisplayShowCustomEnabled(true)
+            setDisplayShowTitleEnabled(false)
+        }
 
 
         val locationRequest = LocationRequest.create()?.apply {

@@ -6,25 +6,61 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <kyklab.test.subwaymap.ui.MultiplePinView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:background="?colorSurface"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:padding="4dp"
+            app:contentInsetEnd="0dp"
+            app:contentInsetStart="0dp"
+            android:layout_margin="4dp">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/search_bar_background"
+                android:textSize="16sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:hint="Search building, bus stop, etc.." />
+
+        </androidx.appcompat.widget.Toolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <kyklab.test.subwaymap.ui.MultiplePinView
+        app:layout_constraintTop_toBottomOf="@id/appBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:id="@+id/imageView" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="120dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteX="169dp"
-        tools:layout_editor_absoluteY="296dp">
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense"
+        android:layout_marginBottom="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/textCustomTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Time"
+            android:maxLength="4"
             android:inputType="number" />
     </com.google.android.material.textfield.TextInputLayout>
 

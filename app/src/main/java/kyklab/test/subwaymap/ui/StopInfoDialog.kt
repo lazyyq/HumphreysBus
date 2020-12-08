@@ -45,8 +45,14 @@ class StopInfoDialog : BottomSheetDialogFragment() {
 
         Thread {
             val items = ArrayList<MyAdapter.AdapterItem>()
-            for (i in 0..2) {
-                items.add(MyAdapter.AdapterItem(Buses.buses[i], stop.stopNo))
+            for (bus in Buses.buses) {
+                if (bus.instances.isEmpty()) continue
+                for (s in bus.instances[0].stops) {
+                    if (s.stopNo == stop.stopNo) {
+                        items.add(MyAdapter.AdapterItem(bus, stop.stopNo))
+                        break
+                    }
+                }
             }
 
             val adapter = MyAdapter(activity, items)
@@ -55,8 +61,6 @@ class StopInfoDialog : BottomSheetDialogFragment() {
                 TabLayoutMediator(v.busTabLayout, v.vpTimeTable) { tab, position ->
                     tab.text = adapter.items[position].bus.name
                 }.attach()
-
-                v.vpTimeTable.offscreenPageLimit = 1
 
                 v.progressBar.visibility = View.GONE
 
