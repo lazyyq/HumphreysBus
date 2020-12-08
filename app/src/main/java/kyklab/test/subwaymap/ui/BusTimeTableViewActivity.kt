@@ -96,7 +96,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                 val tableRowHeaderList = ArrayList<String>(refInstance.stops.size)
                 // Table rows
                 refInstance.stops.forEach { stop ->
-                    tableRowHeaderList.add(stop.stopNo.getBusStop()?.stopName ?: "")
+                    tableRowHeaderList.add(getBusStop(stop.stopNo)?.stopName ?: "")
                 }
                 val tableColumnHeaderList = ArrayList<String>(instances.size)
                 val tableCellList =
