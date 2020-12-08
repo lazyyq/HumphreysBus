@@ -112,7 +112,7 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                             stopTimes?.let {
                                 for (i in it.indices) {
                                     ++itemNum
-                                    if (!closestFound && it[if (i == 0) it.size - 1 else i - 1] < curTime!! && curTime!! <= it[i]) {
+                                    if (!closestFound && it.getWithWrappedIndex(i - 1)!! < curTime!! && curTime!! <= it[i]) {
                                         bold { scale(1f) { append(it[i].format("%04d")) } }
                                         closestFound = true
                                     } else {

@@ -46,7 +46,7 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
     }
 
     fun removePin(pinIndex: Int): Boolean {
-        return if (pinIndex < 0 || pinIndex >= pins.size) {
+        return if (pinIndex < 0 || pinIndex > pins.lastIndex) {
             false
         } else {
             pins.removeAt(pinIndex)

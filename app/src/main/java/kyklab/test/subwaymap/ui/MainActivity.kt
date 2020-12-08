@@ -2,7 +2,6 @@ package kyklab.test.subwaymap.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.PointF
 import android.os.Bundle
@@ -11,17 +10,21 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.EditText
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusMapManager
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
+import kyklab.test.subwaymap.getWithWrappedIndex
+import kyklab.test.subwaymap.toast
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {
@@ -55,8 +58,7 @@ class MainActivity : AppCompatActivity() {
                         setStopSelectionPin(point)
                         imageView.setScaleAndCenter(2f, point)
                     }
-                } ?: run { toast(this@MainActivity, "Couldn't find location") }
-
+                } ?: run { toast("Couldn't find location") }
             }
         }
     }
@@ -64,10 +66,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-
-        fun toast(context: Context, text: String) {
-            Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
-        }
 
         var etCustomTime: EditText? = null
     }
