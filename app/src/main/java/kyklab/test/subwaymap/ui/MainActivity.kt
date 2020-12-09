@@ -9,6 +9,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -58,10 +59,15 @@ class MainActivity : AppCompatActivity() {
                         imageView.setScaleAndCenter(2f, point)
                     }
                 } ?: run { toast("Couldn't find location") }
+
+                hideLocationProgressBar()
+                isLoadingLocation = false
             }
         }
     }
     private var selectionPin: Int? = null // Pin for current selection on bus map
+    private var fabElevation = 0f
+    private var isLoadingLocation = false
 
     companion object {
         private const val TAG = "MainActivity"
@@ -94,6 +100,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         fabLocation.setOnClickListener { v ->
+            if (isLoadingLocation) return@setOnClickListener
             // Permission
 
             /*{ isGranted: Boolean ->
@@ -133,6 +140,8 @@ class MainActivity : AppCompatActivity() {
                 )
             } else {
                 // Request location
+                isLoadingLocation = true
+                showLocationProgressBar()
                 fusedLocationClient.requestLocationUpdates(
                     locationRequest,
                     locationCallback,
@@ -142,6 +151,7 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        fabElevation = fabLocation.compatElevation
 
         imageView.setImage(ImageSource.asset("subway.webp"))
         imageView.setScaleAndCenter(1f, PointF(2000f, 2000f))
@@ -208,6 +218,8 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
+        isLoadingLocation = false
+        hideLocationProgressBar()
     }
 
     private fun setStopSelectionPin(coord: PointF) {
@@ -222,6 +234,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
+    private fun showLocationProgressBar() {
+        fabElevation = fabLocation.compatElevation
+        fabLocation.compatElevation = 0f
+        pbLocation.visibility = View.VISIBLE
+    }
+
+    private fun hideLocationProgressBar() {
+        fabLocation.compatElevation = fabElevation
+        pbLocation.visibility = View.GONE
     }
 
     private fun showStopInfoDialog(stopId: Int) {
