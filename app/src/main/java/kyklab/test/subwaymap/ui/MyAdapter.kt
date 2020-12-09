@@ -3,6 +3,8 @@ package kyklab.test.subwaymap.ui
 import android.app.Activity
 import android.content.Context
 import android.icu.text.SimpleDateFormat
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.view.LayoutInflater
 import android.view.View
@@ -112,13 +114,29 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                             stopTimes?.let {
                                 for (i in it.indices) {
                                     ++itemNum
+                                    append("    ")
+                                    val str = it[i].format("%04d")
                                     if (!closestFound && it.getWithWrappedIndex(i - 1)!! < curTime!! && curTime!! <= it[i]) {
-                                        bold { scale(1f) { append(it[i].format("%04d")) } }
+                                        append(SpannableString(str).apply {
+                                            if (textColor != null) {
+                                                this.setSpan(
+                                                    RoundedBackgroundSpan(
+                                                        context,
+                                                        resources.getColor(textColor),
+                                                        resources.getColor(R.color.white)
+                                                    ),
+                                                    0,
+                                                    str.length,
+                                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                                )
+                                            }
+                                        })
                                         closestFound = true
                                     } else {
-                                        append(it[i].format("%04d"))
+                                        append(str)
                                     }
-                                    append(if (itemNum == timeTextsPerLine) "\n" else "        ")
+                                    append("    ")
+                                    if (itemNum == timeTextsPerLine) append("\n")
                                     itemNum %= timeTextsPerLine
                                 }
                             }

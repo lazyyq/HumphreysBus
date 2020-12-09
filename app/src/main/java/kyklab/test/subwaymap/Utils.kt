@@ -1,8 +1,14 @@
 package kyklab.test.subwaymap
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
+import androidx.annotation.ColorInt
+import kotlin.math.roundToInt
 
 
 fun Context.toast(text: String? = null) {
@@ -55,5 +61,55 @@ fun <T> List<T>.getWithWrappedIndex(index: Int): T? {
         var i = index
         while (i < 0) i += size
         return get(i % size)
+    }
+}
+
+class RoundedBackgroundSpan(
+    private val context: Context,
+    @ColorInt private val backgroundColor: Int,
+    @ColorInt private val textColor: Int
+) : ReplacementSpan() {
+    companion object {
+        private const val CORNER_RADIUS = 8f
+        private const val SIDE_MARGIN = 8f
+        private const val TOP_MARGIN = 8f
+    }
+
+    override fun draw(
+        canvas: Canvas,
+        text: CharSequence,
+        start: Int,
+        end: Int,
+        x: Float,
+        top: Int,
+        y: Int,
+        bottom: Int,
+        paint: Paint
+    ) {
+        val sideMargin = dpToPx(context, SIDE_MARGIN)
+        val topMargin = dpToPx(context, TOP_MARGIN)
+        val rect =
+            RectF(
+                x - sideMargin, top.toFloat() - topMargin,
+                x + measureText(paint, text, start, end) + sideMargin, bottom.toFloat()
+            )
+        paint.color = backgroundColor
+        canvas.drawRoundRect(rect, CORNER_RADIUS, CORNER_RADIUS, paint)
+        paint.color = textColor
+        canvas.drawText(text, start, end, x, y.toFloat(), paint)
+    }
+
+    override fun getSize(
+        paint: Paint,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        fm: Paint.FontMetricsInt?
+    ): Int {
+        return paint.measureText(text, start, end).roundToInt()
+    }
+
+    private fun measureText(paint: Paint, text: CharSequence, start: Int, end: Int): Float {
+        return paint.measureText(text, start, end)
     }
 }

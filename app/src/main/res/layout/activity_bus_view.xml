@@ -25,9 +25,9 @@
         app:layout_constraintStart_toEndOf="@+id/ivBus"
         app:layout_constraintTop_toTopOf="@id/ivBus" />
 
-    <com.google.android.material.progressindicator.ProgressIndicator
+    <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
-        style="@style/Widget.MaterialComponents.ProgressIndicator.Linear.Indeterminate"
+        style="@style/Widget.MaterialComponents.LinearProgressIndicator"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

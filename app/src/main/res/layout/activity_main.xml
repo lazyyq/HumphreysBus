@@ -73,18 +73,23 @@
 
         <ProgressBar
             android:id="@+id/pbLocation"
-            style="@style/Widget.MaterialComponents.ProgressIndicator.Circular.Indeterminate"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_margin="6dp"
-            android:visibility="gone" />
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="6dp"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
+        <!--workaround for missing shadow-->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabLocation"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="16dp"
             android:clickable="true"
+            app:elevation="4dp"
             app:backgroundTint="@color/white"
             app:srcCompat="@drawable/location" />
     </RelativeLayout>
