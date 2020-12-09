@@ -35,16 +35,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivBus" />
 
-    <com.evrencoskun.tableview.TableView
-        android:id="@+id/entireTimeTable"
+    <ScrollView
+        android:id="@+id/verticalScrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-
-        app:allow_click_inside_cell="true"
-        app:column_header_height="@dimen/entire_timetable_column_header_height"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar"
-        app:row_header_width="@dimen/entire_timetable_row_header_width" />
+        app:layout_constraintTop_toBottomOf="@id/progressBar">
+
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/timeTableContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:divider="?android:attr/listDivider"
+                android:orientation="horizontal"
+                android:showDividers="middle" />
+        </HorizontalScrollView>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,7 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="entire_timetable_row_header_width">150dp</dimen>
-    <dimen name="entire_timetable_column_header_height">0dp</dimen>
-    <dimen name="entire_timetable_cell_min_width">128dp</dimen>
-    <dimen name="entire_timetable_cell_height">40dp</dimen>
 </resources>
