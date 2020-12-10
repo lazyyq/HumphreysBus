@@ -11,7 +11,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.bus.Buses
 import java.util.*
 
 class StopInfoDialog : BottomSheetDialogFragment() {
@@ -44,7 +43,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
 
         Thread {
             val items = ArrayList<StopInfoDialogAdapter.AdapterItem>()
-            for (bus in Buses.buses) {
+            for (bus in BusUtils.buses) {
                 if (bus.instances.isEmpty()) continue
                 for (s in bus.instances[0].stops) {
                     if (s.stopNo == stop.stopNo) {

@@ -29,11 +29,13 @@ object BusStopSQLiteHelper :
     const val DB_TABLE_STOPS = "stations"
     const val DB_TABLE_BUSES = "buses"
 
-    private val mDBPath: String = "/data/data/" + App.context.packageName + "/databases"
+    private val dbPath: String = "/data/data/" + App.context.packageName + "/databases"
     private lateinit var myDatabase: SQLiteDatabase
 
+    var isDBOpen = false
+
     init {
-        Log.e(TAG, "DB Path: $mDBPath")
+        Log.e(TAG, "DB Path: $dbPath")
     }
 
     fun createDatabase() {
@@ -51,7 +53,7 @@ object BusStopSQLiteHelper :
 
     private fun checkDatabase(): Boolean {
         var checkDB: SQLiteDatabase? = null
-        val path = "$mDBPath/$DB_NAME"
+        val path = "$dbPath/$DB_NAME"
         try {
             checkDB = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY)
         } catch (e: SQLiteException) {
@@ -62,7 +64,7 @@ object BusStopSQLiteHelper :
     }
 
     private fun copyDatabase() {
-        val outFilename = "$mDBPath/$DB_NAME"
+        val outFilename = "$dbPath/$DB_NAME"
         App.context.assets.open(DB_NAME).use { inputStream ->
             FileOutputStream(outFilename).use { outputStream ->
                 val buffer = ByteArray(10)
@@ -80,10 +82,11 @@ object BusStopSQLiteHelper :
     }
 
     fun openDatabase() {
-        val myPath = "$mDBPath/$DB_NAME"
+        val myPath = "$dbPath/$DB_NAME"
         // TODO("test")
         copyDatabase()
         myDatabase = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY)
+        isDBOpen = true
     }
 
     @JvmOverloads
@@ -117,5 +120,11 @@ object BusStopSQLiteHelper :
                 e.printStackTrace()
             }
         }
+    }
+
+    override fun close() {
+        myDatabase.close()
+        isDBOpen = false
+        super.close()
     }
 }

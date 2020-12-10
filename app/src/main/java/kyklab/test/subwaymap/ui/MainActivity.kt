@@ -24,6 +24,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.test.subwaymap.R
+import kyklab.test.subwaymap.bus.BusStopSQLiteHelper
 import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 import kyklab.test.subwaymap.toast
@@ -167,12 +168,6 @@ class MainActivity : AppCompatActivity() {
         ivMap.setImage(ImageSource.asset("subway.webp"))
         ivMap.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
-        val stationManager = BusUtils
-        BusUtils.loadFromDB()
-
-        //TODO: For Debug
-//        val buses = Buses
-
         etCustomTime = textCustomTime
 
         val gestureDetector = GestureDetector(this, object :
@@ -260,6 +255,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
+    }
+
+    override fun onDestroy() {
+        BusStopSQLiteHelper.close()
+        super.onDestroy()
     }
 
     private fun setStopSelectionPin(coord: PointF) {

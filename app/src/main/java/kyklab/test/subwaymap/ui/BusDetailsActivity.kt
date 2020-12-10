@@ -19,7 +19,6 @@ import kotlinx.android.synthetic.main.activity_bus_details.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.bus.Buses
 import kyklab.test.subwaymap.calcTimeLeft
 import kyklab.test.subwaymap.dpToPx
 import java.util.*
@@ -43,7 +42,7 @@ class BusDetailsActivity : AppCompatActivity() {
         busName = intent.extras?.get("busname") as? String
         stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
 
-        for (b in Buses.buses) {
+        for (b in BusUtils.buses) {
             if (b.name == busName) {
                 busToShow = b
                 break

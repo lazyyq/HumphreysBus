@@ -6,23 +6,77 @@ import android.util.Log
 object BusUtils {
     private const val TAG = "BusUtils"
 
-    val stops: MutableList<BusStop> by lazy { ArrayList(40) }
-
-    fun loadFromDB() {
-        val start = System.currentTimeMillis()
-        with(BusStopSQLiteHelper) {
-            createDatabase()
-            openDatabase()
-            query(DB_TABLE_STOPS).use {
+    val stops: MutableList<BusStop> by lazy {
+        val list = ArrayList<BusStop>(40)
+        if (BusStopSQLiteHelper.isDBOpen) {
+            BusStopSQLiteHelper.query(BusStopSQLiteHelper.DB_TABLE_STOPS).use {
                 if (it.moveToFirst()) {
                     do {
-                        stops.add(BusStop(it))
+                        list.add(BusStop(it))
                     } while (it.moveToNext())
                 }
             }
         }
+        list
+    }
+    val buses: MutableList<Bus> by lazy {
+        val list = ArrayList<Bus>(5)
+        if (BusStopSQLiteHelper.isDBOpen) {
+            with(BusStopSQLiteHelper) {
+                query(DB_TABLE_BUSES, arrayOf("name"), orderBy = "buses._id ASC").use {
+                    if (it.moveToFirst()) {
+                        do {
+                            // Add a new bus
+                            val busName = it.getString(0)
+                            val instances = java.util.ArrayList<Bus.BusInstance>(100)
+                            //SELECT stop_points FROM buses WHERE name="Red";
+                            query(
+                                "buses", arrayOf("stop_points"),
+                                "name=\"$busName\"", orderBy = "buses._id ASC"
+                            ).use { c1 ->
+                                if (c1.moveToFirst()) {
+                                    do {
+                                        val stopPoints = c1.getString(0).split(';')
+                                        //SELECT stop_times FROM bus_details WHERE bus_name="Red";
+                                        query(
+                                            "bus_details",
+                                            arrayOf("stop_times"),
+                                            "bus_name=\"$busName\""
+                                        ).use { c2 ->
+                                            // Create new bus instances, with stopPoints and newly created stopTimes
+                                            if (c2.moveToFirst()) {
+                                                do {
+                                                    // Create a new instance
+                                                    val stopTimes = c2.getString(0).split(';')
+                                                    if (stopPoints.size != stopTimes.size) continue
+                                                    val stops = java.util.ArrayList<Bus.Stop>()
+                                                    for (i in stopPoints.indices) {
+                                                        stops.add(
+                                                            Bus.Stop(stopPoints[i], stopTimes[i])
+                                                        )
+                                                    }
+                                                    instances.add(Bus.BusInstance(stops))
+                                                } while (c2.moveToNext())
+                                            }
+                                        }
+                                    } while (c1.moveToNext())
+                                }
+                            }
+                            list.add(Bus(busName, instances))
+                        } while (it.moveToNext())
+                    }
+                }
+            }
+        }
+        list
+    }
 
-        Log.e(TAG, "Took ${System.currentTimeMillis() - start}ms to load from DB")
+    init {
+        // Open DB
+        with(BusStopSQLiteHelper) {
+            createDatabase()
+            openDatabase()
+        }
     }
 
     fun getStopFromCoord(x: Float, y: Float): BusStop? {

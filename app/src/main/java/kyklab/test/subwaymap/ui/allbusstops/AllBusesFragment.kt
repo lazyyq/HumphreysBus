@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_buses.view.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.Buses
+import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.ui.BusDetailsActivity
 
 class AllBusesFragment : Fragment() {
@@ -27,7 +27,7 @@ class AllBusesFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_all_buses, container, false)
         view.rvAllBuses.apply {
-            adapter = RvAdapter(Buses.buses)
+            adapter = RvAdapter(BusUtils.buses)
             layoutManager = GridLayoutManager(context, 2)
         }
         return view
