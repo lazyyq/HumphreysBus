@@ -16,12 +16,12 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.stop_timetable_item.view.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.BusMapManager
-import kyklab.test.subwaymap.bus.BusMapManager.getBusStop
+import kyklab.test.subwaymap.bus.BusUtils
+import kyklab.test.subwaymap.bus.BusUtils.getBusStop
 import java.util.*
 
-class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
-    RecyclerView.Adapter<MyAdapter.ViewHolder>() {
+class StopInfoDialogAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
+    RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
     val items: List<InternalItem>
 
     //val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>
@@ -68,9 +68,9 @@ class MyAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
                 val stopTimes = item.stopIndexAndTimes[stopIndex]
                 val timeTextsPerLine: Int = 4 / item.stopIndexAndTimes.keys.size
 
-                var prevStop: BusMapManager.BusStop?
-                var currStop: BusMapManager.BusStop?
-                var nextStop: BusMapManager.BusStop?
+                var prevStop: BusUtils.BusStop?
+                var currStop: BusUtils.BusStop?
+                var nextStop: BusUtils.BusStop?
                 // Get names of previous, current, next stops
                 bus.instances[0].let {
                     prevStop = getBusStop(it.stops.getOrNull(stopIndex - 1)?.stopNo)

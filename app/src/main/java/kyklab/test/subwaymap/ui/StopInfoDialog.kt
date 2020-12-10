@@ -10,9 +10,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info.view.*
 import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusMapManager
+import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.bus.Buses
-import kyklab.test.subwaymap.ui.BusTimeTableViewActivity
 import java.util.*
 
 class StopInfoDialog : BottomSheetDialogFragment() {
@@ -40,22 +39,22 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         val stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
         if (stopId == -1) return
 
-        val stop = BusMapManager.getStopWithId(stopId)
+        val stop = BusUtils.getStopWithId(stopId)
         v.tvStopInfo.text = stop.stopName
 
         Thread {
-            val items = ArrayList<MyAdapter.AdapterItem>()
+            val items = ArrayList<StopInfoDialogAdapter.AdapterItem>()
             for (bus in Buses.buses) {
                 if (bus.instances.isEmpty()) continue
                 for (s in bus.instances[0].stops) {
                     if (s.stopNo == stop.stopNo) {
-                        items.add(MyAdapter.AdapterItem(bus, stop.stopNo))
+                        items.add(StopInfoDialogAdapter.AdapterItem(bus, stop.stopNo))
                         break
                     }
                 }
             }
 
-            val adapter = MyAdapter(activity, items)
+            val adapter = StopInfoDialogAdapter(activity, items)
             activity.runOnUiThread {
                 v.vpTimeTable.adapter = adapter
                 TabLayoutMediator(v.busTabLayout, v.vpTimeTable) { tab, position ->

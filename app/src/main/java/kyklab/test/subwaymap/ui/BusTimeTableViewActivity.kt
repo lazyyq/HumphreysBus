@@ -18,7 +18,7 @@ import com.google.android.material.textview.MaterialTextView
 import kotlinx.android.synthetic.main.activity_bus_view.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.BusMapManager
+import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.bus.Buses
 import kyklab.test.subwaymap.calcTimeLeft
 import kyklab.test.subwaymap.dpToPx
@@ -128,7 +128,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                                 scale(1.2f) {
                                     append(
                                         "${
-                                            BusMapManager.getStopWithStopNo(
+                                            BusUtils.getStopWithStopNo(
                                                 stop.stopNo
                                             )?.stopName ?: "Unknown"
                                         } (${stop.stopTime})\n($timeLeft mins)\n\n"
@@ -136,7 +136,7 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            strStops.append("${BusMapManager.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
+                            strStops.append("${BusUtils.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
                         }
                     }
                     text = strStops

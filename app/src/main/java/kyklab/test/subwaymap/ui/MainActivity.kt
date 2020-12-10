@@ -22,7 +22,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusMapManager
+import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 import kyklab.test.subwaymap.toast
 
@@ -156,8 +156,8 @@ class MainActivity : AppCompatActivity() {
         imageView.setImage(ImageSource.asset("subway.webp"))
         imageView.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
-        val stationManager = BusMapManager
-        BusMapManager.loadFromDB()
+        val stationManager = BusUtils
+        BusUtils.loadFromDB()
 
         //TODO: For Debug
 //        val buses = Buses
@@ -173,7 +173,7 @@ class MainActivity : AppCompatActivity() {
                     val yCor = sCoord.y
                     Log.e(TAG, "x: $xCor, y: $yCor")
 
-                    val station = BusMapManager.getStopFromCoord(xCor, yCor)
+                    val station = BusUtils.getStopFromCoord(xCor, yCor)
 
                     if (station != null) {
                         val pinCoord = PointF(station.xCenter.toFloat(), station.yCenter.toFloat())
