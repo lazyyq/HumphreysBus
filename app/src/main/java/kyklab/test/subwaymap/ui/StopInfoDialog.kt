@@ -79,7 +79,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         const val ARGUMENT_STOP_ID = "argument_id"
 
         fun showBusSchedules(activity: Activity, busName: String, stopIndex: Int) {
-            val intent = Intent(activity, BusTimeTableViewActivity::class.java).apply {
+            val intent = Intent(activity, BusDetailsActivity::class.java).apply {
                 putExtra("busname", busName)
                 putExtra("highlightstopindex", stopIndex)
             }

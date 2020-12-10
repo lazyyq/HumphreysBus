@@ -13,7 +13,7 @@ import android.widget.LinearLayout
 import androidx.core.text.bold
 import androidx.core.text.scale
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.stop_timetable_item.view.*
+import kotlinx.android.synthetic.main.fragment_stop_info_timetable_item.view.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
@@ -41,7 +41,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
         }
         return ViewHolder(
             LayoutInflater.from(parent.context).inflate(
-                R.layout.stop_timetable_container,
+                R.layout.fragment_stop_info_timetable_container,
                 parent,
                 false
             )
@@ -80,7 +80,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
 
                 // Prepare new timetable item
                 val timeTableItem = LayoutInflater.from(context)
-                    .inflate(R.layout.stop_timetable_item, null).apply {
+                    .inflate(R.layout.fragment_stop_info_timetable_item, null).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.MATCH_PARENT, 1f

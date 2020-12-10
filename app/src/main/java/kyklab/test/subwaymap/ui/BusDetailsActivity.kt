@@ -15,7 +15,7 @@ import androidx.core.text.bold
 import androidx.core.text.scale
 import androidx.core.view.marginTop
 import com.google.android.material.textview.MaterialTextView
-import kotlinx.android.synthetic.main.activity_bus_view.*
+import kotlinx.android.synthetic.main.activity_bus_details.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
@@ -25,7 +25,7 @@ import kyklab.test.subwaymap.dpToPx
 import java.util.*
 
 
-class BusTimeTableViewActivity : AppCompatActivity() {
+class BusDetailsActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "BusViewActivity"
     }
@@ -36,12 +36,12 @@ class BusTimeTableViewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bus_view)
+        setContentView(R.layout.activity_bus_details)
 
         val intent = intent
 
-        busName = intent.extras?.getString("busname")
-        stopToHighlightIndex = intent.extras?.getInt("highlightstopindex")
+        busName = intent.extras?.get("busname") as? String
+        stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
 
         for (b in Buses.buses) {
             if (b.name == busName) {
@@ -103,9 +103,9 @@ class BusTimeTableViewActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply {
                         setPadding(
-                            dpToPx(this@BusTimeTableViewActivity, 16f),
+                            dpToPx(this@BusDetailsActivity, 16f),
                             0,
-                            dpToPx(this@BusTimeTableViewActivity, 16f),
+                            dpToPx(this@BusDetailsActivity, 16f),
                             0
                         )
                     }
@@ -155,29 +155,31 @@ class BusTimeTableViewActivity : AppCompatActivity() {
             // Scroll to instance with closest bus for selected stop
 //        scrollToView(scrollView, closestBusTextView!!)
 //        Handler().postDelayed({ scrollView.scrollTo(closestBusTextView!!.left, 0) }, 500)
-            horizontalScrollView.viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    val scrollX =
-                        (closestBusTextView!!.left + closestBusTextView!!.right - horizontalScrollView.width) / 2
+            if (stopToHighlightIndex != null) {
+                horizontalScrollView.viewTreeObserver.addOnGlobalLayoutListener(object :
+                    ViewTreeObserver.OnGlobalLayoutListener {
+                    override fun onGlobalLayout() {
+                        val scrollX =
+                            (closestBusTextView!!.left + closestBusTextView!!.right - horizontalScrollView.width) / 2
 //                val scrollX = closestBusTextView!!.left
-                    val baseHeight =
-                        closestBusTextView!!.bottom - closestBusTextView!!.top/*-verticalScrollView.height*/
-                    val scrollYnew = /*closestBusTextView!!.top+*/
-                        (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)/*closestBusTextView!!.lineCount*/
+                        val baseHeight =
+                            closestBusTextView!!.bottom - closestBusTextView!!.top/*-verticalScrollView.height*/
+                        val scrollYnew = /*closestBusTextView!!.top+*/
+                            (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)/*closestBusTextView!!.lineCount*/
 //                scrollView.scrollTo(scrollX, 0)
 //                Handler().postDelayed (
 //                    {
-                    horizontalScrollView.scrollTo(scrollX, 0)
+                        horizontalScrollView.scrollTo(scrollX, 0)
 //                        timeTableContainer.scrollTo(0, scrollYnew.toInt())
-                    verticalScrollView.scrollTo(
-                        0,
-                        y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
-                    )
+                        verticalScrollView.scrollTo(
+                            0,
+                            y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
+                        )
 //                    }, 1000)
-                    horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                }
-            })
+                        horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                })
+            }
         }.start()
     }
 

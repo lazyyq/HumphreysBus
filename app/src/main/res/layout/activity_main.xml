@@ -24,21 +24,36 @@
             app:contentInsetEnd="0dp"
             app:contentInsetStart="0dp">
 
-            <EditText
+            <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/search_bar_background"
-                android:hint="Search building, bus stop, etc.."
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:textSize="16sp" />
+                android:layout_height="match_parent">
 
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/search_bar_background"
+                    android:hint="Search building, bus stop, etc.."
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:id="@+id/ivAllBuses"
+                    android:layout_width="28dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:scaleType="fitCenter"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_bus"
+                    app:tint="@color/black" />
+            </LinearLayout>
         </androidx.appcompat.widget.Toolbar>
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <kyklab.test.subwaymap.ui.MultiplePinView
-        android:id="@+id/imageView"
+        android:id="@+id/ivMap"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"

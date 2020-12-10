@@ -2,6 +2,7 @@ package kyklab.test.subwaymap.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.PointF
 import android.os.Bundle
@@ -25,6 +26,7 @@ import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 import kyklab.test.subwaymap.toast
+import kyklab.test.subwaymap.ui.allbusstops.AllBusAndStopActivity
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {
@@ -49,14 +51,14 @@ class MainActivity : AppCompatActivity() {
                         p0.locations.last().latitude
                     )
                 localMapCoords?.let {
-                    if (imageView.isReady) {
+                    if (ivMap.isReady) {
                         val point = PointF(
                             it[0].toFloat(),
                             it[1].toFloat()
                         )
 //                        imageView.setPin(point)
                         setStopSelectionPin(point)
-                        imageView.setScaleAndCenter(2f, point)
+                        ivMap.setScaleAndCenter(2f, point)
                     }
                 } ?: run { toast("Couldn't find location") }
 
@@ -85,6 +87,9 @@ class MainActivity : AppCompatActivity() {
             setDisplayShowTitleEnabled(false)
         }
 
+        ivAllBuses.setOnClickListener {
+            startActivity(Intent(this, AllBusAndStopActivity::class.java))
+        }
 
         val locationRequest = LocationRequest.create()?.apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -153,8 +158,8 @@ class MainActivity : AppCompatActivity() {
 
         fabElevation = fabLocation.compatElevation
 
-        imageView.setImage(ImageSource.asset("subway.webp"))
-        imageView.setScaleAndCenter(1f, PointF(2000f, 2000f))
+        ivMap.setImage(ImageSource.asset("subway.webp"))
+        ivMap.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
         val stationManager = BusUtils
         BusUtils.loadFromDB()
@@ -167,8 +172,8 @@ class MainActivity : AppCompatActivity() {
         val gestureDetector = GestureDetector(this, object :
             GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-                if (imageView.isReady) {
-                    val sCoord = imageView.viewToSourceCoord(e!!.x, e.y)
+                if (ivMap.isReady) {
+                    val sCoord = ivMap.viewToSourceCoord(e!!.x, e.y)
                     val xCor = sCoord!!.x
                     val yCor = sCoord.y
                     Log.e(TAG, "x: $xCor, y: $yCor")
@@ -192,10 +197,10 @@ class MainActivity : AppCompatActivity() {
 
                         }
                         val animationBuilder =
-                            if (imageView.scale < 1.0f)
-                                imageView.animateScaleAndCenter(1f, pinCoord)
+                            if (ivMap.scale < 1.0f)
+                                ivMap.animateScaleAndCenter(1f, pinCoord)
                             else
-                                imageView.animateCenter(pinCoord)
+                                ivMap.animateCenter(pinCoord)
                         animationBuilder?.withOnAnimationEventListener(listener)?.withDuration(250)
                             ?.start()
 
@@ -209,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                 return super.onSingleTapConfirmed(e)
             }
         })
-        imageView.setOnTouchListener { v, event ->
+        ivMap.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
             false
         }
@@ -227,11 +232,11 @@ class MainActivity : AppCompatActivity() {
     private fun setStopSelectionPin(coord: PointF) {
         resetStopSelectionPin()
         selectionPin =
-            imageView.addPin(MultiplePinView.Pin(coord, resources, R.drawable.pushpin_blue))
+            ivMap.addPin(MultiplePinView.Pin(coord, resources, R.drawable.pushpin_blue))
     }
 
     private fun resetStopSelectionPin() {
-        selectionPin?.let { imageView.removePin(it) }
+        selectionPin?.let { ivMap.removePin(it) }
     }
 
     private fun stopLocationUpdates() {

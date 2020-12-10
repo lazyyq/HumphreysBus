@@ -6,7 +6,7 @@ import android.util.Log
 object BusUtils {
     private const val TAG = "BusUtils"
 
-    private val stops: MutableList<BusStop> by lazy { ArrayList(40) }
+    val stops: MutableList<BusStop> by lazy { ArrayList(40) }
 
     fun loadFromDB() {
         val start = System.currentTimeMillis()

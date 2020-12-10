@@ -92,6 +92,7 @@ object BusStopSQLiteHelper :
         selectionArgs: Array<String>? = null, groupBy: String? = null, having: String? = null,
         orderBy: String? = null, limit: String? = null
     ): Cursor {
+        Log.e(TAG, "query called")
         return myDatabase.query(
             table,
             columns,
