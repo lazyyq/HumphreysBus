@@ -82,14 +82,12 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
-        <!--workaround for missing shadow-->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabLocation"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="16dp"
             android:clickable="true"
-            app:elevation="4dp"
             app:backgroundTint="@color/white"
             app:srcCompat="@drawable/location" />
     </RelativeLayout>

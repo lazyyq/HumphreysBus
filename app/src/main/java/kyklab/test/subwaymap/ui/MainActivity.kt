@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private var selectionPin: Int? = null // Pin for current selection on bus map
-    private var fabElevation = 0f
+    private var fabElevation: Float? = null
     private var isLoadingLocation = false
 
     companion object {
@@ -218,8 +218,10 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopLocationUpdates()
-        isLoadingLocation = false
-        hideLocationProgressBar()
+        if (isLoadingLocation) {
+            isLoadingLocation = false
+            hideLocationProgressBar()
+        }
     }
 
     private fun setStopSelectionPin(coord: PointF) {
@@ -239,11 +241,13 @@ class MainActivity : AppCompatActivity() {
     private fun showLocationProgressBar() {
         fabElevation = fabLocation.compatElevation
         fabLocation.compatElevation = 0f
+        Log.e(TAG, "killed elevation")
         pbLocation.visibility = View.VISIBLE
     }
 
     private fun hideLocationProgressBar() {
-        fabLocation.compatElevation = fabElevation
+        fabElevation?.let { fabLocation.compatElevation = it }
+        Log.e(TAG, "restored elevation")
         pbLocation.visibility = View.GONE
     }
 
