@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.android.synthetic.main.fragment_stop_info.view.*
+import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.bus.Buses
@@ -21,7 +21,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_stop_info, container, false)
+        val view = inflater.inflate(R.layout.fragment_stop_info_dialog, container, false)
         arguments ?: dismiss()
 
         return view

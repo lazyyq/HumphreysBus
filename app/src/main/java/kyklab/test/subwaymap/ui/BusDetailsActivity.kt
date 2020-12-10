@@ -147,7 +147,7 @@ class BusDetailsActivity : AppCompatActivity() {
 //                setLineSpacing(1f, 2f)
                 }
                 runOnUiThread {
-                    progressBar.visibility = View.INVISIBLE
+//                    progressBar.visibility = View.INVISIBLE
                     timeTableContainer.addView(textView)
                 }
             }
@@ -176,6 +176,7 @@ class BusDetailsActivity : AppCompatActivity() {
                             y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
                         )
 //                    }, 1000)
+                        progressBar.visibility = View.INVISIBLE
                         horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     }
                 })
