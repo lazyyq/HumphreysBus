@@ -34,7 +34,8 @@ class AllStopsFragment : Fragment() {
         RecyclerView.Adapter<RvAdapter.ViewHolder>() {
 
         private inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val tvStop: TextView = itemView.findViewById(R.id.tvStop)
+            val tvStopNo: TextView = itemView.findViewById(R.id.tvStopNo)
+            val tvStopName: TextView = itemView.findViewById(R.id.tvStopName)
 
             init {
                 itemView.setOnClickListener {
@@ -64,7 +65,8 @@ class AllStopsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             // TODO: Generify
-            holder.tvStop.text = "(${items[position].stopNo}) ${items[position].stopName}"
+            holder.tvStopNo.text = items[position].stopNo
+            holder.tvStopName.text = items[position].stopName
 //                holder.tvBus.setTextColor(color)
         }
 

@@ -6,26 +6,42 @@
     android:clickable="true"
     android:background="?selectableItemBackground">
 
-    <ImageView
-        android:id="@+id/ivStop"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_margin="8dp"
-        android:src="@drawable/ic_place"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <LinearLayout
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="16dp"
+        android:padding="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:id="@+id/container">
+
+        <ImageView
+            android:id="@+id/ivStop"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_place" />
+
+        <TextView
+            android:id="@+id/tvStopNo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Stop No" />
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/tvStop"
+        android:id="@+id/tvStopName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:textSize="18sp"
-        android:text="Stop"
+        android:text="Stop Name"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/ivStop"
+        app:layout_constraintStart_toEndOf="@+id/container"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
