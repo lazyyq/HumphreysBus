@@ -41,11 +41,12 @@
 
                 <ImageView
                     android:id="@+id/ivAllBuses"
-                    android:layout_width="28dp"
+                    android:layout_width="36dp"
                     android:layout_height="match_parent"
                     android:layout_marginStart="8dp"
                     android:scaleType="fitCenter"
                     android:layout_gravity="center"
+                    android:background="?selectableItemBackground"
                     android:src="@drawable/ic_bus" />
             </LinearLayout>
         </androidx.appcompat.widget.Toolbar>

@@ -147,7 +147,9 @@ class BusDetailsActivity : AppCompatActivity() {
 //                setLineSpacing(1f, 2f)
                 }
                 runOnUiThread {
-//                    progressBar.visibility = View.INVISIBLE
+                    if (stopToHighlightIndex == null) {
+                        progressBar.visibility = View.INVISIBLE
+                    }
                     timeTableContainer.addView(textView)
                 }
             }
@@ -169,9 +171,9 @@ class BusDetailsActivity : AppCompatActivity() {
 //                scrollView.scrollTo(scrollX, 0)
 //                Handler().postDelayed (
 //                    {
-                        horizontalScrollView.scrollTo(scrollX, 0)
+                        horizontalScrollView.smoothScrollTo(scrollX, 0)
 //                        timeTableContainer.scrollTo(0, scrollYnew.toInt())
-                        verticalScrollView.scrollTo(
+                        verticalScrollView.smoothScrollTo(
                             0,
                             y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
                         )
