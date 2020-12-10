@@ -86,7 +86,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                             LinearLayout.LayoutParams.MATCH_PARENT, 1f
                         )
                         textColor?.let { color ->
-                            tvStopsInfo.setTextColor(
+                            tvPrevCurrNextStop.setTextColor(
                                 context.resources.getColor(
                                     color,
                                     context.theme
@@ -101,7 +101,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                         }
 
                         // Show previous, current, next stop name
-                        tvStopsInfo.text = SpannableStringBuilder().apply {
+                        tvPrevCurrNextStop.text = SpannableStringBuilder().apply {
                             prevStop?.let { appendLine(it.stopName) }
                             currStop?.let { bold { scale(1.2f) { append(it.stopName) } } }
                             nextStop?.let { append('\n' + it.stopName) }
@@ -115,23 +115,34 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                                 for (i in it.indices) {
                                     ++itemNum
                                     append("    ")
-                                    val str = it[i].format("%04d").insert(2, ":")
-                                    if (!closestFound && it.getWithWrappedIndex(i - 1)!! < curTime!! && curTime!! <= it[i]) {
-                                        append(SpannableString(str).apply {
-                                            if (textColor != null) {
-                                                this.setSpan(
-                                                    RoundedBackgroundSpan(
-                                                        context,
-                                                        resources.getColor(textColor),
-                                                        resources.getColor(R.color.white)
-                                                    ),
-                                                    0,
-                                                    str.length,
-                                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                                                )
-                                            }
-                                        })
-                                        closestFound = true
+                                    val str = it[i].format("%04d").insert(2, ":");
+                                    if (!closestFound) {
+                                        val isBetween = isBetween(
+                                            curTime!!,
+                                            it.getWithWrappedIndex(i - 1)!!, it[i]
+                                        )
+                                        if (isBetween) {
+                                            append(SpannableString(str).apply {
+                                                if (textColor != null) {
+                                                    this.setSpan(
+                                                        RoundedBackgroundSpan(
+                                                            context,
+                                                            resources.getColor(
+                                                                textColor, context.theme
+                                                            ),
+                                                            resources.getColor(
+                                                                R.color.white, context.theme
+                                                            )
+                                                        ),
+                                                        0, str.length,
+                                                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                                    )
+                                                }
+                                            })
+                                            closestFound = true
+                                        } else {
+                                            append(str)
+                                        }
                                     } else {
                                         append(str)
                                     }
@@ -142,7 +153,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                             }
                         }
 
-                        tvStopsInfo.setOnClickListener { v: View ->
+                        tvPrevCurrNextStop.setOnClickListener { v: View ->
                             StopInfoDialog.showBusSchedules(
                                 context as Activity,
                                 bus.name,
@@ -176,6 +187,25 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
     }
 
     override fun getItemCount() = items.size
+
+    /**
+     * Decide if we're between previous and next stop time
+     */
+
+    private fun isBetween(_curTime: Int, _prevTime: Int, _nextTime: Int): Boolean {
+        val currTime: Int
+        val nextTime: Int
+        if (_nextTime < _prevTime) {
+            nextTime = _nextTime + 2400
+            currTime =
+                if (_curTime < _prevTime) _curTime + 2400
+                else _curTime
+        } else {
+            nextTime = _nextTime
+            currTime = _curTime
+        }
+        return currTime in (_prevTime + 1)..nextTime
+    }
 
     class ViewHolder(val itemView: View) : RecyclerView.ViewHolder(itemView) {
         val container = itemView.findViewById<LinearLayout>(R.id.items_container)
