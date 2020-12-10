@@ -6,11 +6,13 @@ import android.icu.text.SimpleDateFormat
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.text.bold
+import androidx.core.text.italic
 import androidx.core.text.scale
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_stop_info_timetable_item.view.*
@@ -64,6 +66,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
             }
 
             val tables = LinkedList<View>()
+            var largestPrevNextStopViewHeight = 0 // To evenly set each table item's view height
             for (stopIndex in item.stopIndexAndTimes.keys) {
                 val stopTimes = item.stopIndexAndTimes[stopIndex]
                 val timeTextsPerLine: Int = 4 / item.stopIndexAndTimes.keys.size
@@ -103,8 +106,21 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                         // Show previous, current, next stop name
                         tvPrevCurrNextStop.text = SpannableStringBuilder().apply {
                             prevStop?.let { appendLine(it.stopName) }
+                                ?: italic { appendLine("(NONE)") }
                             currStop?.let { bold { scale(1.2f) { append(it.stopName) } } }
+                                ?: append("Unknown")
                             nextStop?.let { append('\n' + it.stopName) }
+                                ?: italic { append("\n(NONE)") }
+                        }
+                        tvPrevCurrNextStop.measure(0, 0)
+                        largestPrevNextStopViewHeight = Math.max(
+                            largestPrevNextStopViewHeight,
+                            tvPrevCurrNextStop.measuredHeight
+                        )
+                        if (prevStop != null && nextStop == null) {
+                            tvPrevCurrNextStop.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                        } else if (prevStop == null && nextStop != null) {
+                            tvPrevCurrNextStop.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                         }
 
                         // Show times for current stop, with the closest one in bold
@@ -162,6 +178,10 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                         }
                     }
                 tables.add(timeTableItem)
+            }
+            for (table in tables) {
+                table.findViewById<View>(R.id.tvPrevCurrNextStop).layoutParams.height =
+                    largestPrevNextStopViewHeight
             }
             (context as Activity).runOnUiThread {
                 for ((index, view) in tables.withIndex()) {
