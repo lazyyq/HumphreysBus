@@ -64,6 +64,13 @@ fun <T> List<T>.getWithWrappedIndex(index: Int): T? {
     }
 }
 
+fun String.insert(position: Int, str: CharSequence): String =
+    StringBuffer().apply {
+        append(this@insert.substring(0, position))
+        append(str)
+        append(this@insert.substring(position, this@insert.length))
+    }.toString()
+
 class RoundedBackgroundSpan(
     private val context: Context,
     @ColorInt private val backgroundColor: Int,

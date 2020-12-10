@@ -115,7 +115,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                                 for (i in it.indices) {
                                     ++itemNum
                                     append("    ")
-                                    val str = it[i].format("%04d")
+                                    val str = it[i].format("%04d").insert(2, ":")
                                     if (!closestFound && it.getWithWrappedIndex(i - 1)!! < curTime!! && curTime!! <= it[i]) {
                                         append(SpannableString(str).apply {
                                             if (textColor != null) {
