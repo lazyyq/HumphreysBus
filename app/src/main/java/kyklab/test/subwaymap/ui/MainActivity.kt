@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.PointF
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.GestureDetector
@@ -73,6 +74,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        const val REQ_CODE_SELECT_STOP = 1
+        const val RESULT_STOP_SELECTED = 100
 
         var etCustomTime: EditText? = null
     }
@@ -88,7 +91,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         ivAllBuses.setOnClickListener {
-            startActivity(Intent(this, AllBusAndStopActivity::class.java))
+            startActivityForResult(
+                Intent(this, AllBusAndStopActivity::class.java),
+                REQ_CODE_SELECT_STOP
+            )
         }
 
         val locationRequest = LocationRequest.create()?.apply {
@@ -226,6 +232,33 @@ class MainActivity : AppCompatActivity() {
         if (isLoadingLocation) {
             isLoadingLocation = false
             hideLocationProgressBar()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQ_CODE_SELECT_STOP) {
+            if (resultCode == RESULT_STOP_SELECTED) {
+                data?.let {
+                    val coord = PointF(
+                        data.getFloatExtra("xCor", -1f),
+                        data.getFloatExtra("yCor", -1f)
+                    )
+                    val id = data.getIntExtra("stopId", -1)
+                    val animationBuilder =
+                        if (ivMap.scale < 1.0f)
+                            ivMap.animateScaleAndCenter(1f, coord)
+                        else
+                            ivMap.animateCenter(coord)
+                    animationBuilder?.withDuration(500)?.start()
+                    setStopSelectionPin(coord)
+                    // Workaround for IllegalStateException
+                    Handler(Looper.getMainLooper()).post {
+                        showStopInfoDialog(id)
+                    }
+                }
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
         }
     }
 

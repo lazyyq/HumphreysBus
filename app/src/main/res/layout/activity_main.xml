@@ -46,8 +46,7 @@
                     android:layout_marginStart="8dp"
                     android:scaleType="fitCenter"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_bus"
-                    app:tint="@color/black" />
+                    android:src="@drawable/ic_bus" />
             </LinearLayout>
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>

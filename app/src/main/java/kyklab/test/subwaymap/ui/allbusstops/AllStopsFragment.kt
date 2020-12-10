@@ -1,5 +1,6 @@
 package kyklab.test.subwaymap.ui.allbusstops
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_stops.view.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
+import kyklab.test.subwaymap.ui.MainActivity
 
 class AllStopsFragment : Fragment() {
     override fun onCreateView(
@@ -35,6 +37,18 @@ class AllStopsFragment : Fragment() {
             val tvStop: TextView = itemView.findViewById(R.id.tvStop)
 
             init {
+                itemView.setOnClickListener {
+                    val stop = items[adapterPosition]
+                    val intent = Intent().apply {
+                        putExtra("xCor", stop.xCenter.toFloat())
+                        putExtra("yCor", stop.yCenter.toFloat())
+                        putExtra("stopId", stop.id)
+                    }
+                    activity?.run {
+                        setResult(MainActivity.RESULT_STOP_SELECTED, intent)
+                        finish()
+                    }
+                }
             }
         }
 

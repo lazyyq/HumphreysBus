@@ -73,6 +73,7 @@ object BusUtils {
         val stopName: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_NAME)
         val xCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_X_CENTER)
         val yCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+        // TODO: Fix stops without coordinates
 
         fun checkDistanceToStop(x: Float, y: Float): Float? {
             val distance = (x - xCenter).square() + (y - yCenter).square()
