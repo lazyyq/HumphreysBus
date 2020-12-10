@@ -7,6 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
 import kyklab.test.subwaymap.R
+import kyklab.test.subwaymap.reduceDragSensitivity
 
 class AllBusAndStopActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,6 +15,7 @@ class AllBusAndStopActivity : FragmentActivity() {
         setContentView(R.layout.activity_all_bus_stop_view)
 
         vp.adapter = ScreenSlidePagerAdapter(this)
+        vp.reduceDragSensitivity()
         TabLayoutMediator(tab, vp) { tab, position ->
             tab.text = when (position) {
                 0 -> "Bus"

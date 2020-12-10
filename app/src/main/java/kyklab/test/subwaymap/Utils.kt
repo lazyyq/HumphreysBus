@@ -8,6 +8,8 @@ import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.ColorInt
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import kotlin.math.roundToInt
 
 
@@ -70,6 +72,18 @@ fun String.insert(position: Int, str: CharSequence): String =
         append(str)
         append(this@insert.substring(position, this@insert.length))
     }.toString()
+
+// https://al-e-shevelev.medium.com/how-to-reduce-scroll-sensitivity-of-viewpager2-widget-87797ad02414
+fun ViewPager2.reduceDragSensitivity() {
+    val rvField = ViewPager2::class.java.getDeclaredField("mRecyclerView")
+    rvField.isAccessible = true
+    val rv = rvField.get(this) as RecyclerView
+
+    val touchSlopField = RecyclerView::class.java.getDeclaredField("mTouchSlop")
+    touchSlopField.isAccessible = true
+    val touchSlop = touchSlopField.get(rv) as Int
+    touchSlopField.set(rv, touchSlop * 2)
+}
 
 class RoundedBackgroundSpan(
     private val context: Context,
