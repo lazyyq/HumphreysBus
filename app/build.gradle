@@ -49,4 +49,5 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:17.1.0'
 
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
+    implementation 'com.otaliastudios:zoomlayout:1.8.0'
 }
