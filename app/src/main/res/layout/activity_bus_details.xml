@@ -39,49 +39,26 @@
     <com.otaliastudios.zoom.ZoomLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:transformation="centerInside"
-        app:transformationGravity="auto"
         app:alignment="center"
-        app:overScrollHorizontal="true"
-        app:overScrollVertical="true"
-        app:overPinchable="true"
-        app:horizontalPanEnabled="true"
-        app:verticalPanEnabled="true"
-        app:zoomEnabled="true"
-        app:flingEnabled="true"
-        app:scrollEnabled="true"
-        app:oneFingerScrollEnabled="true"
-        app:twoFingersScrollEnabled="true"
-        app:threeFingersScrollEnabled="true"
-        app:minZoom="20"
-        app:minZoomType="zoom"
-        app:maxZoom="50"
-        app:maxZoomType="zoom"
+        app:overScrollHorizontal="false"
+        app:overScrollVertical="false"
         app:animationDuration="280"
         app:hasClickableChildren="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar">
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:maxZoom="2"
+        app:minZoom="0.75"
+        app:transformation="none"
+        app:transformationGravity="top">
 
-        <ScrollView
-            android:id="@+id/verticalScrollView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <HorizontalScrollView
-                android:id="@+id/horizontalScrollView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:id="@+id/timeTableContainer"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:divider="?android:attr/listDivider"
-                    android:orientation="horizontal"
-                    android:showDividers="middle" />
-            </HorizontalScrollView>
-        </ScrollView>
+        <LinearLayout
+            android:id="@+id/timeTableContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:divider="?android:attr/listDivider"
+            android:orientation="horizontal"
+            android:showDividers="middle" />
     </com.otaliastudios.zoom.ZoomLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

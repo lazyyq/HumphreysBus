@@ -13,7 +13,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.bold
 import androidx.core.text.scale
-import androidx.core.view.marginTop
 import com.google.android.material.textview.MaterialTextView
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kyklab.test.subwaymap.R
@@ -146,41 +145,11 @@ class BusDetailsActivity : AppCompatActivity() {
 //                setLineSpacing(1f, 2f)
                 }
                 runOnUiThread {
-                    if (stopToHighlightIndex == null) {
-                        progressBar.visibility = View.INVISIBLE
-                    }
                     timeTableContainer.addView(textView)
                 }
             }
-
-            // Scroll to instance with closest bus for selected stop
-//        scrollToView(scrollView, closestBusTextView!!)
-//        Handler().postDelayed({ scrollView.scrollTo(closestBusTextView!!.left, 0) }, 500)
-            if (stopToHighlightIndex != null) {
-                horizontalScrollView.viewTreeObserver.addOnGlobalLayoutListener(object :
-                    ViewTreeObserver.OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val scrollX =
-                            (closestBusTextView!!.left + closestBusTextView!!.right - horizontalScrollView.width) / 2
-//                val scrollX = closestBusTextView!!.left
-                        val baseHeight =
-                            closestBusTextView!!.bottom - closestBusTextView!!.top/*-verticalScrollView.height*/
-                        val scrollYnew = /*closestBusTextView!!.top+*/
-                            (if (baseHeight < 0) 0 else baseHeight) * (y1!! / y2!!)/*closestBusTextView!!.lineCount*/
-//                scrollView.scrollTo(scrollX, 0)
-//                Handler().postDelayed (
-//                    {
-                        horizontalScrollView.smoothScrollTo(scrollX, 0)
-//                        timeTableContainer.scrollTo(0, scrollYnew.toInt())
-                        verticalScrollView.smoothScrollTo(
-                            0,
-                            y1!!.toInt() - verticalScrollView.marginTop - (verticalScrollView.height * 0.4).toInt()
-                        )
-//                    }, 1000)
-                        progressBar.visibility = View.INVISIBLE
-                        horizontalScrollView.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
-                })
+            runOnUiThread {
+                progressBar.visibility = View.INVISIBLE
             }
         }.start()
     }
