@@ -15,7 +15,7 @@ import androidx.core.text.bold
 import androidx.core.text.italic
 import androidx.core.text.scale
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_stop_info_timetable_item.view.*
+import kotlinx.android.synthetic.main.fragment_stop_info_timetable_column_item.view.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
@@ -82,8 +82,8 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                 }
 
                 // Prepare new timetable item
-                val timeTableItem = LayoutInflater.from(context)
-                    .inflate(R.layout.fragment_stop_info_timetable_item, null).apply {
+                val timeTableColumnItem = LayoutInflater.from(context)
+                    .inflate(R.layout.fragment_stop_info_timetable_column_item, null).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.MATCH_PARENT, 1f
@@ -169,15 +169,17 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                             }
                         }
 
-                        tvPrevCurrNextStop.setOnClickListener { v: View ->
+                        val showBusScheduledOnClick = { v: View ->
                             StopInfoDialog.showBusSchedules(
                                 context as Activity,
                                 bus.name,
                                 stopIndex
                             )
                         }
+                        tvTimeTable.setOnClickListener(showBusScheduledOnClick)
+                        tvPrevCurrNextStop.setOnClickListener(showBusScheduledOnClick)
                     }
-                tables.add(timeTableItem)
+                tables.add(timeTableColumnItem)
             }
             for (table in tables) {
                 table.findViewById<View>(R.id.tvPrevCurrNextStop).layoutParams.height =

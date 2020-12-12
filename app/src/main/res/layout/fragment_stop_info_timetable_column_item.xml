@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="0dp"
     android:layout_height="match_parent"
     android:layout_weight="1"
     android:clickable="true"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:layout_width="match_parent">
 
     <TextView
         android:id="@+id/tvPrevCurrNextStop"
@@ -12,9 +14,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
         android:gravity="center"
         android:lineSpacingMultiplier="1.2"
-        android:text="Stops information"
+        android:text="Previous Stop\nCurrent Stop\nNext Stop"
         android:textSize="16sp" />
 
     <ScrollView
@@ -32,10 +36,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|top"
             android:gravity="start"
+            android:lineSpacingMultiplier="1.5"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
-            android:lineSpacingMultiplier="1.5"
-            android:text="TimeTable"
+            android:text="12:00\n13:00\n14:00\n..."
             android:textSize="18sp" />
     </ScrollView>
 </LinearLayout>
