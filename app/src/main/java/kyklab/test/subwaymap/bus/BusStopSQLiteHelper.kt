@@ -123,8 +123,10 @@ object BusStopSQLiteHelper :
     }
 
     override fun close() {
-        myDatabase.close()
-        isDBOpen = false
+        if (isDBOpen) {
+            myDatabase.close()
+            isDBOpen = false
+        }
         super.close()
     }
 }
