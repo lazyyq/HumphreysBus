@@ -1,6 +1,7 @@
 package kyklab.test.subwaymap.ui
 
 import android.content.res.ColorStateList
+import android.graphics.Matrix
 import android.graphics.Rect
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.bold
 import androidx.core.text.scale
 import com.google.android.material.textview.MaterialTextView
+import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.Bus
@@ -52,6 +54,19 @@ class BusDetailsActivity : AppCompatActivity() {
             finish()
         }
 
+        zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
+            override fun onIdle(engine: ZoomEngine) {
+
+            }
+
+            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
+                val y: Float = -(zoomLayoutStopName.engine.computeVerticalScrollRange()
+                    .toFloat() - zoomLayoutStopName.engine.containerHeight) / 4 // Why 4??
+                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, y, false)
+            }
+        })
+        // Block touch for stop names to prevent scrolling
+        zoomLayoutStopName.setOnTouchListener { _, _ -> true }
         showBusTimeTable()
     }
 
@@ -144,8 +159,18 @@ class BusDetailsActivity : AppCompatActivity() {
 //                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
 //                setLineSpacing(1f, 2f)
                 }
+                val textViewStopName = MaterialTextView(this).apply {
+                    textView.measure(0, 0)
+                    text = "Text"
+                    layoutParams = LinearLayout.LayoutParams(
+                        textView.measuredWidth,
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    gravity = Gravity.CENTER
+                }
                 runOnUiThread {
                     timeTableContainer.addView(textView)
+                    stopNameContainer.addView(textViewStopName)
                 }
             }
             runOnUiThread {

@@ -37,19 +37,43 @@
         app:layout_constraintTop_toBottomOf="@+id/ivBus" />
 
     <com.otaliastudios.zoom.ZoomLayout
+        android:id="@+id/zoomLayoutStopName"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="36dp"
         app:alignment="center"
-        app:overScrollHorizontal="false"
-        app:overScrollVertical="false"
-        app:animationDuration="280"
         app:hasClickableChildren="false"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/progressBar"
         app:maxZoom="2"
         app:minZoom="0.75"
+        app:overScrollHorizontal="false"
+        app:overScrollVertical="false"
+        app:transformation="none"
+        app:transformationGravity="center">
+
+        <LinearLayout
+            android:id="@+id/stopNameContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:orientation="horizontal" />
+    </com.otaliastudios.zoom.ZoomLayout>
+
+    <com.otaliastudios.zoom.ZoomLayout
+        android:id="@+id/zoomLayoutTimeTable"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:alignment="center"
+        app:animationDuration="280"
+        app:hasClickableChildren="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/zoomLayoutStopName"
+        app:maxZoom="2"
+        app:minZoom="0.75"
+        app:overScrollHorizontal="false"
+        app:overScrollVertical="false"
         app:transformation="none"
         app:transformationGravity="top">
 
