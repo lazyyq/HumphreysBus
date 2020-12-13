@@ -3,25 +3,25 @@ package kyklab.test.subwaymap.ui
 import android.content.res.ColorStateList
 import android.graphics.Matrix
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.view.*
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.text.bold
-import androidx.core.text.scale
+import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
-import kyklab.test.subwaymap.R
+import kotlinx.android.synthetic.main.activity_bus_details_detail_item.view.*
+import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.calcTimeLeft
-import kyklab.test.subwaymap.dpToPx
 import java.util.*
 
 
@@ -109,69 +109,116 @@ class BusDetailsActivity : AppCompatActivity() {
             var tempPosition: Int = 0
             var y1: Float? = null
             var y2: Float? = null
-            for (busInstance in busToShow!!.instances) {
-                val textView = MaterialTextView(this).apply {
+
+            // TextViews in header that display stop names
+            val stopNameContainerColumnItems =
+                Array<TextView>(busToShow!!.instances[0].stops.size) { i ->
+                    MaterialTextView(this).apply {
+                        text =
+                            BusUtils.getBusStop(busToShow!!.instances[0].stops[i].stopNo)?.stopName
+                                ?: "Unknown"
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT
+                        )
+                        gravity = Gravity.CENTER
+                        setTypeface(typeface, Typeface.BOLD)
+                    }
+                }
+            // Columns, which are LinearLayout, that contain list of stop time and time left
+            val stopColumns = Array(busToShow!!.instances[0].stops.size) {
+                LinearLayout(this).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        setPadding(
-                            dpToPx(this@BusDetailsActivity, 16f),
-                            0,
-                            dpToPx(this@BusDetailsActivity, 16f),
-                            0
-                        )
-                    }
-                    gravity = Gravity.CENTER
-
-                    val strStops = SpannableStringBuilder()
-                    for ((i, stop) in busInstance.stops.withIndex()) {
-                        val stopTime = stop.stopTime.toInt()
-                        val timeLeft = calcTimeLeft(curTime, stopTime)
-                        if (i == stopToHighlightIndex) {
-                            if (closestBusTimeLeft > timeLeft) {
-                                closestBusTimeLeft = timeLeft
-                                closestBusTextView = this
-                                text = strStops
-                                this.measure(0, 0)
-                                y1 = this.measuredHeight.toFloat()
-                                scrollY = strStops.lines().size
-                            }
-                            strStops.bold {
-                                scale(1.2f) {
-                                    append(
-                                        "${
-                                            BusUtils.getStopWithStopNo(
-                                                stop.stopNo
-                                            )?.stopName ?: "Unknown"
-                                        } (${stop.stopTime})\n($timeLeft mins)\n\n"
-                                    )
-                                }
-                            }
-                        } else {
-                            strStops.append("${BusUtils.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    dividerDrawable = ResourcesCompat.getDrawable(
+                        resources, getResId(android.R.attr.listDivider), context.theme
+                    )
+                    showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
+                }
+            }
+            for (busInstance in busToShow!!.instances) {
+                for ((i, stop) in busInstance.stops.withIndex()) {
+                    val v = LayoutInflater.from(this)
+                        .inflate(
+                            R.layout.activity_bus_details_detail_item,
+                            stopColumns[i], false
+                        ).apply {
+                            this.tvStopTime.text = stop.stopTime.insert(2, ":")
+                            this.tvTimeLeft.text = minToHH_mm(
+                                calcTimeLeft(curTime, stop.stopTime.toInt())
+                            ) + " mins left"
+                            layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT
                         }
+                    stopColumns[i].addView(v)
+                }
+            }
+            for (i in stopColumns.indices) {
+                runOnUiThread {
+                    timeTableContainer.addView(stopColumns[i])
+                    // Match column header width with column width
+                    stopColumns[i].measure(0, 0)
+                    stopNameContainerColumnItems[i].layoutParams.width =
+                        stopColumns[i].measuredWidth
+                    stopNameContainer.addView(stopNameContainerColumnItems[i])
+                }
+            }
+            /*
+            val textView = MaterialTextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setPadding(
+                        dpToPx(this@BusDetailsActivity, 16f),
+                        0,
+                        dpToPx(this@BusDetailsActivity, 16f),
+                        0
+                    )
+                }
+                gravity = Gravity.CENTER
+
+                val strStops = SpannableStringBuilder()
+                for ((i, stop) in busInstance.stops.withIndex()) {
+                    val stopTime = stop.stopTime.toInt()
+                    val timeLeft = calcTimeLeft(curTime, stopTime)
+                    if (i == stopToHighlightIndex) {
+                        if (closestBusTimeLeft > timeLeft) {
+                            closestBusTimeLeft = timeLeft
+                            closestBusTextView = this
+                            text = strStops
+                            this.measure(0, 0)
+                            y1 = this.measuredHeight.toFloat()
+                            scrollY = strStops.lines().size
+                        }
+                        strStops.bold {
+                            scale(1.2f) {
+                                append(
+                                    "${
+                                        BusUtils.getStopWithStopNo(
+                                            stop.stopNo
+                                        )?.stopName ?: "Unknown"
+                                    } (${stop.stopTime})\n($timeLeft mins)\n\n"
+                                )
+                            }
+                        }
+                    } else {
+                        strStops.append("${BusUtils.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
                     }
-                    text = strStops
-                    this.measure(0, 0)
-                    y2 = this.measuredHeight.toFloat()
-                    scrollYFinal = strStops.lines().size
+                }
+                text = strStops
+                this.measure(0, 0)
+                y2 = this.measuredHeight.toFloat()
+                scrollYFinal = strStops.lines().size
 //                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
 //                setLineSpacing(1f, 2f)
-                }
-                val textViewStopName = MaterialTextView(this).apply {
-                    textView.measure(0, 0)
-                    text = "Text"
-                    layoutParams = LinearLayout.LayoutParams(
-                        textView.measuredWidth,
-                        LinearLayout.LayoutParams.MATCH_PARENT
-                    )
-                    gravity = Gravity.CENTER
-                }
-                runOnUiThread {
-                    timeTableContainer.addView(textView)
-                    stopNameContainer.addView(textViewStopName)
-                }
+            }
+            */
+            runOnUiThread {
+//                    timeTableContainer.addView(textView)
+//                    stopNameContainer.addView(textViewStopName)
             }
             runOnUiThread {
                 progressBar.visibility = View.INVISIBLE

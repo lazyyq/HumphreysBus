@@ -1,15 +1,19 @@
 package kyklab.test.subwaymap
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -37,6 +41,13 @@ fun calcTimeLeft(from: Int, to: Int): Int {
     val toMins = toH * 60 + toM
 
     return toMins - fromMins
+}
+
+@SuppressLint("SimpleDateFormat")
+fun minToHH_mm(totalMins: Int): String {
+    val cal = Calendar.getInstance()
+    cal.set(Calendar.MINUTE, totalMins)
+    return SimpleDateFormat("HH:mm").format(cal)
 }
 
 private const val xBase = 126.974512
@@ -83,6 +94,12 @@ fun ViewPager2.reduceDragSensitivity() {
     touchSlopField.isAccessible = true
     val touchSlop = touchSlopField.get(rv) as Int
     touchSlopField.set(rv, touchSlop * 2)
+}
+
+fun Context.getResId(attrResId: Int): Int {
+    val typedValue = TypedValue()
+    theme.resolveAttribute(android.R.attr.listDivider, typedValue, true)
+    return typedValue.resourceId
 }
 
 class RoundedBackgroundSpan(
