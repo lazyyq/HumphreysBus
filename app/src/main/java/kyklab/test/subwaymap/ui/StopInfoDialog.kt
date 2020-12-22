@@ -1,11 +1,15 @@
 package kyklab.test.subwaymap.ui
 
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
+import android.widget.FrameLayout
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
@@ -14,7 +18,6 @@ import kyklab.test.subwaymap.bus.BusUtils
 import java.util.*
 
 class StopInfoDialog : BottomSheetDialogFragment() {
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -29,6 +32,16 @@ class StopInfoDialog : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         showBuses()
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return super.onCreateDialog(savedInstanceState).apply {
+            setOnShowListener {
+                // Set bottom sheet dialog background to rounded corner one
+                findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+                    ?.setBackgroundResource(R.drawable.bottom_sheet_dialog_rounded_corner)
+            }
+        }
     }
 
     private fun showBuses() {
@@ -61,6 +74,21 @@ class StopInfoDialog : BottomSheetDialogFragment() {
                 }.attach()
 
                 v.progressBar.visibility = View.GONE
+
+                // Adjust peek (default expanded) height to match that of its contents size
+                v.bottomSheetContents.viewTreeObserver.addOnGlobalLayoutListener(
+                    object : ViewTreeObserver.OnGlobalLayoutListener {
+                        override fun onGlobalLayout() {
+                            val bottomSheetDialog =
+                                dialog?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+                            bottomSheetDialog?.let {
+                                val behavior = BottomSheetBehavior.from(it)
+                                behavior.peekHeight = v.bottomSheetContents.measuredHeight
+                            }
+                            v.bottomSheetContents.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    }
+                )
 
                 /*val pageMarginPx = resources.getDimensionPixelOffset(R.dimen.pageMargin)
             val pagerWidth = resources.getDimensionPixelOffset(R.dimen.pagerWidth)
