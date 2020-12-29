@@ -15,10 +15,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_bus_details_detail_item.view.*
+import kotlinx.coroutines.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
@@ -71,7 +73,7 @@ class BusDetailsActivity : AppCompatActivity() {
     }
 
     private fun showBusTimeTable() {
-        Thread {
+        lifecycleScope.launch(Dispatchers.Default) {
             // TODO: Generify
             var tintColor: Int? = null
             when (busName) {
@@ -86,10 +88,15 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             }
             tintColor?.let {
-                runOnUiThread {
-                    ivBus.imageTintList = ColorStateList.valueOf(resources.getColor(it, this.theme))
+                launch(Dispatchers.Main) {
+                    ivBus.imageTintList = ColorStateList.valueOf(
+                        resources.getColor(
+                            it,
+                            this@BusDetailsActivity.theme
+                        )
+                    )
                     tvBus.text = busName
-                    tvBus.setTextColor(resources.getColor(it, this.theme))
+                    tvBus.setTextColor(resources.getColor(it, this@BusDetailsActivity.theme))
                 }
             }
 
@@ -113,7 +120,7 @@ class BusDetailsActivity : AppCompatActivity() {
             // TextViews in header that display stop names
             val stopNameContainerColumnItems =
                 Array<TextView>(busToShow!!.instances[0].stops.size) { i ->
-                    MaterialTextView(this).apply {
+                    MaterialTextView(this@BusDetailsActivity).apply {
                         text =
                             BusUtils.getBusStop(busToShow!!.instances[0].stops[i].stopNo)?.stopName
                                 ?: "Unknown"
@@ -127,7 +134,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             // Columns, which are LinearLayout, that contain list of stop time and time left
             val stopColumns = Array(busToShow!!.instances[0].stops.size) {
-                LinearLayout(this).apply {
+                LinearLayout(this@BusDetailsActivity).apply {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -141,7 +148,7 @@ class BusDetailsActivity : AppCompatActivity() {
             }
             for (busInstance in busToShow!!.instances) {
                 for ((i, stop) in busInstance.stops.withIndex()) {
-                    val v = LayoutInflater.from(this)
+                    val v = LayoutInflater.from(this@BusDetailsActivity)
                         .inflate(
                             R.layout.activity_bus_details_detail_item,
                             stopColumns[i], false
@@ -156,7 +163,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             }
             for (i in stopColumns.indices) {
-                runOnUiThread {
+                launch(Dispatchers.Main) {
                     timeTableContainer.addView(stopColumns[i])
                     // Match column header width with column width
                     stopColumns[i].measure(0, 0)
@@ -216,14 +223,14 @@ class BusDetailsActivity : AppCompatActivity() {
 //                setLineSpacing(1f, 2f)
             }
             */
-            runOnUiThread {
+            launch(Dispatchers.Main) {
 //                    timeTableContainer.addView(textView)
 //                    stopNameContainer.addView(textViewStopName)
             }
-            runOnUiThread {
+            launch(Dispatchers.Main) {
                 progressBar.visibility = View.INVISIBLE
             }
-        }.start()
+        }
     }
 
     fun scrollToView(scrollView: HorizontalScrollView, view: TextView) {

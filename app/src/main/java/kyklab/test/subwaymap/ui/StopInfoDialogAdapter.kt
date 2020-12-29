@@ -16,13 +16,20 @@ import androidx.core.text.italic
 import androidx.core.text.scale
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_stop_info_timetable_column_item.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.bus.BusUtils.getBusStop
 import java.util.*
 
-class StopInfoDialogAdapter(private val context: Context, adapterItems: List<AdapterItem>) :
+class StopInfoDialogAdapter(
+    private val context: Context,
+    private val scope: CoroutineScope,
+    adapterItems: List<AdapterItem>
+) :
     RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
     val items: List<InternalItem>
 
@@ -52,11 +59,11 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        Thread {
+        scope.launch(Dispatchers.Default) {
             val item = items[position]
             val bus = item.bus
 
-            if (bus.instances.isEmpty()) return@Thread
+            if (bus.instances.isEmpty()) return@launch
 
             val textColor = when (bus.name) {
                 "Red" -> android.R.color.holo_red_dark
@@ -185,7 +192,7 @@ class StopInfoDialogAdapter(private val context: Context, adapterItems: List<Ada
                 table.findViewById<View>(R.id.tvPrevCurrNextStop).layoutParams.height =
                     largestPrevNextStopViewHeight
             }
-            (context as Activity).runOnUiThread {
+            launch(Dispatchers.Main) {
                 for ((index, view) in tables.withIndex()) {
                     holder.container.addView(view)
                     // Add divider

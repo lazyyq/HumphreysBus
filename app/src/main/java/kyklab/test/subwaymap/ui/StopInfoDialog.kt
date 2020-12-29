@@ -9,10 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
 import java.util.*
@@ -54,7 +57,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         val stop = BusUtils.getStopWithId(stopId)
         v.tvStopInfo.text = stop.stopName
 
-        Thread {
+        lifecycleScope.launch(Dispatchers.Default) {
             val items = ArrayList<StopInfoDialogAdapter.AdapterItem>()
             for (bus in BusUtils.buses) {
                 if (bus.instances.isEmpty()) continue
@@ -66,8 +69,8 @@ class StopInfoDialog : BottomSheetDialogFragment() {
                 }
             }
 
-            val adapter = StopInfoDialogAdapter(activity, items)
-            activity.runOnUiThread {
+            val adapter = StopInfoDialogAdapter(activity, lifecycleScope, items)
+            launch(Dispatchers.Main) {
                 v.vpTimeTable.adapter = adapter
                 TabLayoutMediator(v.busTabLayout, v.vpTimeTable) { tab, position ->
                     tab.text = adapter.items[position].bus.name
