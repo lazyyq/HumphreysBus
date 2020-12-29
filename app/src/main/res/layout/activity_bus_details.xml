@@ -50,16 +50,15 @@
         app:overScrollHorizontal="false"
         app:overScrollVertical="false"
         app:transformation="none"
-        app:transformationGravity="center">
+        app:transformationGravity="left">
 
         <LinearLayout
             android:id="@+id/stopNameContainer"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:divider="@drawable/list_divider_material_2dp"
-            android:dividerPadding="4dp"
             android:orientation="horizontal"
-            android:showDividers="middle"/>
+            android:showDividers="middle" />
     </com.otaliastudios.zoom.ZoomLayout>
 
     <com.otaliastudios.zoom.ZoomLayout

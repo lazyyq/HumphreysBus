@@ -1,12 +1,9 @@
 package kyklab.test.subwaymap
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import android.icu.text.SimpleDateFormat
-import android.icu.util.Calendar
 import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
@@ -43,12 +40,17 @@ fun calcTimeLeft(from: Int, to: Int): Int {
     return toMins - fromMins
 }
 
+fun minToHH_mm(totalMins: Int) =
+    "${(totalMins / 60 % 24).format("%02d")}:${(totalMins % 60).format("%02d")}"
+
+/*
 @SuppressLint("SimpleDateFormat")
 fun minToHH_mm(totalMins: Int): String {
     val cal = Calendar.getInstance()
     cal.set(Calendar.MINUTE, totalMins)
     return SimpleDateFormat("HH:mm").format(cal)
 }
+*/
 
 private const val xBase = 126.974512
 private const val yBase = 36.945053

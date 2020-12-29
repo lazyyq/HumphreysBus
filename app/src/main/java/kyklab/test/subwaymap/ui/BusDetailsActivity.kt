@@ -9,17 +9,17 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
-import kotlinx.android.synthetic.main.activity_bus_details_detail_item.view.*
+import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
 import kotlinx.coroutines.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
@@ -133,24 +133,43 @@ class BusDetailsActivity : AppCompatActivity() {
                     }
                 }
             // Columns, which are LinearLayout, that contain list of stop time and time left
-            val stopColumns = Array(busToShow!!.instances[0].stops.size) {
-                LinearLayout(this@BusDetailsActivity).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-                    orientation = LinearLayout.VERTICAL
-                    dividerDrawable = ResourcesCompat.getDrawable(
-                        resources, getResId(android.R.attr.listDivider), context.theme
-                    )
-                    showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
+            val stopColumns = Array(busToShow!!.instances[0].stops.size) { stopIndex ->
+                LayoutInflater.from(this@BusDetailsActivity).inflate(
+                    R.layout.activity_bus_details_column, timeTableContainer, false
+                ).apply {
+                    val timeText = StringBuilder()
+                    val timeLeftText = StringBuilder()
+                    for (i in busToShow!!.instances.indices) {
+                        val time = busToShow!!.instances[i].stops[stopIndex].stopTime
+                        timeText.append(time.insert(2, ":") + '\n')
+                        timeLeftText.append(
+                            minToHH_mm(
+                                calcTimeLeft(curTime, time.toInt())
+                            ) + " mins left" + '\n'
+                        )
+                    }
+                    tvStopTimeColumn.text = timeText
+                    tvTimeLeftColumn.text = timeLeftText
                 }
+
+
+                /*LinearLayout(this@BusDetailsActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = LinearLayout.VERTICAL
+                dividerDrawable = ResourcesCompat.getDrawable(
+                    resources, getResId(android.R.attr.listDivider), context.theme
+                )
+                showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
+            }*/
             }
-            for (busInstance in busToShow!!.instances) {
+            /*for (busInstance in busToShow!!.instances) {
                 for ((i, stop) in busInstance.stops.withIndex()) {
                     val v = LayoutInflater.from(this@BusDetailsActivity)
                         .inflate(
-                            R.layout.activity_bus_details_detail_item,
+                            R.layout.activity_bus_details_column,
                             stopColumns[i], false
                         ).apply {
                             this.tvStopTime.text = stop.stopTime.insert(2, ":")
@@ -161,15 +180,20 @@ class BusDetailsActivity : AppCompatActivity() {
                         }
                     stopColumns[i].addView(v)
                 }
-            }
-            for (i in stopColumns.indices) {
-                launch(Dispatchers.Main) {
+            }*/
+            launch(Dispatchers.Main) {
+                for (i in stopColumns.indices) {
                     timeTableContainer.addView(stopColumns[i])
-                    // Match column header width with column width
-                    stopColumns[i].measure(0, 0)
-                    stopNameContainerColumnItems[i].layoutParams.width =
-                        stopColumns[i].measuredWidth
-                    stopNameContainer.addView(stopNameContainerColumnItems[i])
+                    stopColumns[i].viewTreeObserver.addOnGlobalLayoutListener(object :
+                        ViewTreeObserver.OnGlobalLayoutListener {
+                        override fun onGlobalLayout() {
+                            // Match column header width with column width
+                            stopNameContainerColumnItems[i].layoutParams.width =
+                                stopColumns[i].width
+                            stopNameContainer.addView(stopNameContainerColumnItems[i])
+                            stopColumns[i].viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    })
                 }
             }
             /*
