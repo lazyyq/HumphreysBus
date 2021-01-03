@@ -118,7 +118,7 @@ fun ViewPager2.reduceDragSensitivity() {
 
 fun Context.getResId(attrResId: Int): Int {
     val typedValue = TypedValue()
-    theme.resolveAttribute(android.R.attr.listDivider, typedValue, true)
+    theme.resolveAttribute(attrResId, typedValue, true)
     return typedValue.resourceId
 }
 
