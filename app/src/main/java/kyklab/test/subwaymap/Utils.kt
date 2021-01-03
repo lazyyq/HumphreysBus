@@ -1,9 +1,12 @@
 package kyklab.test.subwaymap
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.database.Cursor
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.icu.text.SimpleDateFormat
 import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
@@ -22,6 +25,10 @@ fun dpToPx(context: Context, dp: Float): Int {
     val dm = context.resources.displayMetrics
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, dm).toInt()
 }
+
+val currentTimeHHmm: String
+    @SuppressLint("SimpleDateFormat")
+    get() = SimpleDateFormat("HHmm").format(Date())
 
 /**
  * Calculate minutes in hhmm format between `from` to `to`
@@ -85,6 +92,17 @@ fun String.insert(position: Int, str: CharSequence): String =
         append(str)
         append(this@insert.substring(position, this@insert.length))
     }.toString()
+
+inline fun <T : Cursor> T.forEachCursor(block: (T) -> Unit): T {
+    this.use {
+        if (moveToFirst()) {
+            do {
+                block(this)
+            } while (moveToNext())
+        }
+    }
+    return this
+}
 
 // https://al-e-shevelev.medium.com/how-to-reduce-scroll-sensitivity-of-viewpager2-widget-87797ad02414
 fun ViewPager2.reduceDragSensitivity() {

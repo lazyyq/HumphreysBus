@@ -145,7 +145,7 @@ class BusDetailsActivity : AppCompatActivity() {
                         timeLeftText.append(
                             minToHH_mm(
                                 calcTimeLeft(curTime, time.toInt())
-                            ) + " mins left" + '\n'
+                            ) + " left" + '\n'
                         )
                     }
                     tvStopTimeColumn.text = timeText

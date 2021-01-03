@@ -1,7 +1,10 @@
 package kyklab.test.subwaymap.bus
 
 import android.database.Cursor
+import android.graphics.Color
 import android.util.Log
+import androidx.core.database.getIntOrNull
+import kyklab.test.subwaymap.forEachCursor
 
 object BusUtils {
     private const val TAG = "BusUtils"
@@ -20,55 +23,45 @@ object BusUtils {
         list
     }
     val buses: MutableList<Bus> by lazy {
-        val list = ArrayList<Bus>(5)
+        val busList = ArrayList<Bus>(5)
         if (BusStopSQLiteHelper.isDBOpen) {
             with(BusStopSQLiteHelper) {
-                query(DB_TABLE_BUSES, arrayOf("name"), orderBy = "buses._id ASC").use {
-                    if (it.moveToFirst()) {
-                        do {
-                            // Add a new bus
-                            val busName = it.getString(0)
-                            val instances = java.util.ArrayList<Bus.BusInstance>(100)
-                            //SELECT stop_points FROM buses WHERE name="Red";
-                            query(
-                                "buses", arrayOf("stop_points"),
-                                "name=\"$busName\"", orderBy = "buses._id ASC"
-                            ).use { c1 ->
-                                if (c1.moveToFirst()) {
-                                    do {
-                                        val stopPoints = c1.getString(0).split(';')
-                                        //SELECT stop_times FROM bus_details WHERE bus_name="Red";
-                                        query(
-                                            "bus_details",
-                                            arrayOf("stop_times"),
-                                            "bus_name=\"$busName\""
-                                        ).use { c2 ->
-                                            // Create new bus instances, with stopPoints and newly created stopTimes
-                                            if (c2.moveToFirst()) {
-                                                do {
-                                                    // Create a new instance
-                                                    val stopTimes = c2.getString(0).split(';')
-                                                    if (stopPoints.size != stopTimes.size) continue
-                                                    val stops = java.util.ArrayList<Bus.Stop>()
-                                                    for (i in stopPoints.indices) {
-                                                        stops.add(
-                                                            Bus.Stop(stopPoints[i], stopTimes[i])
-                                                        )
-                                                    }
-                                                    instances.add(Bus.BusInstance(stops))
-                                                } while (c2.moveToNext())
-                                            }
-                                        }
-                                    } while (c1.moveToNext())
-                                }
-                            }
-                            list.add(Bus(busName, instances))
-                        } while (it.moveToNext())
+                query(
+                    table = DB_TABLE_BUSES, columns = arrayOf("name", "stop_points", "color"),
+                    orderBy = "buses._id ASC"
+                ).forEachCursor {
+                    // Attributes for a new bus
+                    val busName = it.getString(0)
+                    val stopsTemp = it.getString(1).split(';')
+                    val busStops = ArrayList<BusStop>(stopsTemp.size)
+                    stopsTemp.forEach { stopNo ->
+                        val index = stops.binarySearch { s -> s.stopNo.compareTo(stopNo) }
+                        if (index > -1) busStops.add(stops[index])
                     }
+                    val instances = ArrayList<Bus.BusInstance>(100)
+                    val busColorRes = Color.parseColor(it.getString(2))
+
+                    query(
+                        table = "bus_details",
+                        columns = arrayOf("stop_times", "is_holiday"),
+                        selection = "name=\"$busName\"",
+                        orderBy = "bus_details._id ASC"
+                    ).forEachCursor { c1 ->
+                        val stopTimes = ArrayList(c1.getString(0).split(';'))
+                        if (stopTimes.size == busStops.size) {
+                            val isHoliday =
+                                when (c1.getIntOrNull(1)) {
+                                    1 -> true
+                                    else -> false
+                                }
+                            instances.add(Bus.BusInstance(stopTimes, isHoliday))
+                        }
+                    }
+                    busList.add(Bus(busName, busColorRes, busStops, instances))
                 }
             }
         }
-        list
+        busList
     }
 
     init {
