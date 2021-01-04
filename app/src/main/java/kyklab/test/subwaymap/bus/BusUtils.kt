@@ -39,7 +39,7 @@ object BusUtils {
                         if (index > -1) busStops.add(stops[index])
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
-                    val busColorRes = Color.parseColor(it.getString(2))
+                    val busColorInt = Color.parseColor(it.getString(2))
 
                     query(
                         table = "bus_details",
@@ -57,7 +57,7 @@ object BusUtils {
                             instances.add(Bus.BusInstance(stopTimes, isHoliday))
                         }
                     }
-                    busList.add(Bus(busName, busColorRes, busStops, instances))
+                    busList.add(Bus(busName, busColorInt, busStops, instances))
                 }
             }
         }

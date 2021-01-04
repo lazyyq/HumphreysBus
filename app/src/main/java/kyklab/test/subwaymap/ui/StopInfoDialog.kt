@@ -61,7 +61,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
             val items = ArrayList<StopInfoDialogAdapter.AdapterItem>()
             for (bus in BusUtils.buses) {
                 if (bus.instances.isEmpty()) continue
-                for (s in bus.instances[0].stops) {
+                for (s in bus.stopPoints) {
                     if (s.stopNo == stop.stopNo) {
                         items.add(StopInfoDialogAdapter.AdapterItem(bus, stop.stopNo))
                         break

@@ -1,7 +1,10 @@
 package kyklab.test.subwaymap.bus
 
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+
 data class Bus(
-    val name: String, val colorRes: Int,
+    val name: String, @ColorInt val colorInt: Int,
     val stopPoints: List<BusUtils.BusStop>,
     val instances: List<BusInstance>
 ) {

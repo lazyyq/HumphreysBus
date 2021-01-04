@@ -1,6 +1,7 @@
 package kyklab.test.subwaymap.ui
 
 import android.content.res.ColorStateList
+import android.database.Cursor
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.Typeface
@@ -34,7 +35,7 @@ class BusDetailsActivity : AppCompatActivity() {
 
     private var busName: String? = null
     private var stopToHighlightIndex: Int? = null
-    private var busToShow: Bus? = null
+    private lateinit var busToShow: Bus
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,15 +45,15 @@ class BusDetailsActivity : AppCompatActivity() {
 
         busName = intent.extras?.get("busname") as? String
         stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
-
-        for (b in BusUtils.buses) {
-            if (b.name == busName) {
-                busToShow = b
-                break
+        when (val found = BusUtils.buses.find { b -> b.name == busName }) {
+            null -> {
+                toast("Bus not found")
+                finish()
             }
+            else -> busToShow = found
         }
-        if (busToShow == null || busToShow!!.instances.isEmpty()) {
-            Toast.makeText(this, "Bus not found", Toast.LENGTH_SHORT).show()
+        if (busToShow.instances.isEmpty()) {
+            toast("No schedule for bus $busName available")
             finish()
         }
 
@@ -74,56 +75,24 @@ class BusDetailsActivity : AppCompatActivity() {
 
     private fun showBusTimeTable() {
         lifecycleScope.launch(Dispatchers.Default) {
-            // TODO: Generify
-            var tintColor: Int? = null
-            when (busName) {
-                "Red" -> { // Red
-                    tintColor = android.R.color.holo_red_dark
-                }
-                "Blue" -> {  // Blue
-                    tintColor = android.R.color.holo_blue_dark
-                }
-                "Green" -> { // Green
-                    tintColor = android.R.color.holo_green_dark
-                }
-            }
-            tintColor?.let {
+            busToShow.colorInt.let {
                 launch(Dispatchers.Main) {
-                    ivBus.imageTintList = ColorStateList.valueOf(
-                        resources.getColor(
-                            it,
-                            this@BusDetailsActivity.theme
-                        )
-                    )
+                    ivBus.imageTintList = ColorStateList.valueOf(it)
                     tvBus.text = busName
                     tvBus.setTextColor(resources.getColor(it, this@BusDetailsActivity.theme))
                 }
             }
 
-            // Get current time
-            val sdfWithoutColon = SimpleDateFormat("HHmm")
-            val curTime: Int
-            MainActivity.etCustomTime!!.text.toString().let {
-                curTime = if (it == "") sdfWithoutColon.format(
-                    Date()
-                ).toInt() else it.toInt()
+            val curTime: Int = when(val customTime = MainActivity.etCustomTime!!.text.toString()) {
+                "" -> currentTimeHHmm.toInt()
+                else -> customTime.toInt()
             }
-
-            var closestBusTimeLeft = 1440
-            var closestBusTextView: TextView? = null
-            var scrollY = 0
-            var scrollYFinal = 0
-            var tempPosition: Int = 0
-            var y1: Float? = null
-            var y2: Float? = null
 
             // TextViews in header that display stop names
             val stopNameContainerColumnItems =
-                Array<TextView>(busToShow!!.instances[0].stops.size) { i ->
+                Array<TextView>(busToShow.stopPoints.size) { i ->
                     MaterialTextView(this@BusDetailsActivity).apply {
-                        text =
-                            BusUtils.getBusStop(busToShow!!.instances[0].stops[i].stopNo)?.stopName
-                                ?: "Unknown"
+                        text = busToShow.stopPoints[i].stopName
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
                             LinearLayout.LayoutParams.MATCH_PARENT
@@ -133,14 +102,14 @@ class BusDetailsActivity : AppCompatActivity() {
                     }
                 }
             // Columns, which are LinearLayout, that contain list of stop time and time left
-            val stopColumns = Array(busToShow!!.instances[0].stops.size) { stopIndex ->
+            val stopColumns = Array(busToShow.stopPoints.size) { stopIndex ->
                 LayoutInflater.from(this@BusDetailsActivity).inflate(
                     R.layout.activity_bus_details_column, timeTableContainer, false
                 ).apply {
                     val timeText = StringBuilder()
                     val timeLeftText = StringBuilder()
-                    for (i in busToShow!!.instances.indices) {
-                        val time = busToShow!!.instances[i].stops[stopIndex].stopTime
+                    for (i in busToShow.instances.indices) {
+                        val time = busToShow.instances[i].stopTimes[stopIndex]
                         timeText.append(time.insert(2, ":") + '\n')
                         timeLeftText.append(
                             minToHH_mm(
@@ -151,36 +120,7 @@ class BusDetailsActivity : AppCompatActivity() {
                     tvStopTimeColumn.text = timeText
                     tvTimeLeftColumn.text = timeLeftText
                 }
-
-
-                /*LinearLayout(this@BusDetailsActivity).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-                orientation = LinearLayout.VERTICAL
-                dividerDrawable = ResourcesCompat.getDrawable(
-                    resources, getResId(android.R.attr.listDivider), context.theme
-                )
-                showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
-            }*/
             }
-            /*for (busInstance in busToShow!!.instances) {
-                for ((i, stop) in busInstance.stops.withIndex()) {
-                    val v = LayoutInflater.from(this@BusDetailsActivity)
-                        .inflate(
-                            R.layout.activity_bus_details_column,
-                            stopColumns[i], false
-                        ).apply {
-                            this.tvStopTime.text = stop.stopTime.insert(2, ":")
-                            this.tvTimeLeft.text = minToHH_mm(
-                                calcTimeLeft(curTime, stop.stopTime.toInt())
-                            ) + " mins left"
-                            layoutParams.width = LinearLayout.LayoutParams.MATCH_PARENT
-                        }
-                    stopColumns[i].addView(v)
-                }
-            }*/
             launch(Dispatchers.Main) {
                 for (i in stopColumns.indices) {
                     timeTableContainer.addView(stopColumns[i])
@@ -247,10 +187,6 @@ class BusDetailsActivity : AppCompatActivity() {
 //                setLineSpacing(1f, 2f)
             }
             */
-            launch(Dispatchers.Main) {
-//                    timeTableContainer.addView(textView)
-//                    stopNameContainer.addView(textViewStopName)
-            }
             launch(Dispatchers.Main) {
                 progressBar.visibility = View.INVISIBLE
             }
