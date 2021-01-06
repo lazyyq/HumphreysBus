@@ -42,12 +42,14 @@ class StopInfoDialogAdapter(
         }
     }
 
-    private var curTime: Int? = null
+    private val curTime by lazy {
+        when (val customTime = MainActivity.etCustomTime!!.text.toString()) {
+            "" -> currentTimeHHmm.toInt()
+            else -> customTime.toInt()
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        MainActivity.etCustomTime!!.text.toString().let {
-            curTime = if (it == "") SimpleDateFormat("HHmm").format(Date()).toInt() else it.toInt()
-        }
         return ViewHolder(
             LayoutInflater.from(parent.context).inflate(
                 R.layout.fragment_stop_info_timetable_container,
@@ -64,13 +66,6 @@ class StopInfoDialogAdapter(
             val bus = item.bus
 
             if (bus.instances.isEmpty()) return@launch
-
-            val textColor = when (bus.name) {
-                "Red" -> android.R.color.holo_red_dark
-                "Blue" -> android.R.color.holo_blue_dark
-                "Green" -> android.R.color.holo_green_dark
-                else -> null
-            }
 
             val tables = LinkedList<View>()
             var largestPrevNextStopViewHeight = 0 // To evenly set each table item's view height
@@ -240,7 +235,7 @@ class StopInfoDialogAdapter(
         val container = itemView.findViewById<LinearLayout>(R.id.items_container)
     }
 
-    data class AdapterItem(val bus: Bus, val curStopNo: String)
+    data class AdapterItem(val bus: Bus, val curStop: BusUtils.BusStop)
 
-    data class InternalItem(val bus: Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
+//    data class InternalItem(val bus: Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
 }

@@ -67,6 +67,10 @@ class StopInfoDialog : BottomSheetDialogFragment() {
                         break
                     }
                 }
+
+                bus.stopPoints.find { s -> s.stopNo == stop.stopNo }?.let {
+                    items.add(StopInfoDialogAdapter.AdapterItem(bus, stop.stopNo))
+                }
             }
 
             val adapter = StopInfoDialogAdapter(activity, lifecycleScope, items)

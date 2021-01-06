@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.widget.Toast
@@ -102,6 +103,15 @@ inline fun <T : Cursor> T.forEachCursor(block: (T) -> Unit): T {
         }
     }
     return this
+}
+
+fun isHoliday() = Date().isHoliday()
+
+fun Date.isHoliday(): Boolean {
+    val cal = Calendar.getInstance()
+    cal.time = Date()
+    return ((cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+            || (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY))
 }
 
 // https://al-e-shevelev.medium.com/how-to-reduce-scroll-sensitivity-of-viewpager2-widget-87797ad02414
