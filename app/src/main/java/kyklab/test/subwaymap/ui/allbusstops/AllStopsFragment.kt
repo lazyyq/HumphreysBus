@@ -65,8 +65,8 @@ class AllStopsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             // TODO: Generify
-            holder.tvStopNo.text = items[position].stopNo
-            holder.tvStopName.text = items[position].stopName
+            holder.tvStopNo.text = items[position].no
+            holder.tvStopName.text = items[position].name
 //                holder.tvBus.setTextColor(color)
         }
 

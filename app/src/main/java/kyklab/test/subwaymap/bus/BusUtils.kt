@@ -35,7 +35,7 @@ object BusUtils {
                     val stopsTemp = it.getString(1).split(';')
                     val busStops = ArrayList<BusStop>(stopsTemp.size)
                     stopsTemp.forEach { stopNo ->
-                        val index = stops.binarySearch { s -> s.stopNo.compareTo(stopNo) }
+                        val index = stops.binarySearch { s -> s.no.compareTo(stopNo) }
                         if (index > -1) busStops.add(stops[index])
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
@@ -92,7 +92,7 @@ object BusUtils {
     fun getStopWithId(id: Int) = stops[id - 1]
 
     fun getStopWithStopNo(stopNo: String): BusStop? {
-        stops.forEach { t -> if (t.stopNo == stopNo) return t }
+        stops.forEach { t -> if (t.no == stopNo) return t }
         return null
     }
 
@@ -103,7 +103,7 @@ object BusUtils {
 
     fun getBusStop(stopNo: String?): BusStop? {
         stopNo ?: return null
-        stops.forEach { t -> if (t.stopNo == stopNo) return t }
+        stops.forEach { t -> if (t.no == stopNo) return t }
         return null
     }
 
@@ -116,8 +116,8 @@ object BusUtils {
         }
 
         val id: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_ID)
-        val stopNo: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_MAPNO)
-        val stopName: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_NAME)
+        val no: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_MAPNO)
+        val name: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_NAME)
         val xCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_X_CENTER)
         val yCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_Y_CENTER)
         // TODO: Fix stops without coordinates

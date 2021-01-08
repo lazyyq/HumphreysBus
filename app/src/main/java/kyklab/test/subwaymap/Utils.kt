@@ -78,14 +78,23 @@ fun gMapCoordToLocalMapCoord(x: Double, y: Double): Array<Double>? {
 
 fun Int.format(format: String): String = String.format(format, this)
 
-fun <T> List<T>.getWithWrappedIndex(index: Int): T? {
-    return if (isEmpty()) null
-    else {
+fun <T> Array<T>.getWithWrappedIndex(index: Int): T? =
+    if (isEmpty()) {
+        null
+    } else {
         var i = index
         while (i < 0) i += size
-        return get(i % size)
+        get(i % size)
     }
-}
+
+fun <T> List<T>.getWithWrappedIndex(index: Int): T? =
+    if (isEmpty()) {
+        null
+    } else {
+        var i = index
+        while (i < 0) i += size
+        get(i % size)
+    }
 
 fun String.insert(position: Int, str: CharSequence): String =
     StringBuffer().apply {

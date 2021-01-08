@@ -2,7 +2,6 @@ package kyklab.test.subwaymap.ui
 
 import android.app.Activity
 import android.content.Context
-import android.icu.text.SimpleDateFormat
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -22,23 +21,24 @@ import kotlinx.coroutines.launch
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.bus.BusUtils.getBusStop
 import java.util.*
 
 class StopInfoDialogAdapter(
     private val context: Context,
     private val scope: CoroutineScope,
-    adapterItems: List<AdapterItem>
-) :
-    RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
-    val items: List<InternalItem>
+//    adapterItems: List<AdapterItem>
+    private val stopId: Int
+) : RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
+
+    val adapterItems: List<AdapterItem>
 
     //val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>
     init {
-        items = LinkedList()
-        for (adapterItem in adapterItems) {
-            val m = adapterItem.bus.getAllStopTimes(adapterItem.curStopNo)
-            items.add(InternalItem(adapterItem.bus, m))
+        adapterItems = LinkedList()
+        BusUtils.buses.forEach { bus ->
+            bus.stopPoints.withIndex().filter { it.value.id == stopId }.map { it.index }.let {
+                if (it.isNotEmpty()) adapterItems.add(AdapterItem(bus, it))
+            }
         }
     }
 
@@ -59,28 +59,26 @@ class StopInfoDialogAdapter(
         )
     }
 
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         scope.launch(Dispatchers.Default) {
-            val item = items[position]
+            val item = adapterItems[position]
             val bus = item.bus
 
             if (bus.instances.isEmpty()) return@launch
 
             val tables = LinkedList<View>()
             var largestPrevNextStopViewHeight = 0 // To evenly set each table item's view height
-            for (stopIndex in item.stopIndexAndTimes.keys) {
-                val stopTimes = item.stopIndexAndTimes[stopIndex]
-                val timeTextsPerLine: Int = 4 / item.stopIndexAndTimes.keys.size
+            for (stopIndex in item.stopIndexes) {
+                val stopTimes = Array(bus.instances.size) { bus.instances[it].stopTimes[stopIndex] }
+                val timeTextsPerLine: Int = 4 / item.stopIndexes.size
 
                 var prevStop: BusUtils.BusStop?
                 var currStop: BusUtils.BusStop?
                 var nextStop: BusUtils.BusStop?
-                // Get names of previous, current, next stops
-                bus.instances[0].let {
-                    prevStop = getBusStop(it.stops.getOrNull(stopIndex - 1)?.stopNo)
-                    currStop = getBusStop(it.stops.getOrNull(stopIndex)?.stopNo)
-                    nextStop = getBusStop(it.stops.getOrNull(stopIndex + 1)?.stopNo)
+                bus.stopPoints.let {
+                    prevStop = it.getOrNull(stopIndex - 1)
+                    currStop = it.getOrNull(stopIndex)
+                    nextStop = it.getOrNull(stopIndex + 1)
                 }
 
                 // Prepare new timetable item
@@ -90,28 +88,18 @@ class StopInfoDialogAdapter(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.MATCH_PARENT, 1f
                         )
-                        textColor?.let { color ->
-                            tvPrevCurrNextStop.setTextColor(
-                                context.resources.getColor(
-                                    color,
-                                    context.theme
-                                )
-                            )
-                            tvTimeTable.setTextColor(
-                                context.resources.getColor(
-                                    color,
-                                    context.theme
-                                )
-                            )
+                        bus.colorInt.let {
+                            tvPrevCurrNextStop.setTextColor(it)
+                            tvTimeTable.setTextColor(it)
                         }
 
                         // Show previous, current, next stop name
                         tvPrevCurrNextStop.text = SpannableStringBuilder().apply {
-                            prevStop?.let { appendLine(it.stopName) }
+                            prevStop?.let { appendLine(it.name) }
                                 ?: italic { appendLine("(NONE)") }
-                            currStop?.let { bold { scale(1.2f) { append(it.stopName) } } }
+                            currStop?.let { bold { scale(1.2f) { append(it.name) } } }
                                 ?: append("Unknown")
-                            nextStop?.let { append('\n' + it.stopName) }
+                            nextStop?.let { append('\n' + it.name) }
                                 ?: italic { append("\n(NONE)") }
                         }
                         tvPrevCurrNextStop.measure(0, 0)
@@ -129,33 +117,29 @@ class StopInfoDialogAdapter(
                         tvTimeTable.text = SpannableStringBuilder().apply {
                             var closestFound = false
                             var itemNum = 0 // To change line on `timeTextsPerLine`th text
-                            stopTimes?.let {
+                            stopTimes.let {
                                 for (i in it.indices) {
                                     ++itemNum
                                     append("    ")
                                     val str = it[i].format("%04d").insert(2, ":");
                                     if (!closestFound) {
                                         val isBetween = isBetween(
-                                            curTime!!,
-                                            it.getWithWrappedIndex(i - 1)!!, it[i]
+                                            curTime,
+                                            it.getWithWrappedIndex(i - 1)!!.toInt(0),
+                                            it[i].toInt()
                                         )
                                         if (isBetween) {
                                             append(SpannableString(str).apply {
-                                                if (textColor != null) {
-                                                    this.setSpan(
-                                                        RoundedBackgroundSpan(
-                                                            context,
-                                                            resources.getColor(
-                                                                textColor, context.theme
-                                                            ),
-                                                            resources.getColor(
-                                                                R.color.white, context.theme
-                                                            )
-                                                        ),
-                                                        0, str.length,
-                                                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                                                    )
-                                                }
+                                                setSpan(
+                                                    RoundedBackgroundSpan(
+                                                        context, bus.colorInt,
+                                                        resources.getColor(
+                                                            R.color.white, context.theme
+                                                        )
+                                                    ),
+                                                    0, str.length,
+                                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                                )
                                             })
                                             closestFound = true
                                         } else {
@@ -210,7 +194,7 @@ class StopInfoDialogAdapter(
         }.start()
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = adapterItems.size
 
     /**
      * Decide if we're between previous and next stop time
@@ -235,7 +219,10 @@ class StopInfoDialogAdapter(
         val container = itemView.findViewById<LinearLayout>(R.id.items_container)
     }
 
-    data class AdapterItem(val bus: Bus, val curStop: BusUtils.BusStop)
+    data class AdapterItem(
+        val bus: Bus,
+        val stopIndexes: List<Int> // Indexes in the bus' stop points list for the given stop id
+    )
 
 //    data class InternalItem(val bus: Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
 }

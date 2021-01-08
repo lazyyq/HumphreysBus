@@ -1,11 +1,9 @@
 package kyklab.test.subwaymap.ui
 
 import android.content.res.ColorStateList
-import android.database.Cursor
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.Typeface
-import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -14,7 +12,6 @@ import android.view.ViewTreeObserver
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
@@ -92,7 +89,7 @@ class BusDetailsActivity : AppCompatActivity() {
             val stopNameContainerColumnItems =
                 Array<TextView>(busToShow.stopPoints.size) { i ->
                     MaterialTextView(this@BusDetailsActivity).apply {
-                        text = busToShow.stopPoints[i].stopName
+                        text = busToShow.stopPoints[i].name
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
                             LinearLayout.LayoutParams.MATCH_PARENT

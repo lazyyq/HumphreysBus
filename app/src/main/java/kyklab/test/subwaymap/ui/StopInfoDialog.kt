@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kyklab.test.subwaymap.R
 import kyklab.test.subwaymap.bus.BusUtils
-import java.util.*
 
 class StopInfoDialog : BottomSheetDialogFragment() {
     override fun onCreateView(
@@ -55,29 +54,14 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         if (stopId == -1) return
 
         val stop = BusUtils.getStopWithId(stopId)
-        v.tvStopInfo.text = stop.stopName
+        v.tvStopInfo.text = stop.name
 
         lifecycleScope.launch(Dispatchers.Default) {
-            val items = ArrayList<StopInfoDialogAdapter.AdapterItem>()
-            for (bus in BusUtils.buses) {
-                if (bus.instances.isEmpty()) continue
-                for (s in bus.stopPoints) {
-                    if (s.stopNo == stop.stopNo) {
-                        items.add(StopInfoDialogAdapter.AdapterItem(bus, stop.stopNo))
-                        break
-                    }
-                }
-
-                bus.stopPoints.find { s -> s.stopNo == stop.stopNo }?.let {
-                    items.add(StopInfoDialogAdapter.AdapterItem(bus, stop.stopNo))
-                }
-            }
-
-            val adapter = StopInfoDialogAdapter(activity, lifecycleScope, items)
+            val adapter = StopInfoDialogAdapter(activity, lifecycleScope, stopId)
             launch(Dispatchers.Main) {
                 v.vpTimeTable.adapter = adapter
                 TabLayoutMediator(v.busTabLayout, v.vpTimeTable) { tab, position ->
-                    tab.text = adapter.items[position].bus.name
+                    tab.text = adapter.adapterItems[position].bus.name
                 }.attach()
 
                 v.progressBar.visibility = View.GONE
