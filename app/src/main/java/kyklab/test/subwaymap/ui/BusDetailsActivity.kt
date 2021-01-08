@@ -76,7 +76,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 launch(Dispatchers.Main) {
                     ivBus.imageTintList = ColorStateList.valueOf(it)
                     tvBus.text = busName
-                    tvBus.setTextColor(resources.getColor(it, this@BusDetailsActivity.theme))
+                    tvBus.setTextColor(it)
                 }
             }
 
