@@ -44,7 +44,7 @@ object BusUtils {
                     query(
                         table = "bus_details",
                         columns = arrayOf("stop_times", "is_holiday"),
-                        selection = "name=\"$busName\"",
+                        selection = "bus_name=\"$busName\"",
                         orderBy = "bus_details._id ASC"
                     ).forEachCursor { c1 ->
                         val stopTimes = ArrayList(c1.getString(0).split(';'))
