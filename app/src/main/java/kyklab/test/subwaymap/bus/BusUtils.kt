@@ -4,32 +4,105 @@ import android.database.Cursor
 import android.graphics.Color
 import android.util.Log
 import androidx.core.database.getIntOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kyklab.test.subwaymap.forEachCursor
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 object BusUtils {
     private const val TAG = "BusUtils"
 
-    val stops: MutableList<BusStop> by lazy {
-        val list = ArrayList<BusStop>(40)
-        if (BusStopSQLiteHelper.isDBOpen) {
-            BusStopSQLiteHelper.query(BusStopSQLiteHelper.DB_TABLE_STOPS).use {
-                if (it.moveToFirst()) {
-                    do {
-                        list.add(BusStop(it))
-                    } while (it.moveToNext())
+    var stops: List<BusStop> = emptyList()
+    var buses: List<Bus> = emptyList()
+
+    // Whether load from db is done. This should be true even when nothing is fetched from db.
+    @set:Synchronized
+    var isLoadDone = false
+
+    // Whether load from db is successfully done.
+    @set: Synchronized
+    var isLoadSuccessful = false
+
+    private val lock = ReentrantLock()
+    private val cond = lock.newCondition()
+
+    init {
+        BusSQLiteHelper.openDatabase()
+    }
+
+    fun loadData() {
+        lock.withLock {
+            GlobalScope.launch(Dispatchers.IO) {
+                Log.e(TAG, "Start loading data")
+                if (BusSQLiteHelper.isDBOpen || BusSQLiteHelper.openDatabase()) {
+                    loadBusStops()
+                    loadBuses()
+                    isLoadSuccessful = true
                 }
+                isLoadDone = true
+                cond.signalAll()
+                Log.e(TAG, "Done loading data")
             }
         }
-        list
     }
-    val buses: MutableList<Bus> by lazy {
-        val busList = ArrayList<Bus>(5)
-        if (BusStopSQLiteHelper.isDBOpen) {
-            with(BusStopSQLiteHelper) {
-                query(
+
+    fun getStopFromCoord(x: Float, y: Float): BusStop? {
+        lock.withLock {
+            while (!isLoadDone) cond.await()
+            if (!isLoadSuccessful) return null
+
+            val start = System.currentTimeMillis()
+            var nearestStop: BusStop? = null
+            var minDistance: Float? = null
+            for (stop in stops) {
+                val distanceToStop = stop.checkDistanceToStop(x, y)
+                if (distanceToStop != null) {
+                    if (minDistance == null || distanceToStop < minDistance) {
+                        nearestStop = stop
+                        minDistance = distanceToStop
+                    }
+                }
+            }
+            Log.e(TAG, "Took ${System.currentTimeMillis() - start}ms to load stop info")
+            return nearestStop
+        }
+    }
+
+    fun getBusStop(stopId: Int?): BusStop? {
+        lock.withLock {
+            while (!isLoadDone) cond.await()
+            return stopId?.let { stops.getOrNull(stopId - 1) }
+        }
+    }
+
+    fun getBusStop(stopNo: String?): BusStop? {
+        lock.withLock {
+            while (!isLoadDone) cond.await()
+            return stops.find { stop -> stop.no == stopNo }
+        }
+    }
+
+    private fun loadBusStops() {
+        if (BusSQLiteHelper.isDBOpen || BusSQLiteHelper.openDatabase()) {
+            val cursor = BusSQLiteHelper.query(BusSQLiteHelper.DB_TABLE_STOPS)
+            stops = ArrayList(cursor.count)
+            cursor.forEachCursor { (stops as ArrayList<BusStop>).add(BusStop(it)) }
+        }
+    }
+
+    private fun loadBuses() {
+        if (stops.isEmpty()) loadBusStops() ?: return
+
+        if (BusSQLiteHelper.isDBOpen || BusSQLiteHelper.openDatabase()) {
+            with(BusSQLiteHelper) {
+                val cursor = query(
                     table = DB_TABLE_BUSES, columns = arrayOf("name", "stop_points", "color"),
                     orderBy = "buses._id ASC"
-                ).forEachCursor { c ->
+                )
+                buses = ArrayList(cursor.count)
+                cursor.forEachCursor { c ->
                     // Attributes for a new bus
                     val busName = c.getString(0)
                     val stopsTemp = c.getString(1).split(';')
@@ -57,43 +130,11 @@ object BusUtils {
                             instances.add(Bus.BusInstance(stopTimes, isHoliday))
                         }
                     }
-                    busList.add(Bus(busName, busColorInt, busStops, instances))
+                    (buses as ArrayList<Bus>).add(Bus(busName, busColorInt, busStops, instances))
                 }
             }
         }
-        busList
     }
-
-    init {
-        // Open DB
-        with(BusStopSQLiteHelper) {
-            createDatabase()
-            openDatabase()
-        }
-    }
-
-    fun getStopFromCoord(x: Float, y: Float): BusStop? {
-        val start = System.currentTimeMillis()
-        var nearestStop: BusStop? = null
-        var minDistance: Float? = null
-        for (stop in stops) {
-            val distanceToStop = stop.checkDistanceToStop(x, y)
-            if (distanceToStop != null) {
-                if (minDistance == null || distanceToStop < minDistance) {
-                    nearestStop = stop
-                    minDistance = distanceToStop
-                }
-            }
-        }
-        Log.e(TAG, "Took ${System.currentTimeMillis() - start}ms to load stop info")
-        return nearestStop
-    }
-
-    fun getBusStop(stopId: Int?): BusStop? =
-        stopId?.let { stops.getOrNull(stopId - 1) }
-
-    fun getBusStop(stopNo: String?): BusStop? =
-        stops.find { stop -> stop.no == stopNo }
 
     data class BusStop(val cursor: Cursor) {
         companion object {
@@ -103,11 +144,11 @@ object BusUtils {
             private fun Float.square() = this * this
         }
 
-        val id: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_ID)
-        val no: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_MAPNO)
-        val name: String = cursor.getString(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_NAME)
-        val xCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_X_CENTER)
-        val yCenter: Int = cursor.getInt(BusStopSQLiteHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+        val id: Int = cursor.getInt(BusSQLiteHelper.DB_STOPS_COL_INDEX_ID)
+        val no: String = cursor.getString(BusSQLiteHelper.DB_STOPS_COL_INDEX_MAPNO)
+        val name: String = cursor.getString(BusSQLiteHelper.DB_STOPS_COL_INDEX_NAME)
+        val xCenter: Int = cursor.getInt(BusSQLiteHelper.DB_STOPS_COL_INDEX_X_CENTER)
+        val yCenter: Int = cursor.getInt(BusSQLiteHelper.DB_STOPS_COL_INDEX_Y_CENTER)
         // TODO: Fix stops without coordinates
 
         fun checkDistanceToStop(x: Float, y: Float): Float? {
