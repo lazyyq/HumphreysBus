@@ -29,17 +29,17 @@ object BusUtils {
                 query(
                     table = DB_TABLE_BUSES, columns = arrayOf("name", "stop_points", "color"),
                     orderBy = "buses._id ASC"
-                ).forEachCursor {
+                ).forEachCursor { c ->
                     // Attributes for a new bus
-                    val busName = it.getString(0)
-                    val stopsTemp = it.getString(1).split(';')
+                    val busName = c.getString(0)
+                    val stopsTemp = c.getString(1).split(';')
                     val busStops = ArrayList<BusStop>(stopsTemp.size)
                     stopsTemp.forEach { stopNo ->
-                        val index = stops.binarySearch { s -> s.no.compareTo(stopNo) }
-                        if (index > -1) busStops.add(stops[index])
+                        // TODO: implement a better searching mechanism
+                        stops.find { stop -> stop.no == stopNo }?.let { busStops.add(it) }
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
-                    val busColorInt = Color.parseColor(it.getString(2))
+                    val busColorInt = Color.parseColor(c.getString(2))
 
                     query(
                         table = "bus_details",

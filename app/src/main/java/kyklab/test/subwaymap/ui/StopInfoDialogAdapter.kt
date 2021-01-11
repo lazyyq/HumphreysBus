@@ -30,6 +30,10 @@ class StopInfoDialogAdapter(
     private val stopId: Int
 ) : RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
 
+    companion object {
+        private val TAG = StopInfoDialogAdapter::class.simpleName
+    }
+
     val adapterItems: List<AdapterItem>
 
     //val bus: Buses.Bus, val stopIndex: Int, val stopTimes: List<Int>
@@ -125,7 +129,7 @@ class StopInfoDialogAdapter(
                                     if (!closestFound) {
                                         val isBetween = isBetween(
                                             curTime,
-                                            it.getWithWrappedIndex(i - 1)!!.toInt(0),
+                                            it.getWithWrappedIndex(i - 1)!!.toInt(),
                                             it[i].toInt()
                                         )
                                         if (isBetween) {
