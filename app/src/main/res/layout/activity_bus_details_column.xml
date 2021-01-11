@@ -6,9 +6,9 @@
     android:background="?selectableItemBackground"
     android:clickable="true"
     android:orientation="horizontal"
-    android:paddingStart="18dp"
+    android:paddingStart="16dp"
     android:paddingTop="8dp"
-    android:paddingEnd="18dp"
+    android:paddingEnd="16dp"
     tools:layout_gravity="center_horizontal">
 
     <TextView
@@ -22,7 +22,7 @@
         tools:text="12:00\n13:00\n14:00\n15:00\n16:00\n17:00\n18:00" />
 
     <View
-        android:layout_width="8dp"
+        android:layout_width="12dp"
         android:layout_height="match_parent"
         tools:layout_weight="1" />
 
