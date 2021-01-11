@@ -80,7 +80,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             }
 
-            val curTime: Int = when(val customTime = MainActivity.etCustomTime!!.text.toString()) {
+            val curTime: Int = when (val customTime = MainActivity.etCustomTime!!.text.toString()) {
                 "" -> currentTimeHHmm.toInt()
                 else -> customTime.toInt()
             }
@@ -119,8 +119,11 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             }
             launch(Dispatchers.Main) {
+                val bg = listOf(android.R.color.white, R.color.details_column_lighter_gray)
                 for (i in stopColumns.indices) {
                     timeTableContainer.addView(stopColumns[i])
+                    stopColumns[i].setBackgroundResource(bg[i % bg.size])
+                    stopNameContainerColumnItems[i].setBackgroundResource(bg[i % bg.size])
                     stopColumns[i].viewTreeObserver.addOnGlobalLayoutListener(object :
                         ViewTreeObserver.OnGlobalLayoutListener {
                         override fun onGlobalLayout() {

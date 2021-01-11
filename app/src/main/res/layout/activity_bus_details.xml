@@ -56,7 +56,7 @@
             android:id="@+id/stopNameContainer"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:divider="@drawable/list_divider_material_2dp"
+            android:divider="@drawable/list_divider_material_1dp"
             android:orientation="horizontal"
             android:showDividers="middle" />
     </com.otaliastudios.zoom.ZoomLayout>
@@ -65,6 +65,8 @@
         android:id="@+id/zoomLayoutTimeTable"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:scrollbars="vertical|horizontal"
+        android:scrollIndicators="top"
         app:alignment="center"
         app:animationDuration="280"
         app:hasClickableChildren="true"
@@ -83,7 +85,7 @@
             android:id="@+id/timeTableContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:divider="@drawable/list_divider_material_2dp"
+            android:divider="@drawable/list_divider_material_1dp"
             android:orientation="horizontal"
             android:showDividers="middle" />
     </com.otaliastudios.zoom.ZoomLayout>
