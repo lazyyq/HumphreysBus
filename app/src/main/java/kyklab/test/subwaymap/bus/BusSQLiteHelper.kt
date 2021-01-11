@@ -15,7 +15,7 @@ object BusSQLiteHelper :
     SQLiteOpenHelper(App.context, "subway.db", null, 10) {
 
     private val TAG = BusSQLiteHelper::class.simpleName
-    private val DB_DIR: String = App.context.filesDir.path + App.context.packageName + "/databases"
+    private val DB_DIR: String = App.context.dataDir.toString() + "/databases"
     private const val DB_NAME = "subway.db"
 
     const val DB_STOPS_COL_INDEX_ID = 0
@@ -58,9 +58,7 @@ object BusSQLiteHelper :
                     }
                 }
                 db = SQLiteDatabase.openDatabase(
-                    "$DB_DIR/$DB_NAME",
-                    null,
-                    SQLiteDatabase.OPEN_READONLY
+                    "$DB_DIR/$DB_NAME", null, SQLiteDatabase.OPEN_READONLY
                 )
                 isDBOpen = true
             }

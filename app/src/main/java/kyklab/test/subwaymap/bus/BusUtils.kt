@@ -33,8 +33,8 @@ object BusUtils {
     }
 
     fun loadData() {
-        lock.withLock {
-            GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.launch(Dispatchers.IO) {
+            lock.withLock {
                 Log.e(TAG, "Start loading data")
                 if (BusSQLiteHelper.isDBOpen || BusSQLiteHelper.openDatabase()) {
                     loadBusStops()
