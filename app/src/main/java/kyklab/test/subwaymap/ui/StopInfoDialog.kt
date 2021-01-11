@@ -51,9 +51,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         val activity = requireActivity()
 
         val stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
-        if (stopId == -1) return
-
-        val stop = BusUtils.getStopWithId(stopId)
+        val stop = BusUtils.getBusStop(stopId) ?: return
         v.tvStopInfo.text = stop.name
 
         lifecycleScope.launch(Dispatchers.Default) {

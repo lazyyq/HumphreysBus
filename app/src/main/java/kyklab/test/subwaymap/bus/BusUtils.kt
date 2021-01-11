@@ -89,23 +89,11 @@ object BusUtils {
         return nearestStop
     }
 
-    fun getStopWithId(id: Int) = stops[id - 1]
+    fun getBusStop(stopId: Int?): BusStop? =
+        stopId?.let { stops.getOrNull(stopId - 1) }
 
-    fun getStopWithStopNo(stopNo: String): BusStop? {
-        stops.forEach { t -> if (t.no == stopNo) return t }
-        return null
-    }
-
-    fun getBusStop(stopIndex: Int?): BusStop? {
-        return if (stopIndex == null) null
-        else stops.getOrNull(stopIndex - 1)
-    }
-
-    fun getBusStop(stopNo: String?): BusStop? {
-        stopNo ?: return null
-        stops.forEach { t -> if (t.no == stopNo) return t }
-        return null
-    }
+    fun getBusStop(stopNo: String?): BusStop? =
+        stops.find { stop -> stop.no == stopNo }
 
     data class BusStop(val cursor: Cursor) {
         companion object {
