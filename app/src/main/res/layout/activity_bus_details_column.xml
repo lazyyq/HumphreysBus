@@ -16,7 +16,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:textColor="#BF000000"
         android:gravity="start"
+        android:textStyle="bold"
         android:lineSpacingExtra="12sp"
         android:textSize="16sp"
         tools:text="12:00\n13:00\n14:00\n15:00\n16:00\n17:00\n18:00" />
@@ -27,6 +29,7 @@
         tools:layout_weight="1" />
 
     <TextView
+        android:textColor="#99000000"
         android:id="@+id/tvTimeLeftColumn"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
