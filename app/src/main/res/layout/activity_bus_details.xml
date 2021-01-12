@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -24,6 +25,42 @@
         app:layout_constraintBottom_toBottomOf="@id/ivBus"
         app:layout_constraintStart_toEndOf="@+id/ivBus"
         app:layout_constraintTop_toTopOf="@id/ivBus" />
+
+    <LinearLayout
+        android:id="@+id/timeContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toTopOf="@id/progressBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:drawableEnd="@drawable/ic_alarm"
+            android:gravity="start|center_vertical"
+            android:textSize="16sp"
+            android:paddingStart="16dp"
+            android:id="@+id/tvCurrentTime"
+            android:paddingEnd="12dp"
+            tools:text="12:00" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:id="@+id/switchHoliday"
+            android:gravity="start|center_vertical"
+            android:layout_weight="1"
+            android:textSize="16sp"
+            android:paddingStart="16dp"
+            android:text="Holiday" />
+    </LinearLayout>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
@@ -65,8 +102,8 @@
         android:id="@+id/zoomLayoutTimeTable"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scrollbars="vertical|horizontal"
         android:scrollIndicators="top"
+        android:scrollbars="vertical|horizontal"
         app:alignment="center"
         app:animationDuration="280"
         app:hasClickableChildren="true"

@@ -118,7 +118,7 @@ fun isHoliday() = Date().isHoliday()
 
 fun Date.isHoliday(): Boolean {
     val cal = Calendar.getInstance()
-    cal.time = Date()
+    cal.time = this
     return ((cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
             || (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY))
 }

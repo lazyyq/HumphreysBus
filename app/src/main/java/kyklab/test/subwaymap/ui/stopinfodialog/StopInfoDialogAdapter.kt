@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui
+package kyklab.test.subwaymap.ui.stopinfodialog
 
 import android.app.Activity
 import android.content.Context
@@ -26,8 +26,9 @@ import java.util.*
 class StopInfoDialogAdapter(
     private val context: Context,
     private val scope: CoroutineScope,
-//    adapterItems: List<AdapterItem>
-    private val stopId: Int
+    private val stopId: Int,
+    private val currentTime: String,
+    private val isHoliday: Boolean
 ) : RecyclerView.Adapter<StopInfoDialogAdapter.ViewHolder>() {
 
     companion object {
@@ -43,13 +44,6 @@ class StopInfoDialogAdapter(
             bus.stopPoints.withIndex().filter { it.value.id == stopId }.map { it.index }.let {
                 if (it.isNotEmpty()) adapterItems.add(AdapterItem(bus, it))
             }
-        }
-    }
-
-    private val curTime by lazy {
-        when (val customTime = MainActivity.etCustomTime!!.text.toString()) {
-            "" -> currentTimeHHmm.toInt()
-            else -> customTime.toInt()
         }
     }
 
@@ -73,7 +67,6 @@ class StopInfoDialogAdapter(
             val tables = LinkedList<View>()
             var largestPrevNextStopViewHeight = 0 // To evenly set each table item's view height
             for (stopIndex in item.stopIndexes) {
-                val stopTimes = Array(bus.instances.size) { bus.instances[it].stopTimes[stopIndex] }
                 val timeTextsPerLine: Int = 4 / item.stopIndexes.size
 
                 var prevStop: BusUtils.BusStop?
@@ -121,6 +114,9 @@ class StopInfoDialogAdapter(
                         tvTimeTable.text = SpannableStringBuilder().apply {
                             var closestFound = false
                             var itemNum = 0 // To change line on `timeTextsPerLine`th text
+                            val stopTimes = bus.instances
+                                .filter { it.isHoliday == isHoliday }
+                                .map { it.stopTimes[stopIndex] }
                             stopTimes.let {
                                 for (i in it.indices) {
                                     ++itemNum
@@ -128,7 +124,7 @@ class StopInfoDialogAdapter(
                                     val str = it[i].format("%04d").insert(2, ":");
                                     if (!closestFound) {
                                         val isBetween = isBetween(
-                                            curTime,
+                                            currentTime.toInt(),
                                             it.getWithWrappedIndex(i - 1)!!.toInt(),
                                             it[i].toInt()
                                         )

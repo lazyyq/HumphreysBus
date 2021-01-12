@@ -12,7 +12,6 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -29,6 +28,7 @@ import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 import kyklab.test.subwaymap.toast
 import kyklab.test.subwaymap.ui.allbusstops.AllBusAndStopActivity
+import kyklab.test.subwaymap.ui.stopinfodialog.StopInfoDialog
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {
@@ -77,8 +77,6 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "MainActivity"
         const val REQ_CODE_SELECT_STOP = 1
         const val RESULT_STOP_SELECTED = 100
-
-        var etCustomTime: EditText? = null
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -169,8 +167,6 @@ class MainActivity : AppCompatActivity() {
 
         ivMap.setImage(ImageSource.asset("subway.webp"))
         ivMap.setScaleAndCenter(1f, PointF(2000f, 2000f))
-
-        etCustomTime = textCustomTime
 
         val gestureDetector = GestureDetector(this, object :
             GestureDetector.SimpleOnGestureListener() {

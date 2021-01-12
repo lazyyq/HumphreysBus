@@ -4,11 +4,14 @@ import android.content.res.ColorStateList
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewTreeObserver
+import android.widget.CompoundButton
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,6 +25,8 @@ import kotlinx.coroutines.*
 import kyklab.test.subwaymap.*
 import kyklab.test.subwaymap.bus.Bus
 import kyklab.test.subwaymap.bus.BusUtils
+import kyklab.test.subwaymap.ui.stopinfodialog.DatePickerFragment
+import kyklab.test.subwaymap.ui.stopinfodialog.TimePickerFragment
 import java.util.*
 
 
@@ -33,6 +38,13 @@ class BusDetailsActivity : AppCompatActivity() {
     private var busName: String? = null
     private var stopToHighlightIndex: Int? = null
     private lateinit var busToShow: Bus
+
+    private val calendar = Calendar.getInstance()
+    private var currentTime = currentTimeHHmm
+    private val sdf by lazy { SimpleDateFormat("HHmm") }
+    private var isHoliday = isHoliday()
+
+    private var loadScheduleJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,130 +79,112 @@ class BusDetailsActivity : AppCompatActivity() {
         })
         // Block touch for stop names to prevent scrolling
         zoomLayoutStopName.setOnTouchListener { _, _ -> true }
+
+        showCurrentTime()
         showBusTimeTable()
     }
 
     private fun showBusTimeTable() {
+        busToShow.colorInt.let {
+            ivBus.imageTintList = ColorStateList.valueOf(it)
+            tvBus.text = busName
+            tvBus.setTextColor(it)
+        }
+        updateBusTimeTable()
+    }
+
+    private fun updateBusTimeTable() {
         lifecycleScope.launch(Dispatchers.Default) {
-            busToShow.colorInt.let {
+            loadScheduleJob?.let { if (it.isActive) it.cancelAndJoin() }
+            loadScheduleJob = launch {
                 launch(Dispatchers.Main) {
-                    ivBus.imageTintList = ColorStateList.valueOf(it)
-                    tvBus.text = busName
-                    tvBus.setTextColor(it)
+                    progressBar.visibility = View.VISIBLE
                 }
-            }
-
-            val curTime: Int = when (val customTime = MainActivity.etCustomTime!!.text.toString()) {
-                "" -> currentTimeHHmm.toInt()
-                else -> customTime.toInt()
-            }
-
-            // TextViews in header that display stop names
-            val stopNameContainerColumnItems =
-                Array<TextView>(busToShow.stopPoints.size) { i ->
-                    MaterialTextView(this@BusDetailsActivity).apply {
-                        text = busToShow.stopPoints[i].name
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT
-                        )
-                        gravity = Gravity.CENTER
-                        setTypeface(typeface, Typeface.BOLD)
+                // TextViews in header that display stop names
+                val stopNameContainerColumnItems =
+                    Array<TextView>(busToShow.stopPoints.size) { i ->
+                        MaterialTextView(this@BusDetailsActivity).apply {
+                            text = busToShow.stopPoints[i].name
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            gravity = Gravity.CENTER
+                            setTypeface(typeface, Typeface.BOLD)
+                        }
+                    }
+                // Columns, which are LinearLayout, that contain list of stop time and time left
+                val stopColumns = Array(busToShow.stopPoints.size) { stopIndex ->
+                    LayoutInflater.from(this@BusDetailsActivity).inflate(
+                        R.layout.activity_bus_details_column, timeTableContainer, false
+                    ).apply {
+                        val timeText = StringBuilder()
+                        val timeLeftText = StringBuilder()
+                        val instances = busToShow.instances.filter { i -> i.isHoliday == isHoliday }
+                        for (i in instances.indices) {
+                            val time = instances[i].stopTimes[stopIndex]
+                            timeText.append(time.insert(2, ":") + '\n')
+                            timeLeftText.append(
+                                minToHH_mm(
+                                    calcTimeLeft(currentTimeHHmm.toInt(), time.toInt())
+                                ) + " left" + '\n'
+                            )
+                        }
+                        tvStopTimeColumn.text = timeText
+                        tvTimeLeftColumn.text = timeLeftText
                     }
                 }
-            // Columns, which are LinearLayout, that contain list of stop time and time left
-            val stopColumns = Array(busToShow.stopPoints.size) { stopIndex ->
-                LayoutInflater.from(this@BusDetailsActivity).inflate(
-                    R.layout.activity_bus_details_column, timeTableContainer, false
-                ).apply {
-                    val timeText = StringBuilder()
-                    val timeLeftText = StringBuilder()
-                    for (i in busToShow.instances.indices) {
-                        val time = busToShow.instances[i].stopTimes[stopIndex]
-                        timeText.append(time.insert(2, ":") + '\n')
-                        timeLeftText.append(
-                            minToHH_mm(
-                                calcTimeLeft(curTime, time.toInt())
-                            ) + " left" + '\n'
-                        )
-                    }
-                    tvStopTimeColumn.text = timeText
-                    tvTimeLeftColumn.text = timeLeftText
-                }
-            }
-            launch(Dispatchers.Main) {
-                val bg = listOf(android.R.color.white, R.color.details_column_lighter_gray)
-                for (i in stopColumns.indices) {
-                    timeTableContainer.addView(stopColumns[i])
-                    stopColumns[i].setBackgroundResource(bg[i % bg.size])
-                    stopNameContainerColumnItems[i].setBackgroundResource(bg[i % bg.size])
-                    stopColumns[i].viewTreeObserver.addOnGlobalLayoutListener(object :
-                        ViewTreeObserver.OnGlobalLayoutListener {
-                        override fun onGlobalLayout() {
-                            // Match column header width with column width
-                            stopNameContainerColumnItems[i].layoutParams.width =
-                                stopColumns[i].width
-                            stopNameContainer.addView(stopNameContainerColumnItems[i])
-                            stopColumns[i].viewTreeObserver.removeOnGlobalLayoutListener(this)
-                        }
-                    })
-                }
-            }
-            /*
-            val textView = MaterialTextView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setPadding(
-                        dpToPx(this@BusDetailsActivity, 16f),
-                        0,
-                        dpToPx(this@BusDetailsActivity, 16f),
-                        0
-                    )
-                }
-                gravity = Gravity.CENTER
-
-                val strStops = SpannableStringBuilder()
-                for ((i, stop) in busInstance.stops.withIndex()) {
-                    val stopTime = stop.stopTime.toInt()
-                    val timeLeft = calcTimeLeft(curTime, stopTime)
-                    if (i == stopToHighlightIndex) {
-                        if (closestBusTimeLeft > timeLeft) {
-                            closestBusTimeLeft = timeLeft
-                            closestBusTextView = this
-                            text = strStops
-                            this.measure(0, 0)
-                            y1 = this.measuredHeight.toFloat()
-                            scrollY = strStops.lines().size
-                        }
-                        strStops.bold {
-                            scale(1.2f) {
-                                append(
-                                    "${
-                                        BusUtils.getStopWithStopNo(
-                                            stop.stopNo
-                                        )?.stopName ?: "Unknown"
-                                    } (${stop.stopTime})\n($timeLeft mins)\n\n"
-                                )
+                launch(Dispatchers.Main) {
+                    timeTableContainer.removeAllViews()
+                    val bg = listOf(android.R.color.white, R.color.details_column_lighter_gray)
+                    for (i in stopColumns.indices) {
+                        timeTableContainer.addView(stopColumns[i])
+                        stopColumns[i].setBackgroundResource(bg[i % bg.size])
+                        stopNameContainerColumnItems[i].setBackgroundResource(bg[i % bg.size])
+                        stopColumns[i].viewTreeObserver.addOnGlobalLayoutListener(object :
+                            ViewTreeObserver.OnGlobalLayoutListener {
+                            override fun onGlobalLayout() {
+                                // Match column header width with column width
+                                stopNameContainerColumnItems[i].layoutParams.width =
+                                    stopColumns[i].width
+                                stopNameContainer.addView(stopNameContainerColumnItems[i])
+                                stopColumns[i].viewTreeObserver.removeOnGlobalLayoutListener(this)
                             }
-                        }
-                    } else {
-                        strStops.append("${BusUtils.getStopWithStopNo(stop.stopNo)?.stopName ?: "Unknown"} (${stop.stopTime})\n($timeLeft mins)\n\n")
+                        })
                     }
+                    progressBar.visibility = View.INVISIBLE
                 }
-                text = strStops
-                this.measure(0, 0)
-                y2 = this.measuredHeight.toFloat()
-                scrollYFinal = strStops.lines().size
-//                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-//                setLineSpacing(1f, 2f)
-            }
-            */
-            launch(Dispatchers.Main) {
-                progressBar.visibility = View.INVISIBLE
             }
         }
+    }
+
+    private fun showCurrentTime() {
+        updateDateTime()
+
+        switchHoliday.setOnClickListener {
+            if (it is CompoundButton) {
+                isHoliday = it.isChecked
+            }
+            updateDateTime()
+            updateBusTimeTable()
+        }
+
+        tvCurrentTime.setOnClickListener {
+            DatePickerFragment(calendar) { d, year, month, dayOfMonth ->
+                TimePickerFragment(calendar) { t, hourOfDay, minute ->
+                    calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                    currentTime = sdf.format(calendar.time)
+                    isHoliday = calendar.time.isHoliday()
+                    updateDateTime()
+                    updateBusTimeTable()
+                }.show(supportFragmentManager, "timePicker")
+            }.show(supportFragmentManager, "datePicker")
+        }
+    }
+
+    private fun updateDateTime() {
+        switchHoliday.isChecked = isHoliday
+        tvCurrentTime.text = currentTime.insert(2, ":")
     }
 
     fun scrollToView(scrollView: HorizontalScrollView, view: TextView) {
