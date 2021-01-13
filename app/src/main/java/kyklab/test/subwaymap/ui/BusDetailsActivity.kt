@@ -98,6 +98,8 @@ class BusDetailsActivity : AppCompatActivity() {
             loadScheduleJob = launch {
                 launch(Dispatchers.Main) {
                     progressBar.visibility = View.VISIBLE
+                    stopNameContainer.removeAllViews()
+                    timeTableContainer.removeAllViews()
                 }
                 // TextViews in header that display stop names
                 val stopNameContainerColumnItems =
@@ -134,7 +136,6 @@ class BusDetailsActivity : AppCompatActivity() {
                     }
                 }
                 launch(Dispatchers.Main) {
-                    timeTableContainer.removeAllViews()
                     val bg = listOf(android.R.color.white, R.color.details_column_lighter_gray)
                     for (i in stopColumns.indices) {
                         timeTableContainer.addView(stopColumns[i])
