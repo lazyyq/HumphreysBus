@@ -1,6 +1,5 @@
 package kyklab.test.subwaymap.bus
 
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
@@ -8,13 +7,11 @@ import android.util.Log
 import kyklab.test.subwaymap.App
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
-object BusSQLiteHelper :
+object BusDBHelper :
     SQLiteOpenHelper(App.context, "subway.db", null, 10) {
 
-    private val TAG = BusSQLiteHelper::class.simpleName
+    private val TAG = BusDBHelper::class.simpleName
     private val DB_DIR: String = App.context.dataDir.toString() + "/databases"
     private const val DB_NAME = "subway.db"
 
@@ -32,42 +29,34 @@ object BusSQLiteHelper :
     const val DB_TABLE_STOPS = "stations"
     const val DB_TABLE_BUSES = "buses"
 
-    private lateinit var db: SQLiteDatabase
-
-    private val dbLock = ReentrantLock()
-
-    @set:Synchronized
-    var isDBOpen = false
+    val db: SQLiteDatabase
+        get() = readableDatabase
 
     init {
         Log.e(TAG, "DB Path: $DB_DIR")
-    }
-
-    @Synchronized
-    fun openDatabase(): Boolean {
-        dbLock.withLock {
-            if (!isDBOpen) {
-                val checkDB = checkDatabase()
-                if (!checkDB) {
-                    readableDatabase
-                    try {
-                        copyDatabase()
-                    } catch (e: IOException) {
-                        Log.e(TAG, "Failed to copy database")
-                        return false
-                    }
-                }
-                db = SQLiteDatabase.openDatabase(
-                    "$DB_DIR/$DB_NAME", null, SQLiteDatabase.OPEN_READONLY
-                )
-                isDBOpen = true
-            }
-            return true
-        }
+        checkDatabase()
     }
 
     private fun checkDatabase(): Boolean {
-        dbLock.withLock {
+        if (!dbExists/* || BuildConfig.DEBUG*/) {
+            Log.e(TAG, "DB does not exist, trying to copy")
+            try {
+                // Create an empty db file before copying
+                readableDatabase
+                close()
+                copyDatabase()
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to copy database")
+                return false
+            }
+        } else {
+            Log.e(TAG, "DB exists")
+        }
+        return true
+    }
+
+    private val dbExists: Boolean
+        get() {
             var checkDB: SQLiteDatabase? = null
             val path = "$DB_DIR/$DB_NAME"
             try {
@@ -79,15 +68,15 @@ object BusSQLiteHelper :
             }
             return checkDB != null
         }
-    }
 
+    @Throws(IOException::class)
     private fun copyDatabase() {
-        dbLock.withLock {
-            val outFilename = "$DB_DIR/$DB_NAME"
-            App.context.assets.open(DB_NAME).use { inputStream ->
-                FileOutputStream(outFilename).use { outputStream ->
-                    val buffer = ByteArray(10)
-                    var length: Int
+        val outFilename = "$DB_DIR/$DB_NAME"
+        App.context.assets.open(DB_NAME).use { inputStream ->
+            FileOutputStream(outFilename).use { outputStream ->
+                val buffer = ByteArray(1024)
+                var length: Int
+                try {
                     while (true) {
                         length = inputStream.read(buffer)
                         if (length > 0) {
@@ -96,28 +85,11 @@ object BusSQLiteHelper :
                             break
                         }
                     }
+                } catch (e: IOException) {
+                    throw e
                 }
             }
         }
-    }
-
-    @JvmOverloads
-    fun query(
-        table: String, columns: Array<String>? = null, selection: String? = null,
-        selectionArgs: Array<String>? = null, groupBy: String? = null, having: String? = null,
-        orderBy: String? = null, limit: String? = null
-    ): Cursor {
-        Log.e(TAG, "query called")
-        return db.query(
-            table,
-            columns,
-            selection,
-            selectionArgs,
-            groupBy,
-            having,
-            orderBy,
-            limit
-        )
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -132,13 +104,5 @@ object BusSQLiteHelper :
                 e.printStackTrace()
             }
         }
-    }
-
-    override fun close() {
-        if (isDBOpen) {
-            db.close()
-            isDBOpen = false
-        }
-        super.close()
     }
 }

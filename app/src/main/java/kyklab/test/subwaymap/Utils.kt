@@ -3,6 +3,7 @@ package kyklab.test.subwaymap
 import android.annotation.SuppressLint
 import android.content.Context
 import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
@@ -122,6 +123,15 @@ fun Date.isHoliday(): Boolean {
     return ((cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
             || (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY))
 }
+
+@JvmOverloads
+fun SQLiteDatabase.kQuery(
+    table: String, columns: Array<String>? = null, selection: String? = null,
+    selectionArgs: Array<String>? = null, groupBy: String? = null, having: String? = null,
+    orderBy: String? = null, limit: String? = null
+): Cursor = query(
+    table, columns, selection, selectionArgs, groupBy, having, orderBy, limit
+)
 
 // https://al-e-shevelev.medium.com/how-to-reduce-scroll-sensitivity-of-viewpager2-widget-87797ad02414
 fun ViewPager2.reduceDragSensitivity() {

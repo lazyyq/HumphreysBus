@@ -23,7 +23,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusSQLiteHelper
+import kyklab.test.subwaymap.bus.BusDBHelper
 import kyklab.test.subwaymap.bus.BusUtils
 import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
 import kyklab.test.subwaymap.toast
@@ -256,7 +256,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        BusSQLiteHelper.close()
+        BusDBHelper.close()
         super.onDestroy()
     }
 
