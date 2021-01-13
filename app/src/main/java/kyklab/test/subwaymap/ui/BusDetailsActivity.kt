@@ -11,7 +11,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewTreeObserver
-import android.widget.CompoundButton
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -161,10 +160,9 @@ class BusDetailsActivity : AppCompatActivity() {
     private fun showCurrentTime() {
         updateDateTime()
 
-        switchHoliday.setOnClickListener {
-            if (it is CompoundButton) {
-                isHoliday = it.isChecked
-            }
+        tvHoliday.setOnClickListener {
+            isHoliday = !isHoliday
+
             updateDateTime()
             updateBusTimeTable()
         }
@@ -183,7 +181,7 @@ class BusDetailsActivity : AppCompatActivity() {
     }
 
     private fun updateDateTime() {
-        switchHoliday.isChecked = isHoliday
+        tvHoliday.isSelected = isHoliday
         tvCurrentTime.text = currentTime.insert(2, ":")
     }
 
