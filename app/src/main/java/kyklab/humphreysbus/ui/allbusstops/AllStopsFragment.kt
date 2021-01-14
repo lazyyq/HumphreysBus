@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.allbusstops
+package kyklab.humphreysbus.ui.allbusstops
 
 import android.content.Intent
 import android.os.Bundle
@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_stops.view.*
-import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.ui.MainActivity
+import kyklab.humphreysbus.R
+import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.ui.MainActivity
 
 class AllStopsFragment : Fragment() {
     override fun onCreateView(

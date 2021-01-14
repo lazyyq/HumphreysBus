@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui
+package kyklab.humphreysbus.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -22,13 +22,13 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
-import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusDBHelper
-import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.gMapCoordToLocalMapCoord
-import kyklab.test.subwaymap.toast
-import kyklab.test.subwaymap.ui.allbusstops.AllBusAndStopActivity
-import kyklab.test.subwaymap.ui.stopinfodialog.StopInfoDialog
+import kyklab.humphreysbus.R
+import kyklab.humphreysbus.bus.BusDBHelper
+import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.gMapCoordToLocalMapCoord
+import kyklab.humphreysbus.toast
+import kyklab.humphreysbus.ui.allbusstops.AllBusAndStopActivity
+import kyklab.humphreysbus.ui.stopinfodialog.StopInfoDialog
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {

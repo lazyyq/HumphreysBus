@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui
+package kyklab.humphreysbus.ui
 
 import android.content.res.ColorStateList
 import android.graphics.Matrix
@@ -21,11 +21,11 @@ import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
 import kotlinx.coroutines.*
-import kyklab.test.subwaymap.*
-import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.ui.stopinfodialog.DatePickerFragment
-import kyklab.test.subwaymap.ui.stopinfodialog.TimePickerFragment
+import kyklab.humphreysbus.*
+import kyklab.humphreysbus.bus.Bus
+import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.ui.stopinfodialog.DatePickerFragment
+import kyklab.humphreysbus.ui.stopinfodialog.TimePickerFragment
 import java.util.*
 
 

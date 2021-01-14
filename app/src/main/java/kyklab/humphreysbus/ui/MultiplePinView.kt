@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui
+package kyklab.humphreysbus.ui
 
 import android.content.Context
 import android.content.res.Resources
@@ -6,7 +6,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import kyklab.test.subwaymap.App
+import kyklab.humphreysbus.App
 
 class MultiplePinView @JvmOverloads constructor(context: Context?, attr: AttributeSet? = null) :
     SubsamplingScaleImageView(context, attr) {

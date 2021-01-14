@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.humphreysbus
 
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity

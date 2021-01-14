@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.stopinfodialog
+package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.DatePickerDialog
 import android.app.Dialog

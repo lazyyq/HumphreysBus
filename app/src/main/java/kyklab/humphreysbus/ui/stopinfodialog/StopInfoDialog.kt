@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.stopinfodialog
+package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.Activity
 import android.app.Dialog
@@ -22,12 +22,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.currentTimeHHmm
-import kyklab.test.subwaymap.insert
-import kyklab.test.subwaymap.isHoliday
-import kyklab.test.subwaymap.ui.BusDetailsActivity
+import kyklab.humphreysbus.R
+import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.currentTimeHHmm
+import kyklab.humphreysbus.insert
+import kyklab.humphreysbus.isHoliday
+import kyklab.humphreysbus.ui.BusDetailsActivity
 
 class StopInfoDialog : BottomSheetDialogFragment() {
     private val calendar = Calendar.getInstance()

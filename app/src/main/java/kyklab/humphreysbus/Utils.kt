@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.humphreysbus
 
 import android.annotation.SuppressLint
 import android.content.Context

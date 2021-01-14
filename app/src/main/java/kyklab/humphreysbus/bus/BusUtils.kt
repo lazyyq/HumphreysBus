@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.bus
+package kyklab.humphreysbus.bus
 
 import android.database.Cursor
 import android.graphics.Color
@@ -7,9 +7,9 @@ import androidx.core.database.getIntOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kyklab.test.subwaymap.bus.BusDBHelper.DB_TABLE_BUSES
-import kyklab.test.subwaymap.forEachCursor
-import kyklab.test.subwaymap.kQuery
+import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
+import kyklab.humphreysbus.forEachCursor
+import kyklab.humphreysbus.kQuery
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 

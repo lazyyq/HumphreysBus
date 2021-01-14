@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap
+package kyklab.humphreysbus
 
 import android.app.Application
 import android.content.Context

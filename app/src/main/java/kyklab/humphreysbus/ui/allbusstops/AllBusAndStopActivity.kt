@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.allbusstops
+package kyklab.humphreysbus.ui.allbusstops
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -6,8 +6,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
-import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.reduceDragSensitivity
+import kyklab.humphreysbus.R
+import kyklab.humphreysbus.reduceDragSensitivity
 
 class AllBusAndStopActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

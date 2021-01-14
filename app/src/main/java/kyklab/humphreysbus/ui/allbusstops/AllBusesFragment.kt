@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.allbusstops
+package kyklab.humphreysbus.ui.allbusstops
 
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -14,10 +14,10 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_buses.view.*
-import kyklab.test.subwaymap.R
-import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.BusUtils
-import kyklab.test.subwaymap.ui.BusDetailsActivity
+import kyklab.humphreysbus.R
+import kyklab.humphreysbus.bus.Bus
+import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.ui.BusDetailsActivity
 
 class AllBusesFragment : Fragment() {
     override fun onCreateView(

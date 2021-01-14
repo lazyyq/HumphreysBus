@@ -55,7 +55,7 @@
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <kyklab.test.subwaymap.ui.MultiplePinView
+    <kyklab.humphreysbus.ui.MultiplePinView
         android:id="@+id/ivMap"
         android:layout_width="0dp"
         android:layout_height="0dp"

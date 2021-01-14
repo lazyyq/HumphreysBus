@@ -1,4 +1,4 @@
-package kyklab.test.subwaymap.ui.stopinfodialog
+package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.Activity
 import android.content.Context
@@ -18,9 +18,9 @@ import kotlinx.android.synthetic.main.fragment_stop_info_timetable_column_item.v
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kyklab.test.subwaymap.*
-import kyklab.test.subwaymap.bus.Bus
-import kyklab.test.subwaymap.bus.BusUtils
+import kyklab.humphreysbus.*
+import kyklab.humphreysbus.bus.Bus
+import kyklab.humphreysbus.bus.BusUtils
 import java.util.*
 
 class StopInfoDialogAdapter(

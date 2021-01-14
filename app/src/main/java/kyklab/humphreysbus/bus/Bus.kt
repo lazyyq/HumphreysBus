@@ -1,7 +1,6 @@
-package kyklab.test.subwaymap.bus
+package kyklab.humphreysbus.bus
 
 import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
 
 data class Bus(
     val name: String, @ColorInt val colorInt: Int,
