@@ -18,6 +18,7 @@
         android:layout_gravity="start"
         android:textColor="#BF000000"
         android:gravity="start"
+        android:bufferType="spannable"
         android:textStyle="bold"
         android:lineSpacingExtra="12sp"
         android:textSize="16sp"

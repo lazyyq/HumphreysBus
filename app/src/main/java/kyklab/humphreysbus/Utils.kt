@@ -1,20 +1,27 @@
 package kyklab.humphreysbus
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.RectF
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.text.style.ReplacementSpan
+import android.util.DisplayMetrics
 import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import kotlinx.android.synthetic.main.activity_bus_details.*
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -26,6 +33,39 @@ fun Context.toast(text: String? = null) {
 fun dpToPx(context: Context, dp: Float): Int {
     val dm = context.resources.displayMetrics
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, dm).toInt()
+}
+
+val Activity.screenWidth: Int
+    get() {
+        val metrics = DisplayMetrics()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            display?.getRealMetrics(metrics)
+        } else {
+            windowManager.defaultDisplay.getMetrics(metrics)
+        }
+        return metrics.widthPixels
+    }
+
+val <T : View> T.parentRelativeCoordinates: Rect
+    get() {
+        val bounds = Rect()
+        val p = parent
+        getDrawingRect(bounds)
+        if (p is ViewGroup) {
+            p.offsetDescendantRectToMyCoords(this, bounds)
+        }
+        return bounds
+    }
+
+fun <T : View> T.onViewReady(block: T.() -> Unit) {
+    viewTreeObserver.addOnGlobalLayoutListener(
+        object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                viewTreeObserver.removeOnGlobalLayoutListener(this)
+                this@onViewReady.block()
+            }
+        }
+    )
 }
 
 val currentTimeHHmm: String

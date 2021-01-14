@@ -5,10 +5,7 @@ import android.content.Context
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.LinearLayout
 import androidx.core.text.bold
 import androidx.core.text.italic
@@ -111,6 +108,12 @@ class StopInfoDialogAdapter(
                         }
 
                         // Show times for current stop, with the closest one in bold
+
+                        // Save lines count for auto scrolling to closest stop time
+                        var autoScrollTotalLines: Int
+                        var autoScrollHighlightLine = 0
+                        val autoScrollOffset = 4
+
                         tvTimeTable.text = SpannableStringBuilder().apply {
                             var closestFound = false
                             var itemNum = 0 // To change line on `timeTextsPerLine`th text
@@ -118,6 +121,7 @@ class StopInfoDialogAdapter(
                                 .filter { it.isHoliday == isHoliday }
                                 .map { it.stopTimes[stopIndex] }
                             stopTimes.let {
+                                autoScrollTotalLines = 1
                                 for (i in it.indices) {
                                     ++itemNum
                                     append("    ")
@@ -129,6 +133,7 @@ class StopInfoDialogAdapter(
                                             it[i].toInt()
                                         )
                                         if (isBetween) {
+                                            // Found the closest stop time
                                             append(SpannableString(str).apply {
                                                 setSpan(
                                                     RoundedBackgroundSpan(
@@ -142,6 +147,7 @@ class StopInfoDialogAdapter(
                                                 )
                                             })
                                             closestFound = true
+                                            autoScrollHighlightLine = autoScrollTotalLines
                                         } else {
                                             append(str)
                                         }
@@ -149,10 +155,28 @@ class StopInfoDialogAdapter(
                                         append(str)
                                     }
                                     append("    ")
-                                    if (itemNum == timeTextsPerLine) append("\n")
+                                    if (itemNum == timeTextsPerLine) {
+                                        append("\n")
+                                        ++autoScrollTotalLines
+                                    }
                                     itemNum %= timeTextsPerLine
                                 }
                             }
+                        }
+                        // Auto scroll to closest stop time
+                        scope.launch(Dispatchers.Main) {
+                            tvTimeTable.addOnLayoutChangeListener(object :
+                                View.OnLayoutChangeListener {
+                                override fun onLayoutChange(
+                                    v: View?, left: Int, top: Int, right: Int, bottom: Int,
+                                    oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int
+                                ) {
+                                    val scroll = tvTimeTable.height *
+                                            (autoScrollHighlightLine - autoScrollOffset) / autoScrollTotalLines
+                                    scrollView.scrollTo(0, scroll)
+                                    tvTimeTable.removeOnLayoutChangeListener(this)
+                                }
+                            })
                         }
 
                         val showBusScheduledOnClick = { v: View ->

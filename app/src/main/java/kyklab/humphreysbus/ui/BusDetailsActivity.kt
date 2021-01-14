@@ -2,19 +2,19 @@ package kyklab.humphreysbus.ui
 
 import android.content.res.ColorStateList
 import android.graphics.Matrix
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewTreeObserver
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.bold
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
@@ -114,48 +114,137 @@ class BusDetailsActivity : AppCompatActivity() {
                             setTypeface(typeface, Typeface.BOLD)
                         }
                     }
+
+                // Line to auto scroll
+                var autoScrollTotalLines = 1
+                var autoScrollLine = 0
+                val autoScrollOffset = 5
+
                 // Columns, which are LinearLayout, that contain list of stop time and time left
-                val stopColumns = Array(busToShow.stopPoints.size) { stopIndex ->
+                val stopColumns = Array(busToShow.stopPoints.size) { column ->
+                    var closestTimeFound = false
                     LayoutInflater.from(this@BusDetailsActivity).inflate(
                         R.layout.activity_bus_details_column, timeTableContainer, false
                     ).apply {
-                        val timeText = StringBuilder()
-                        val timeLeftText = StringBuilder()
+                        val timeTextBuilder = SpannableStringBuilder()
+                        val timeLeftTextBuilder = SpannableStringBuilder()
                         val instances = busToShow.instances.filter { i -> i.isHoliday == isHoliday }
+                        autoScrollTotalLines = instances.size + 1
                         for (i in instances.indices) {
-                            val time = instances[i].stopTimes[stopIndex]
-                            timeText.append(time.insert(2, ":") + '\n')
-                            timeLeftText.append(
-                                minToHH_mm(
+                            val time = instances[i].stopTimes[column]
+
+                            // If this is the stop to highlight, find line to auto scroll to
+                            if (!closestTimeFound && column == stopToHighlightIndex &&
+                                isBetween(
+                                    currentTime.toInt(),
+                                    instances.getWithWrappedIndex(i - 1)!!.stopTimes[column].toInt(),
+                                    time.toInt()
+                                )
+                            ) {
+                                autoScrollLine = i
+                                closestTimeFound = true
+
+                                var text = time.insert(2, ":") + '\n'
+                                timeTextBuilder.bold {
+                                    append(
+                                        SpannableStringBuilder(text).apply {
+                                            setSpan(
+                                                ForegroundColorSpan(getColor(R.color.details_column_highlighted_text)),
+                                                0,
+                                                text.length,
+                                                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                            )
+                                        })
+                                }
+                                text = minToHH_mm(
                                     calcTimeLeft(currentTimeHHmm.toInt(), time.toInt())
                                 ) + " left" + '\n'
-                            )
+                                timeLeftTextBuilder.bold {
+                                    append(
+                                        SpannableStringBuilder(text).apply {
+                                            setSpan(
+                                                ForegroundColorSpan(getColor(R.color.details_column_highlighted_text)),
+                                                0,
+                                                text.length,
+                                                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
+                                            )
+                                        })
+                                }
+                            } else {
+                                timeTextBuilder.append(time.insert(2, ":") + '\n')
+                                timeLeftTextBuilder.append(
+                                    minToHH_mm(
+                                        calcTimeLeft(currentTimeHHmm.toInt(), time.toInt())
+                                    ) + " left" + '\n'
+                                )
+                            }
                         }
-                        tvStopTimeColumn.text = timeText
-                        tvTimeLeftColumn.text = timeLeftText
+                        tvStopTimeColumn.text = timeTextBuilder
+                        tvTimeLeftColumn.text = timeLeftTextBuilder
                     }
                 }
+                val bgColors =
+                    listOf(android.R.color.white, R.color.details_column_lighter_gray)
                 launch(Dispatchers.Main) {
-                    val bg = listOf(android.R.color.white, R.color.details_column_lighter_gray)
-                    for (i in stopColumns.indices) {
-                        timeTableContainer.addView(stopColumns[i])
-                        stopColumns[i].setBackgroundResource(bg[i % bg.size])
-                        stopNameContainerColumnItems[i].setBackgroundResource(bg[i % bg.size])
-                        stopColumns[i].viewTreeObserver.addOnGlobalLayoutListener(object :
-                            ViewTreeObserver.OnGlobalLayoutListener {
-                            override fun onGlobalLayout() {
-                                // Match column header width with column width
-                                stopNameContainerColumnItems[i].layoutParams.width =
-                                    stopColumns[i].width
-                                stopNameContainer.addView(stopNameContainerColumnItems[i])
-                                stopColumns[i].viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    for ((i, stopColumn) in stopColumns.withIndex()) {
+                        timeTableContainer.addView(stopColumn)
+
+                        val bg =
+                            if (i == stopToHighlightIndex) R.color.details_column_highlighted_bg
+                            else bgColors[i % bgColors.size]
+                        stopColumn.setBackgroundResource(bg)
+                        stopNameContainerColumnItems[i].setBackgroundResource(bg)
+                        stopColumn.onViewReady {
+                            // Match column header width with column width
+                            stopNameContainerColumnItems[i].layoutParams.width =
+                                stopColumn.width
+                            stopNameContainer.addView(stopNameContainerColumnItems[i])
+
+                            // Auto scroll to highlighted stop
+                            if (i == stopToHighlightIndex) {
+                                val relativeLeft =
+                                    stopColumn.parentRelativeCoordinates.left
+                                val marginLeft = (screenWidth - stopColumn.width) / 2
+                                val scrollX = relativeLeft - marginLeft
+                                val scrollY =
+                                    (stopColumn.height) *
+                                            (autoScrollLine - autoScrollOffset) / autoScrollTotalLines
+
+                                zoomLayoutTimeTable.moveTo(
+                                    zoomLayoutTimeTable.zoom,
+                                    -scrollX.toFloat(), -scrollY.toFloat(), false
+                                )
+                                stopNameContainerColumnItems[i].onViewReady {
+                                    zoomLayoutStopName.moveTo(
+                                        zoomLayoutStopName.zoom,
+                                        -scrollX.toFloat(), 0f, false
+                                    )
+                                }
                             }
-                        })
+                        }
                     }
                     progressBar.visibility = View.INVISIBLE
                 }
             }
         }
+    }
+
+    /**
+     * Decide if we're between previous and next stop time
+     */
+    private fun isBetween(_curTime: Int, _prevTime: Int, _nextTime: Int): Boolean {
+        val currTime: Int
+        val nextTime: Int
+        if (_nextTime < _prevTime) {
+            nextTime = _nextTime + 2400
+            currTime =
+                if (_curTime < _prevTime) _curTime + 2400
+                else _curTime
+        } else {
+            nextTime = _nextTime
+            currTime = _curTime
+        }
+        return currTime in (_prevTime + 1)..nextTime
     }
 
     private fun showCurrentTime() {
@@ -184,19 +273,5 @@ class BusDetailsActivity : AppCompatActivity() {
     private fun updateDateTime() {
         tvHoliday.isSelected = isHoliday
         tvCurrentTime.text = currentTime.insert(2, ":")
-    }
-
-    fun scrollToView(scrollView: HorizontalScrollView, view: TextView) {
-
-        // View needs a focus
-        view.requestFocus()
-
-        // Determine if scroll needs to happen
-        val scrollBounds = Rect()
-        scrollView.getHitRect(scrollBounds)
-        if (!view.getLocalVisibleRect(scrollBounds)) {
-            scrollView.smoothScrollTo(view.left, 0)
-//            Handler().post(Runnable { scrollView.smoothScrollTo(view.getLeft(), 0) })
-        }
     }
 }
