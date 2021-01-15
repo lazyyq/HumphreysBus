@@ -17,11 +17,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+import com.github.javiersantos.appupdater.AppUpdater
+import com.github.javiersantos.appupdater.enums.Display
+import com.github.javiersantos.appupdater.enums.UpdateFrom
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
+import kyklab.humphreysbus.APP_UPDATE_JSON
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusDBHelper
 import kyklab.humphreysbus.bus.BusUtils
@@ -90,6 +94,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         BusUtils.loadData()
+
+        checkAppUpdate()
 
         ivAllBuses.setOnClickListener {
             startActivityForResult(
@@ -293,6 +299,17 @@ class MainActivity : AppCompatActivity() {
             bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, stopId)
             arguments = bundle
             show(supportFragmentManager, this.tag)
+        }
+    }
+
+    private fun checkAppUpdate() {
+        AppUpdater(this).apply {
+            setDisplay(Display.DIALOG)
+            setUpdateFrom(UpdateFrom.JSON)
+            setUpdateJSON(APP_UPDATE_JSON)
+            setTitleOnUpdateAvailable("New version available")
+            setContentOnUpdateAvailable("Check out the latest version of the app for better performance and stability!")
+            start()
         }
     }
 }
