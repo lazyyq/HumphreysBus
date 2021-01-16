@@ -33,12 +33,10 @@ class SettingsActivity : AppCompatActivity() {
             setDisplayUseLogoEnabled(true)
         }
 
-        // Version info in debug version
-        if (BuildConfig.DEBUG) {
-            tvVersion.apply {
-                visibility = View.VISIBLE
-                text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-            }
+        tvVersion.apply {
+            visibility = View.VISIBLE
+            text =
+                "${getString(R.string.app_name)} ${BuildConfig.BUILD_TYPE} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
         }
     }
 
