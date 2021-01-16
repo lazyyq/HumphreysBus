@@ -17,22 +17,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.github.javiersantos.appupdater.AppUpdater
-import com.github.javiersantos.appupdater.enums.Display
-import com.github.javiersantos.appupdater.enums.UpdateFrom
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
-import kyklab.humphreysbus.APP_UPDATE_JSON
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusDBHelper
 import kyklab.humphreysbus.bus.BusUtils
-import kyklab.humphreysbus.gMapCoordToLocalMapCoord
-import kyklab.humphreysbus.toast
 import kyklab.humphreysbus.ui.allbusstops.AllBusAndStopActivity
 import kyklab.humphreysbus.ui.stopinfodialog.StopInfoDialog
+import kyklab.humphreysbus.utils.AppUpdateChecker
+import kyklab.humphreysbus.utils.Prefs
+import kyklab.humphreysbus.utils.gMapCoordToLocalMapCoord
+import kyklab.humphreysbus.utils.toast
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {
@@ -77,6 +75,8 @@ class MainActivity : AppCompatActivity() {
     private var fabElevation: Float? = null
     private var isLoadingLocation = false
 
+    private val appUpdateChecker by lazy { AppUpdateChecker(this) }
+
     companion object {
         private const val TAG = "MainActivity"
         const val REQ_CODE_SELECT_STOP = 1
@@ -94,7 +94,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         BusUtils.loadData()
-
         checkAppUpdate()
 
         ivAllBuses.setOnClickListener {
@@ -102,6 +101,9 @@ class MainActivity : AppCompatActivity() {
                 Intent(this, AllBusAndStopActivity::class.java),
                 REQ_CODE_SELECT_STOP
             )
+        }
+        ivSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         val locationRequest = LocationRequest.create()?.apply {
@@ -263,6 +265,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         BusDBHelper.close()
+        appUpdateChecker.unregisterDownloadReceiver()
         super.onDestroy()
     }
 
@@ -303,13 +306,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkAppUpdate() {
-        AppUpdater(this).apply {
-            setDisplay(Display.DIALOG)
-            setUpdateFrom(UpdateFrom.JSON)
-            setUpdateJSON(APP_UPDATE_JSON)
-            setTitleOnUpdateAvailable("New version available")
-            setContentOnUpdateAvailable("Check out the latest version of the app for better performance and stability!")
-            start()
+        if (Prefs.autoCheckUpdateOnStartup) {
+            appUpdateChecker.checkAppUpdate()
         }
     }
 }

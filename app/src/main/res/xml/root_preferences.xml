@@ -1,0 +1,20 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <PreferenceCategory app:title="Auto update">
+
+        <SwitchPreferenceCompat
+            app:defaultValue="@bool/pref_auto_check_update_on_startup_default"
+            app:icon="@drawable/ic_check_circle_outline"
+            app:key="@string/pref_auto_check_update_on_startup"
+            app:title="Check app update on startup" />
+
+        <Preference
+            app:icon="@drawable/ic_cached"
+            app:key="@string/pref_force_check_update"
+            app:title="Check app update now"
+            tools:summary="Last checked at 12:00" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

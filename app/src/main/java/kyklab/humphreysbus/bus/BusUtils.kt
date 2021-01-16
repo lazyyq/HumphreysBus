@@ -8,8 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
-import kyklab.humphreysbus.forEachCursor
-import kyklab.humphreysbus.kQuery
+import kyklab.humphreysbus.utils.forEachCursor
+import kyklab.humphreysbus.utils.kQuery
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 

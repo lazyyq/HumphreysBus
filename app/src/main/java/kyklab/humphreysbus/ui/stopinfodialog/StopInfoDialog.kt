@@ -24,10 +24,10 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusUtils
-import kyklab.humphreysbus.currentTimeHHmm
-import kyklab.humphreysbus.insert
-import kyklab.humphreysbus.isHoliday
 import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.utils.currentTimeHHmm
+import kyklab.humphreysbus.utils.insert
+import kyklab.humphreysbus.utils.isHoliday
 
 class StopInfoDialog : BottomSheetDialogFragment() {
     private val calendar = Calendar.getInstance()

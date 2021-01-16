@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MaterialComponents.Dialog.TextButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_marginStart">0dp</item>
+        <item name="android:layout_marginEnd">0dp</item>
+    </style>
+</resources>

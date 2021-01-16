@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
 import kyklab.humphreysbus.R
-import kyklab.humphreysbus.reduceDragSensitivity
+import kyklab.humphreysbus.utils.reduceDragSensitivity
 
 class AllBusAndStopActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
