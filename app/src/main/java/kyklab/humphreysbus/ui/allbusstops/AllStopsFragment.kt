@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_stops.view.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.ui.MainActivity
 
 class AllStopsFragment : Fragment() {
@@ -30,7 +31,7 @@ class AllStopsFragment : Fragment() {
         }
     }
 
-    private inner class RvAdapter(private val items: List<BusUtils.BusStop>) :
+    private inner class RvAdapter(private val items: List<BusStop>) :
         RecyclerView.Adapter<RvAdapter.ViewHolder>() {
 
         private inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

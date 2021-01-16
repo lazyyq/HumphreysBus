@@ -1,6 +1,5 @@
 package kyklab.humphreysbus.bus
 
-import android.database.Cursor
 import android.graphics.Color
 import android.util.Log
 import androidx.core.database.getIntOrNull
@@ -8,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
+import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.forEachCursor
 import kyklab.humphreysbus.utils.kQuery
 import java.util.concurrent.locks.ReentrantLock
@@ -51,7 +51,7 @@ object BusUtils {
             var nearestStop: BusStop? = null
             var minDistance: Float? = null
             for (stop in stops) {
-                val distanceToStop = stop.checkDistanceToStop(x, y)
+                val distanceToStop = stop.checkDistance(x, y)
                 if (distanceToStop != null) {
                     if (minDistance == null || distanceToStop < minDistance) {
                         nearestStop = stop
@@ -83,7 +83,15 @@ object BusUtils {
             BusDBHelper.db.use { db ->
                 db.kQuery(BusDBHelper.DB_TABLE_STOPS).use { cursor ->
                     stops = ArrayList(cursor.count)
-                    cursor.forEachCursor { (stops as ArrayList<BusStop>).add(BusStop(it)) }
+                    cursor.forEachCursor {
+                        val id: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_ID)
+                        val no: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_MAPNO)
+                        val name: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_NAME)
+                        val xCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
+                        val yCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+                        val newStop = BusStop(id, no, name, xCenter, yCenter)
+                        (stops as ArrayList<BusStop>).add(newStop)
+                    }
                     cursor.close()
                 }
             }
@@ -146,26 +154,6 @@ object BusUtils {
         }
     }
 
-    data class BusStop(val cursor: Cursor) {
-        companion object {
-            private const val BUS_STOP_TOUCH_RECOGNITION_DISTANCE = 150 * 150
-
-            private fun Int.square() = this * this
-            private fun Float.square() = this * this
-        }
-
-        val id: Int = cursor.getInt(BusDBHelper.DB_STOPS_COL_INDEX_ID)
-        val no: String = cursor.getString(BusDBHelper.DB_STOPS_COL_INDEX_MAPNO)
-        val name: String = cursor.getString(BusDBHelper.DB_STOPS_COL_INDEX_NAME)
-        val xCenter: Int = cursor.getInt(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
-        val yCenter: Int = cursor.getInt(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
-        // TODO: Fix stops without coordinates
-
-        fun checkDistanceToStop(x: Float, y: Float): Float? {
-            val distance = (x - xCenter).square() + (y - yCenter).square()
-            return if (distance <= BUS_STOP_TOUCH_RECOGNITION_DISTANCE) distance else null
-        }
-    }
 }
 
 

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kyklab.humphreysbus.*
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.RoundedBackgroundSpan
 import kyklab.humphreysbus.utils.dpToPx
 import kyklab.humphreysbus.utils.getWithWrappedIndex
@@ -70,9 +71,9 @@ class StopInfoDialogAdapter(
             for (stopIndex in item.stopIndexes) {
                 val timeTextsPerLine: Int = 4 / item.stopIndexes.size
 
-                var prevStop: BusUtils.BusStop?
-                var currStop: BusUtils.BusStop?
-                var nextStop: BusUtils.BusStop?
+                var prevStop: BusStop?
+                var currStop: BusStop?
+                var nextStop: BusStop?
                 bus.stopPoints.let {
                     prevStop = it.getOrNull(stopIndex - 1)
                     currStop = it.getOrNull(stopIndex)

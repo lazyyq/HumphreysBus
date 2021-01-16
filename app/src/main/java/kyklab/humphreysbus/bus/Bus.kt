@@ -1,10 +1,11 @@
 package kyklab.humphreysbus.bus
 
 import androidx.annotation.ColorInt
+import kyklab.humphreysbus.data.BusStop
 
 data class Bus(
     val name: String, @ColorInt val colorInt: Int,
-    val stopPoints: List<BusUtils.BusStop>,
+    val stopPoints: List<BusStop>,
     val instances: List<BusInstance>
 ) {
     companion object {
