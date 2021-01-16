@@ -80,6 +80,8 @@ class MainActivity : AppCompatActivity() {
     private var fabElevation: Float? = null
     private var isLoadingLocation = false
 
+    private var currentStopInfoDialog: StopInfoDialog? = null
+
     private val appUpdateChecker by lazy { AppUpdateChecker(this) }
 
     companion object {
@@ -302,7 +304,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showStopInfoDialog(stopId: Int) {
-        StopInfoDialog().apply {
+        currentStopInfoDialog?.dismiss()
+        currentStopInfoDialog = StopInfoDialog { currentStopInfoDialog = null }.apply {
             val bundle = Bundle()
             bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, stopId)
             arguments = bundle

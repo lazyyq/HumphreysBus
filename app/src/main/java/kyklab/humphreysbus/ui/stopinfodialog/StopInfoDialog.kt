@@ -2,6 +2,7 @@ package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
@@ -25,11 +26,12 @@ import kotlinx.coroutines.launch
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.ui.MainActivity
 import kyklab.humphreysbus.utils.currentTimeHHmm
 import kyklab.humphreysbus.utils.insert
 import kyklab.humphreysbus.utils.isHoliday
 
-class StopInfoDialog : BottomSheetDialogFragment() {
+class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragment() {
     private val calendar = Calendar.getInstance()
     private var currentTime = currentTimeHHmm
     private val sdf by lazy { SimpleDateFormat("HHmm") }
@@ -142,6 +144,11 @@ class StopInfoDialog : BottomSheetDialogFragment() {
         tvCurrentTime.text = "As of ${currentTime.insert(2, ":")}"
     }
 
+    override fun onDismiss(dialog: DialogInterface) {
+        onDismiss()
+        super.onDismiss(dialog)
+    }
+
     companion object {
         const val ARGUMENT_STOP_ID = "argument_id"
 
@@ -150,7 +157,7 @@ class StopInfoDialog : BottomSheetDialogFragment() {
                 putExtra("busname", busName)
                 putExtra("highlightstopindex", stopIndex)
             }
-            activity.startActivity(intent)
+            activity.startActivityForResult(intent, MainActivity.REQ_CODE_SELECT_STOP)
         }
     }
 }

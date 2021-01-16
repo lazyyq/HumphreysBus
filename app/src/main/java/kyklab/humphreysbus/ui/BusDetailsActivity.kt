@@ -1,5 +1,6 @@
 package kyklab.humphreysbus.ui
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Matrix
 import android.graphics.Typeface
@@ -182,6 +183,17 @@ class BusDetailsActivity : AppCompatActivity() {
                         }
                         tvStopTimeColumn.text = timeTextBuilder
                         tvTimeLeftColumn.text = timeLeftTextBuilder
+
+                        setOnClickListener {
+                            val stop = busToShow.stopPoints[column]
+                            val intent = Intent().apply {
+                                putExtra("xCor", stop.xCenter.toFloat())
+                                putExtra("yCor", stop.yCenter.toFloat())
+                                putExtra("stopId", stop.id)
+                            }
+                            setResult(MainActivity.RESULT_STOP_SELECTED, intent)
+                            finish()
+                        }
                     }
                 }
                 val bgColors =
