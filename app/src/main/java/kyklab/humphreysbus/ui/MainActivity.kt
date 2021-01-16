@@ -62,7 +62,12 @@ class MainActivity : AppCompatActivity() {
                         )
 //                        imageView.setPin(point)
                         setStopSelectionPin(point)
-                        ivMap.setScaleAndCenter(2f, point)
+                        val animationBuilder =
+                            if (ivMap.scale < 1.0f)
+                                ivMap.animateScaleAndCenter(1f, point)
+                            else
+                                ivMap.animateCenter(point)
+                        animationBuilder?.withDuration(250)?.start()
                     }
                 } ?: run { toast("Couldn't find location") }
 
