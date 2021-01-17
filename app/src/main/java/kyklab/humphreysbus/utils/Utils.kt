@@ -101,22 +101,6 @@ fun minToHH_mm(totalMins: Int): String {
 }
 */
 
-private const val xBase = 126.974512
-private const val yBase = 36.945053
-
-private const val xRatio = 1749 / 0.028094
-private const val yRatio = 2115 / 0.026039
-
-fun gMapCoordToLocalMapCoord(x: Double, y: Double): Array<Double>? {
-    val xCalculated = (x - xBase) * xRatio
-    val yCalculated = 3600 - (y - yBase) * yRatio
-    return if ((0 <= xCalculated) && (xCalculated <= 4800) &&
-        (0 <= yCalculated) && (yCalculated <= 3600)
-    ) {
-        arrayOf(xCalculated, yCalculated)
-    } else null
-}
-
 fun Int.format(format: String): String = String.format(format, this)
 
 fun <T> Array<T>.getWithWrappedIndex(index: Int): T? =
