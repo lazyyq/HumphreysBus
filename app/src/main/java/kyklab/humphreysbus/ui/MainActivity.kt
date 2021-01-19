@@ -12,6 +12,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -217,9 +218,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initBusMap() {
-        busMap = BusMap(this, ivMap) { spot ->
+        busMap = BusMap(this, lifecycleScope, ivMap) { spot ->
             if (spot is BusStop) {
-                busMap.highlight(spot.xCenter.toFloat(), spot.yCenter.toFloat(),
+                busMap.highlight(
+                    spot.xCenter.toFloat(), spot.yCenter.toFloat(),
                     animateDuration = 250L,
                     animationListener = object :
                         SubsamplingScaleImageView.OnAnimationEventListener {

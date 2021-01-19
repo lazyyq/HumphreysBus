@@ -1,18 +1,24 @@
 package kyklab.humphreysbus.ui
 
 import android.content.Context
-import android.content.res.Resources
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PointF
 import android.util.AttributeSet
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.scale
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import kyklab.humphreysbus.App
 
 class MultiplePinView @JvmOverloads constructor(context: Context?, attr: AttributeSet? = null) :
     SubsamplingScaleImageView(context, attr) {
     companion object {
         private const val TAG = "MultiplePinView"
     }
+
+    var simpleScaleThreshold = 0f
 
     private val paint by lazy {
         Paint().apply { isAntiAlias = true }
@@ -22,24 +28,8 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
         ArrayList()
     }
 
-    class Pin(val sPin: PointF, res: Resources, @DrawableRes resId: Int) {
-        companion object {
-            val density = App.context.resources.displayMetrics.densityDpi.toFloat()
-        }
-
-        val width: Float
-        val height: Float
-        val pin: Bitmap
-
-        init {
-            val tmpPin = BitmapFactory.decodeResource(res, resId)
-            width = density / 420f * tmpPin.width
-            height = density / 420f * tmpPin.height
-            pin = Bitmap.createScaledBitmap(tmpPin, width.toInt(), height.toInt(), true)
-        }
-    }
-
     fun addPin(pin: Pin): Int {
+        if (pin.sPin.x < 0 || pin.sPin.y < 0) return -1
         pins.add(pin)
         invalidate()
         return pins.size - 1
@@ -69,10 +59,58 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
 
         pins.forEach { pin ->
             sourceToViewCoord(pin.sPin)?.let {
-                val vX = it.x - pin.width / 2
-                val vY = it.y - pin.height
-                canvas.drawBitmap(pin.pin, vX, vY, paint)
+                val bitmap =
+                    if (pin.pinSimple != null && simpleScaleThreshold > 0 && scale <= simpleScaleThreshold)
+                        pin.pinSimple!!
+                    else
+                        pin.pin
+                val coord = pin.imageCoord(it, bitmap.width.toFloat(), bitmap.height.toFloat())
+                val x = coord.x
+                val y = coord.y
+                canvas.drawBitmap(bitmap, x, y, paint)
             }
+        }
+    }
+
+    class Pin {
+        var sPin: PointF
+        var pin: Bitmap
+        var pinSimple: Bitmap?
+        var imageCoord: (coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF
+
+        constructor(
+            context: Context,
+            sPin: PointF,
+            @DrawableRes resId: Int,
+            pinSimple: Bitmap?,
+            imageCoord: ((coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF)?
+        ) {
+            this.sPin = sPin
+            this.pin = AppCompatResources.getDrawable(context, resId)!!.toBitmap()
+            this.pinSimple = pinSimple
+            this.imageCoord = imageCoord ?: { coord, _, _ -> coord }
+        }
+
+        constructor(
+            sPin: PointF, bitmap: Bitmap,
+            pinSimple: Bitmap?,
+            imageCoord: ((coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF)?
+        ) {
+            this.sPin = sPin
+            this.pin = bitmap
+            this.pinSimple = pinSimple
+            this.imageCoord = imageCoord ?: { coord, _, _ -> coord }
+        }
+
+        fun setPinSize(width: Int, height: Int) {
+            pin = pin.scale(width, height)
+        }
+
+        fun setSimplePinSize(width: Int, height: Int) {
+            if (pinSimple == null) {
+                pinSimple = pin.copy(pin.config, true)
+            }
+            pinSimple = pinSimple!!.scale(width, height)
         }
     }
 }

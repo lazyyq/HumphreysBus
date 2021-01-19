@@ -2,25 +2,34 @@ package kyklab.humphreysbus.bus
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.graphics.PointF
+import android.graphics.*
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.scale
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kyklab.humphreysbus.R
+import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.data.Spot
 import kyklab.humphreysbus.ui.MultiplePinView
+import kyklab.humphreysbus.utils.dpToPx
+
 
 class BusMap(
     private val activity: Activity,
+    private val scope: CoroutineScope,
     private val mapView: MultiplePinView,
     private val onSpotSelected: (Spot) -> Unit
-
 ) {
     companion object {
         private val TAG = BusMap::class.simpleName
-        private const val MAP_ASSET_FILENAME = "subway.webp"
+        private const val MAP_ASSET_FILENAME = "subway.png"
 
         private const val xBase = 126.974512
         private const val yBase = 36.945053
@@ -69,6 +78,25 @@ class BusMap(
             gestureDetector.onTouchEvent(event)
             false
         }
+        mapView.simpleScaleThreshold = 0.5f
+
+        // Add stop pins to map
+        scope.launch(Dispatchers.Default) {
+            BusUtils.onLoadDone {
+                BusUtils.stops.forEach { stop ->
+                    val pin = MultiplePinView.Pin(
+                        PointF(stop.xCenter.toFloat(), stop.yCenter.toFloat()),
+                        createBusBitmap(stop),
+                        createBusBitmapSimple(stop),
+                    ) { coord, pinWidth, pinHeight ->
+                        val x = coord.x - pinWidth / 2
+                        val y = coord.y - pinHeight / 2
+                        PointF(x, y)
+                    }
+                    mapView.addPin(pin)
+                }
+            }
+        }
     }
 
     fun highlight(
@@ -104,11 +132,100 @@ class BusMap(
         resetStopSelectionPin()
         selectionPin =
             mapView.addPin(
-                MultiplePinView.Pin(coord, activity.resources, R.drawable.pushpin_blue)
+                MultiplePinView.Pin(
+                    activity, coord, R.drawable.pushpin_blue, null
+                ) { c, pinWidth, pinHeight ->
+                    val x = c.x - pinWidth / 2
+                    val y = c.y - pinHeight
+                    PointF(x, y)
+                }.apply {
+                    setPinSize(36.dpToPx(), 44.dpToPx())
+                }
             )
     }
 
     private fun resetStopSelectionPin() {
         selectionPin?.let { mapView.removePin(it) }
+    }
+
+    private fun createBusBitmap(stop: BusStop): Bitmap {
+        val resId = R.drawable.ic_bus
+        val text = stop.name
+
+        val innerImageWidth = 32.dpToPx()
+        val innerImageHeight = 32.dpToPx()
+        val innerImage = AppCompatResources.getDrawable(this.activity, resId)!!
+            .apply { setTint(Color.DKGRAY) }
+            .toBitmap()
+            .scale(innerImageWidth, innerImageHeight)
+
+        val innerTextSize = 10.dpToPx().toFloat()
+        val textBorderSize = 4.dpToPx().toFloat()
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(61, 61, 61)
+            textSize = innerTextSize
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val textStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = innerTextSize
+            strokeWidth = textBorderSize
+            style = Paint.Style.STROKE
+            typeface = Typeface.DEFAULT_BOLD
+        }
+
+        val textBounds = Rect()
+        textPaint.getTextBounds(text, 0, text.length, textBounds)
+
+        val textWidth = textBounds.width()
+        val textHeight = textBounds.height()
+
+        val innerImageMargin = 2.dpToPx()
+        val resultImageMargin = 2.dpToPx()
+
+        val resultImageWidth = Math.max(
+            textBounds.width(),
+            innerImageWidth + innerImageMargin * 2
+        ) + resultImageMargin * 2
+        val resultImageHeight =
+            innerImageHeight + (innerImageMargin + textHeight + resultImageMargin) * 2
+
+
+        val backgroundBitmap =
+            Bitmap.createBitmap(resultImageWidth, resultImageHeight, Bitmap.Config.ARGB_8888)
+
+        val resultBitmap = Bitmap.createBitmap(
+            backgroundBitmap.width, backgroundBitmap.height,
+            backgroundBitmap.config
+        )
+        val c = Canvas(resultBitmap)
+        c.drawBitmap(backgroundBitmap, Matrix(), null)
+
+        val innerImageLeft = (resultImageWidth - innerImageWidth) / 2f
+        val innerImageTop = (resultImageHeight - innerImageHeight) / 2f
+        c.drawBitmap(innerImage, innerImageLeft, innerImageTop, Paint())
+
+        val textLeft = (resultImageWidth - textWidth) / 2f
+        val textBottom = (resultImageHeight - resultImageMargin).toFloat()
+        c.drawText(text, textLeft, textBottom, textStrokePaint)
+        c.drawText(text, textLeft, textBottom, textPaint)
+
+        return resultBitmap
+    }
+
+    private fun createBusBitmapSimple(stop: BusStop): Bitmap {
+        val resId = R.drawable.ic_bus
+
+        val width = 32.dpToPx()
+        val height = 32.dpToPx()
+
+        return AppCompatResources.getDrawable(activity, resId)!!
+            .apply { setTint(Color.DKGRAY) }
+            .toBitmap()
+            .scale(width, height)
+    }
+
+    private fun Number.dpToPx(): Int {
+        return dpToPx(activity, this.toFloat())
     }
 }

@@ -43,6 +43,13 @@ object BusUtils {
         }
     }
 
+    fun onLoadDone(block: () -> Unit) {
+        lock.withLock {
+            while (!isLoadDone) cond.await()
+            block()
+        }
+    }
+
     fun getStopFromCoord(x: Float, y: Float): BusStop? {
         lock.withLock {
             while (!isLoadDone) cond.await()
