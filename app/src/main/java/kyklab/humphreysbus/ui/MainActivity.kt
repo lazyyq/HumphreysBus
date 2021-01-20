@@ -77,25 +77,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
-        supportActionBar?.apply {
-            setDisplayShowCustomEnabled(true)
-            setDisplayShowTitleEnabled(false)
-        }
 
         initBusMap()
         BusUtils.loadData()
         checkAppUpdate()
 
-        ivAllBuses.setOnClickListener {
-            startActivityForResult(
-                Intent(this, AllBusAndStopActivity::class.java),
-                REQ_CODE_SELECT_STOP
-            )
-        }
-        ivSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        setupViews()
 
         val locationRequest = LocationRequest.create()?.apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -250,6 +237,24 @@ class MainActivity : AppCompatActivity() {
     private fun checkAppUpdate() {
         if (Prefs.autoCheckUpdateOnStartup) {
             appUpdateChecker.checkAppUpdate()
+        }
+    }
+
+    private fun setupViews() {
+        // Show contents under translucent status bar
+        window.decorView.systemUiVisibility =
+            window.decorView.systemUiVisibility or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+
+        fabAllBuses.setOnClickListener {
+            startActivityForResult(
+                Intent(this, AllBusAndStopActivity::class.java),
+                REQ_CODE_SELECT_STOP
+            )
+        }
+        fabSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
     }
 }

@@ -18,6 +18,13 @@
         <item name="android:textColor">@android:color/black</item>
     </style>
 
+    <style name="Theme.HumphreysBus.TranslucentActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
     <style name="Theme.HumphreysBus.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

@@ -6,4 +6,16 @@
         <item name="android:layout_marginStart">0dp</item>
         <item name="android:layout_marginEnd">0dp</item>
     </style>
+
+    <style name="FloatingActionBarStyleBottom" parent="Widget.MaterialComponents.FloatingActionButton">
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="fabSize">mini</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="elevation">2dp</item>
+    </style>
+
+    <style name="FloatingActionBarStyleStacked" parent="FloatingActionBarStyleBottom">
+        <item name="android:layout_marginBottom">0dp</item>
+    </style>
 </resources>

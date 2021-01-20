@@ -6,67 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.MainActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?colorSurface"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_margin="4dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            app:contentInsetEnd="0dp"
-            app:contentInsetStart="0dp">
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <EditText
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/search_bar_background"
-                    android:hint="Search building, bus stop, etc.."
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:id="@+id/ivAllBuses"
-                    android:layout_width="36dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:padding="4dp"
-                    android:scaleType="fitCenter"
-                    android:layout_gravity="center"
-                    android:background="?selectableItemBackground"
-                    android:src="@drawable/ic_bus" />
-
-                <ImageView
-                    android:id="@+id/ivSettings"
-                    android:layout_width="36dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="4dp"
-                    android:padding="4dp"
-                    android:scaleType="fitCenter"
-                    android:layout_gravity="center"
-                    android:background="?selectableItemBackground"
-                    android:src="@drawable/ic_settings" />
-            </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
-    </com.google.android.material.appbar.AppBarLayout>
-
     <kyklab.humphreysbus.ui.MultiplePinView
         android:id="@+id/ivMap"
         android:layout_width="0dp"
@@ -74,34 +13,44 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/appBar" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <RelativeLayout
-        android:layout_width="88dp"
-        android:layout_height="88dp"
-        android:gravity="center"
+    <ProgressBar
+        android:id="@+id/pbLocation"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:layout_constraintStart_toStartOf="@id/fabLocation"
+        app:layout_constraintEnd_toEndOf="@id/fabLocation"
+        app:layout_constraintTop_toTopOf="@id/fabLocation"
+        app:layout_constraintBottom_toBottomOf="@id/fabLocation"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/FloatingActionBarStyleBottom"
+        app:srcCompat="@drawable/location"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
 
-        <ProgressBar
-            android:id="@+id/pbLocation"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="6dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginEnd="6dp"
-            android:layout_marginBottom="6dp"
-            android:visibility="gone"
-            tools:visibility="visible" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAllBuses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/FloatingActionBarStyleStacked"
+        app:srcCompat="@drawable/ic_bus"
+        app:layout_constraintBottom_toTopOf="@id/fabLocation"
+        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabLocation"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"
-            android:clickable="true"
-            app:backgroundTint="@color/white"
-            app:srcCompat="@drawable/location" />
-    </RelativeLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_settings"
+        app:layout_constraintBottom_toTopOf="@id/fabAllBuses"
+        style="@style/FloatingActionBarStyleStacked"
+        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
