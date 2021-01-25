@@ -73,9 +73,19 @@ class BusDetailsActivity : AppCompatActivity() {
             }
 
             override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                val y: Float = -(zoomLayoutStopName.engine.computeVerticalScrollRange()
-                    .toFloat() - zoomLayoutStopName.engine.containerHeight) / 4 // Why 4??
-                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, y, false)
+                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
+            }
+        })
+        // Automatically resize header ZoomLayout height based on actual displayed layout height
+        zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
+            override fun onIdle(engine: ZoomEngine) {
+
+            }
+
+            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
+                val lp = zoomLayoutStopName.layoutParams
+                lp.height = (stopNameContainer.height * engine.zoom).toInt()
+                zoomLayoutStopName.layoutParams = lp
             }
         })
         // Block touch for stop names to prevent scrolling
