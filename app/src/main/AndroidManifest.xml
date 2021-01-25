@@ -23,15 +23,20 @@
             android:label="@string/activity_settings_title" />
         <activity
             android:name=".ui.MainActivity"
-            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar">
+            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.BusDetailsActivity" />
-        <activity android:name=".ui.allbusstops.AllBusAndStopActivity" />
+        <activity
+            android:name=".ui.BusDetailsActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+        <activity
+            android:name=".ui.allbusstops.AllBusAndStopActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
 
         <provider
             android:authorities="${applicationId}.fileprovider"
