@@ -4,22 +4,35 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.PointF
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.View
+import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main_quick_card.*
+import kotlinx.android.synthetic.main.bus_directions_chooser.*
+import kotlinx.android.synthetic.main.bus_directions_chooser_item.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kyklab.humphreysbus.R
+import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusDBHelper
 import kyklab.humphreysbus.bus.BusMap
 import kyklab.humphreysbus.bus.BusMap.Companion.gMapCoordToLocalMapCoord
@@ -27,9 +40,7 @@ import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.ui.allbusstops.AllBusAndStopActivity
 import kyklab.humphreysbus.ui.stopinfodialog.StopInfoDialog
-import kyklab.humphreysbus.utils.AppUpdateChecker
-import kyklab.humphreysbus.utils.Prefs
-import kyklab.humphreysbus.utils.toast
+import kyklab.humphreysbus.utils.*
 
 class MainActivity : AppCompatActivity() {
     private val fusedLocationClient by lazy {
@@ -59,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var fabElevation: Float? = null
     private var isLoadingLocation = false
 
     private lateinit var busMap: BusMap
@@ -97,7 +107,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-        fabLocation.setOnClickListener { v ->
+        btnLocation.setOnClickListener { v ->
             if (isLoadingLocation) return@setOnClickListener
             // Permission
 
@@ -147,8 +157,6 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-
-        fabElevation = fabLocation.compatElevation
     }
 
     override fun onPause() {
@@ -192,15 +200,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLocationProgressBar() {
-        fabElevation = fabLocation.compatElevation
-        fabLocation.compatElevation = 0f
-        Log.e(TAG, "killed elevation")
+        btnLocation.visibility = View.GONE
         pbLocation.visibility = View.VISIBLE
     }
 
     private fun hideLocationProgressBar() {
-        fabElevation?.let { fabLocation.compatElevation = it }
-        Log.e(TAG, "restored elevation")
+        btnLocation.visibility = View.VISIBLE
         pbLocation.visibility = View.GONE
     }
 
@@ -240,21 +245,198 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+    val busDirectionsChooserItems by lazy {
+        BusUtils.buses.filter { it.busRouteOverlayFilename != null }.map {
+            BusDirectionChooserAdapter.AdapterItem(it, false)
+        }
+    }
+
+    inline fun PointF.resize(s: Float): PointF {
+        return PointF(x*s, y*s)
+    }
+
+    val busDirectionsChooserAdapter by lazy {
+        val maps = ArrayList<MultiplePinView>(BusUtils.buses.size)
+        val scales = 2f // TODO: Generify
+        ivMap.setOnStateChangedListener(object : SubsamplingScaleImageView.OnStateChangedListener {
+            override fun onScaleChanged(newScale: Float, origin: Int) {
+//                ivMap.post {
+                    maps.forEach { it.setScaleAndCenter(newScale*scales, ivMap.center?.resize(1/scales)) }
+//                }
+            }
+
+            override fun onCenterChanged(newCenter: PointF?, origin: Int) {
+//                ivMap.post {
+                    maps.forEach { it.setScaleAndCenter(ivMap.scale*scales, ivMap.center?.resize(1/scales)) }
+//                }
+            }
+        })
+        BusDirectionChooserAdapter(busDirectionsChooserItems) { bus, checked, map, setMap ->
+//            pin?.let { if (checked) ivMap.addPin(pin) else ivMap.removePin(pin) }
+           /* bus.busRouteOverlayFilename?.let { filename ->
+                ivBusRouteOverlay.setImage(ImageSource.asset(filename))
+                ivBusRouteOverlay.setScaleAndCenter(ivMap.scale, ivMap.center)
+                ivMap.setOnStateChangedListener(object: SubsamplingScaleImageView.OnStateChangedListener{
+                    override fun onScaleChanged(newScale: Float, origin: Int) {
+                        ivBusRouteOverlay.setScaleAndCenter(newScale, ivMap.center)
+                    }
+
+                    override fun onCenterChanged(newCenter: PointF?, origin: Int) {
+                        ivBusRouteOverlay.setScaleAndCenter(ivMap.scale, ivMap.center)
+                    }
+                })
+            }
+            ivBusRouteOverlay.visibility = View.VISIBLE
+            ivBusRouteOverlay.setOnTouchListener { v, event -> ivMap.onTouchEvent(event) }*/
+
+            if (checked) {
+                MultiplePinView(this@MainActivity).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    setOnTouchListener { v, event -> ivMap.onTouchEvent(event) }
+                    setImage(ImageSource.asset(bus.busRouteOverlayFilename!!).dimensions(4800, 3600))
+                    setScaleAndCenter(ivMap.scale*scales, ivMap.center?.resize(1/scales))
+                    maxScale = ivMap.maxScale * scales
+                    mapOverlayContainer.addView(this)
+                    maps.add(this)
+                    if (setMap != null) {
+                        setMap(this)
+                    }
+                }
+            } else {
+                map?.let {
+                    val res = maps.remove(map)
+                    if (res) {
+                        mapOverlayContainer.removeView(map)
+                    }
+                    Log.e(TAG, res.toString())
+                }
+            }
+        }
+    }
+
     private fun setupViews() {
         // Show contents under translucent status bar
-        window.decorView.systemUiVisibility =
-            window.decorView.systemUiVisibility or
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            window.decorView.systemUiVisibility =
+                window.decorView.systemUiVisibility or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        }
 
-        fabAllBuses.setOnClickListener {
+        btnAllBuses.setOnClickListener {
             startActivityForResult(
                 Intent(this, AllBusAndStopActivity::class.java),
                 REQ_CODE_SELECT_STOP
             )
         }
-        fabSettings.setOnClickListener {
+        btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+
+        // Add status bar height to quick button card top margin
+        quickCard.apply {
+            val lp = layoutParams
+            if (lp is ViewGroup.MarginLayoutParams) {
+                lp.topMargin += statusBarHeight
+            }
+            layoutParams = lp
+        }
+
+        moveViewOnDrag(btnHandle, quickCard)
+        lifecycleScope.launch(Dispatchers.Default) {
+            BusUtils.onLoadDone {
+                launch(Dispatchers.Main) {
+                    rvBusDirectionChooser.adapter = busDirectionsChooserAdapter
+                    rvBusDirectionChooser.layoutManager = LinearLayoutManager(this@MainActivity)
+                }
+            }
+        }
+        btnBusDirections.setOnClickListener {
+            busDirectionsChooserLayout.apply {
+                if (visibility == View.VISIBLE) {
+                    visibility = View.GONE
+                } else {
+                    visibility = View.VISIBLE
+                }
+            }
+        }
+        // Collapse on click outside of directions chooser
+        busDirectionsChooserLayout.setOnClickListener {
+            busDirectionsChooserLayout.visibility = View.GONE
+        }
+
+        btnCloseDirectionChooser.setOnClickListener {
+            busDirectionsChooserLayout.visibility = View.GONE
+        }
+
+        busDirectionsChooserLayout.viewTreeObserver.addOnGlobalLayoutListener(
+            object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    busDirectionsChooserLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    attachViewOnLeft(quickCard, cardBusDirectionChooser)
+                }
+            })
+    }
+
+    class BusDirectionChooserAdapter(
+        val items: List<AdapterItem>,
+        val onBusChosen: (Bus, Boolean, MultiplePinView?,
+                          setMap: ((MultiplePinView) -> Unit)?) -> Unit
+    ) :
+        RecyclerView.Adapter<BusDirectionChooserAdapter.ViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            return ViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.bus_directions_chooser_item,
+                    parent, false
+                )
+            )
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val item = items[position]
+            holder.itemView.cbBus.apply {
+                isChecked = item.checked
+                TextViewCompat.setCompoundDrawableTintList(
+                    this, ColorStateList.valueOf(item.bus.colorInt)
+                )
+                text = item.bus.name
+                setTextColor(item.bus.colorInt)
+            }
+        }
+
+        override fun getItemCount() = items.size
+
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            init {
+                itemView.cbBus.setOnClickListener {
+                    val checked = itemView.cbBus.isChecked
+                    val item = items[adapterPosition]
+                    item.checked = checked
+
+                    /*if (checked) {
+                        // Add bus route image as pin to map
+                        val filename = item.bus.busRouteOverlayFilename
+                        filename ?: return@setOnClickListener
+
+                        App.context.assets.open(filename).use {
+                            val bitmap = BitmapFactory.decodeStream(it)
+                            item.pin = MultiplePinView.Pin(
+                                item.bus.name, PointF(0f, 0f),
+                                bitmap, null, 0, null
+                            )
+                        }
+                    }*/
+                    onBusChosen(item.bus, checked, item.map) { map -> item.map = map }
+                }
+            }
+        }
+
+        class AdapterItem(val bus: Bus, var checked: Boolean, var map: MultiplePinView? = null)
     }
 }

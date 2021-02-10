@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="wrap_content"
+    style="@style/QuickButtonCardStyle"
+    android:layout_width="wrap_content">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/btnHandle"
+            style="@style/QuickButtonDragHandleStyle"
+            android:layout_width="match_parent"
+            android:rotation="90"
+            android:src="@drawable/ic_drag_indicator" />
+
+        <ImageView
+            android:id="@+id/btnSettings"
+            style="@style/QuickButtonStyle"
+            android:src="@drawable/ic_settings" />
+
+        <View style="@style/QuickButtonDividerStyle" />
+
+        <ImageView
+            android:id="@+id/btnAllBuses"
+            style="@style/QuickButtonStyle"
+            android:src="@drawable/ic_bus" />
+
+        <View style="@style/QuickButtonDividerStyle" />
+
+        <ImageView
+            android:id="@+id/btnLocation"
+            style="@style/QuickButtonStyle"
+            android:src="@drawable/location" />
+
+        <ProgressBar
+            android:id="@+id/pbLocation"
+            style="@style/QuickButtonProgressStyle"
+            tools:visibility="visible"
+            android:padding="4dp"
+            android:visibility="gone" />
+
+        <View style="@style/QuickButtonDividerStyle" />
+
+        <ImageView
+            android:id="@+id/btnBusDirections"
+            style="@style/QuickButtonStyle"
+            android:src="@drawable/ic_moving" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

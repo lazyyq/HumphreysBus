@@ -31,6 +31,7 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
     fun addPin(pin: Pin): Int {
         if (pin.sPin.x < 0 || pin.sPin.y < 0) return -1
         pins.add(pin)
+        pins.sortBy { it.priority }
         invalidate()
         return pins.size - 1
     }
@@ -47,6 +48,10 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
 
     fun removePin(point: PointF): Boolean {
         return pins.removeIf { p -> point == p.sPin }
+    }
+
+    fun removePin(pin: Pin): Boolean {
+        return pins.remove(pin)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -73,32 +78,45 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
     }
 
     class Pin {
+        companion object {
+            val DEFAULT_PRIORITY = 10
+        }
+        var name: String?
         var sPin: PointF
         var pin: Bitmap
         var pinSimple: Bitmap?
+        var priority: Int
         var imageCoord: (coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF
 
         constructor(
             context: Context,
+            name: String?,
             sPin: PointF,
             @DrawableRes resId: Int,
             pinSimple: Bitmap?,
+            priority: Int?,
             imageCoord: ((coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF)?
         ) {
+            this.name = name
             this.sPin = sPin
             this.pin = AppCompatResources.getDrawable(context, resId)!!.toBitmap()
             this.pinSimple = pinSimple
+            this.priority = priority ?: DEFAULT_PRIORITY
             this.imageCoord = imageCoord ?: { coord, _, _ -> coord }
         }
 
         constructor(
+            name: String?,
             sPin: PointF, bitmap: Bitmap,
             pinSimple: Bitmap?,
+            priority: Int?,
             imageCoord: ((coord: PointF, pinWidth: Float, pinHeight: Float) -> PointF)?
         ) {
+            this.name = name
             this.sPin = sPin
             this.pin = bitmap
             this.pinSimple = pinSimple
+            this.priority = priority ?: DEFAULT_PRIORITY
             this.imageCoord = imageCoord ?: { coord, _, _ -> coord }
         }
 
@@ -111,6 +129,23 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
                 pinSimple = pin.copy(pin.config, true)
             }
             pinSimple = pinSimple!!.scale(width, height)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            return if (other is Pin) {
+                this.name == other.name && this.sPin == other.sPin
+            } else {
+                super.equals(other)
+            }
+        }
+
+        override fun hashCode(): Int {
+            var result = name?.hashCode() ?: 0
+            result = 31 * result + sPin.hashCode()
+            result = 31 * result + pin.hashCode()
+            result = 31 * result + (pinSimple?.hashCode() ?: 0)
+            result = 31 * result + imageCoord.hashCode()
+            return result
         }
     }
 }

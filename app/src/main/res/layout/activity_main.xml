@@ -15,42 +15,43 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ProgressBar
-        android:id="@+id/pbLocation"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        app:layout_constraintStart_toStartOf="@id/fabLocation"
-        app:layout_constraintEnd_toEndOf="@id/fabLocation"
-        app:layout_constraintTop_toTopOf="@id/fabLocation"
-        app:layout_constraintBottom_toBottomOf="@id/fabLocation"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/FloatingActionBarStyleBottom"
-        app:srcCompat="@drawable/location"
+    <FrameLayout
+        android:id="@+id/mapOverlayContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAllBuses"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/FloatingActionBarStyleStacked"
-        app:srcCompat="@drawable/ic_bus"
-        app:layout_constraintBottom_toTopOf="@id/fabLocation"
-        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
+    <kyklab.humphreysbus.ui.MultiplePinView
+        android:id="@+id/ivBusRouteOverlay"
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabSettings"
+    <include
+        android:id="@+id/quickCard"
+        layout="@layout/activity_main_quick_card"
+        style="@style/QuickButtonCardStyle"
         android:layout_width="wrap_content"
+        android:layout_marginTop="48dp"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_settings"
-        app:layout_constraintBottom_toTopOf="@id/fabAllBuses"
-        style="@style/FloatingActionBarStyleStacked"
-        app:layout_constraintEnd_toEndOf="parent"></com.google.android.material.floatingactionbutton.FloatingActionButton>
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        android:id="@+id/busDirectionsChooserLayout"
+        layout="@layout/bus_directions_chooser"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

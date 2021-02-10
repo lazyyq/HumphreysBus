@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import kyklab.humphreysbus.App
+import kyklab.humphreysbus.BuildConfig
 import java.io.FileOutputStream
 import java.io.IOException
 
@@ -38,7 +39,7 @@ object BusDBHelper :
     }
 
     private fun checkDatabase(): Boolean {
-        if (!dbExists/* || BuildConfig.DEBUG*/) {
+        if (!dbExists || BuildConfig.DEBUG) {
             Log.e(TAG, "DB does not exist, trying to copy")
             try {
                 // Create an empty db file before copying

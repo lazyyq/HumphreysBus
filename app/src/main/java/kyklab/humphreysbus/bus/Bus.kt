@@ -6,7 +6,8 @@ import kyklab.humphreysbus.data.BusStop
 data class Bus(
     val name: String, @ColorInt val colorInt: Int,
     val stopPoints: List<BusStop>,
-    val instances: List<BusInstance>
+    val instances: List<BusInstance>,
+    val busRouteOverlayFilename: String?
 ) {
     companion object {
         private const val TAG = "Bus"

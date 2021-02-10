@@ -29,7 +29,7 @@ class BusMap(
 ) {
     companion object {
         private val TAG = BusMap::class.simpleName
-        private const val MAP_ASSET_FILENAME = "subway.png"
+        private const val MAP_ASSET_FILENAME = "subway.webp"
 
         private const val xBase = 126.974512
         private const val yBase = 36.945053
@@ -85,9 +85,10 @@ class BusMap(
             BusUtils.onLoadDone {
                 BusUtils.stops.forEach { stop ->
                     val pin = MultiplePinView.Pin(
+                        null,
                         PointF(stop.xCenter.toFloat(), stop.yCenter.toFloat()),
                         createBusBitmap(stop),
-                        createBusBitmapSimple(stop),
+                        createBusBitmapSimple(stop), null,
                     ) { coord, pinWidth, pinHeight ->
                         val x = coord.x - pinWidth / 2
                         val y = coord.y - pinHeight / 2
@@ -133,7 +134,7 @@ class BusMap(
         selectionPin =
             mapView.addPin(
                 MultiplePinView.Pin(
-                    activity, coord, R.drawable.pushpin_blue, null
+                    activity, null, coord, R.drawable.pushpin_blue, null, null
                 ) { c, pinWidth, pinHeight ->
                     val x = c.x - pinWidth / 2
                     val y = c.y - pinHeight

@@ -3,6 +3,7 @@ package kyklab.humphreysbus.bus
 import android.graphics.Color
 import android.util.Log
 import androidx.core.database.getIntOrNull
+import androidx.core.database.getStringOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -112,7 +113,7 @@ object BusUtils {
             BusDBHelper.db.use { db ->
                 val cursor = db.kQuery(
                     table = DB_TABLE_BUSES,
-                    columns = arrayOf("name", "stop_points", "color"),
+                    columns = arrayOf("name", "stop_points", "color", "route_overlay_filename"),
                     orderBy = "buses._id ASC"
                 )
                 buses = ArrayList(cursor.count)
@@ -127,6 +128,7 @@ object BusUtils {
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
                     val busColorInt = Color.parseColor(c.getString(2))
+                    val busRouteOverlayFilename = c.getStringOrNull(3)
 
                     val cursor2 = db.kQuery(
                         table = "bus_details",
@@ -152,7 +154,8 @@ object BusUtils {
                             busName,
                             busColorInt,
                             busStops,
-                            instances
+                            instances,
+                            busRouteOverlayFilename
                         )
                     )
                 }

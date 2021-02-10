@@ -1,5 +1,6 @@
 package kyklab.humphreysbus.utils
 
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -14,15 +15,15 @@ import android.icu.util.Calendar
 import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
 import android.util.TypedValue
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewTreeObserver
+import android.view.*
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.android.synthetic.main.activity_bus_details.*
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 
@@ -41,9 +42,40 @@ val Activity.screenWidth: Int
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             display?.getRealMetrics(metrics)
         } else {
-            windowManager.defaultDisplay.getMetrics(metrics)
+            windowManager.defaultDisplay.getRealMetrics(metrics)
         }
         return metrics.widthPixels
+    }
+
+val Activity.screenHeight: Int
+    get() {
+        val metrics = DisplayMetrics()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            display?.getRealMetrics(metrics)
+        } else {
+            windowManager.defaultDisplay.getRealMetrics(metrics)
+        }
+        return metrics.heightPixels
+    }
+
+val Activity.statusBarHeight: Int
+    get() {
+        var result = -1
+        val resId = resources.getIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            result = resources.getDimensionPixelSize(resId);
+        }
+        return result
+    }
+
+val Activity.navigationBarHeight: Int
+    get() {
+        var result = -1
+        val resId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resId > 0) {
+            result = resources.getDimensionPixelSize(resId);
+        }
+        return result
     }
 
 val <T : View> T.parentRelativeCoordinates: Rect
@@ -66,6 +98,94 @@ fun <T : View> T.onViewReady(block: T.() -> Unit) {
             }
         }
     )
+}
+
+@SuppressLint("ClickableViewAccessibility")
+fun <T : Activity, S : View> T.moveViewOnDrag(
+    clicked: S,
+    target: S = clicked,
+    allowOffBounds: Boolean = false
+) {
+    var dX = 0f
+    var dY = 0f
+        target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+    val width = target.measuredWidth
+    val height = target.measuredHeight
+    val statusBarHeight = statusBarHeight
+    // val navigationBarHeight = if (hasNavigationBar) navigationBarHeight else 0
+    val navigationBarHeight = 0 // TODO: Add a reliable way to handle navigation bar height
+    val topBorder = statusBarHeight
+    val bottomBorder = screenHeight - navigationBarHeight
+    clicked.setOnTouchListener { v, event ->
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                dX = target.x - event.rawX
+                dY = target.y - event.rawY
+            }
+            MotionEvent.ACTION_MOVE -> {
+                var newX = event.rawX + dX
+                var newY = event.rawY + dY
+                if (!allowOffBounds) {
+                    val left = newX
+                    val right = newX + width
+                    val top = newY
+                    val bottom = newY + height
+
+                    if (left < 0) newX = 0f
+                    else if (right > screenWidth) newX = screenWidth.toFloat() - width
+                    if (top < topBorder) newY = topBorder.toFloat()
+                    else if (bottom > bottomBorder) newY = bottomBorder.toFloat() - height
+                }
+                target.animate()
+                    .x(newX)
+                    .y(newY)
+                    .setDuration(0)
+                    .start()
+            }
+            else -> return@setOnTouchListener false
+        }
+        v.performClick()
+        true
+    }
+}
+
+@SuppressLint("ClickableViewAccessibility")
+fun <T : Activity, S : View> T.attachViewOnLeft(
+    target: S,
+    attached: S = target,
+    allowOffBounds: Boolean = false
+) {
+    attached.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+
+    val updateLocation = {
+            val arr = IntArray(2)
+            target.getLocationOnScreen(arr)
+            val targetX = arr[0]
+            val targetY = arr[1]
+            val margin = dpToPx(this@attachViewOnLeft, 4f)
+            var attachedX = targetX - attached.measuredWidth - margin
+            if (!allowOffBounds) attachedX = max(0, attachedX)
+            val attachedY = targetY
+            attached.animate()
+                .setDuration(0)
+                .x(attachedX.toFloat())
+                .y(attachedY.toFloat())
+                .start()
+    }
+
+    updateLocation()
+
+    target.animate().setListener(object: Animator.AnimatorListener {
+        override fun onAnimationStart(animation: Animator?) {        }
+
+        override fun onAnimationEnd(animation: Animator?) {
+            updateLocation()
+        }
+
+        override fun onAnimationCancel(animation: Animator?) {        }
+
+        override fun onAnimationRepeat(animation: Animator?) {        }
+    })
 }
 
 val currentTimeHHmm: String
