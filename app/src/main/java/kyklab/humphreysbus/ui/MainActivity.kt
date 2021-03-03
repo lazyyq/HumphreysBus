@@ -243,13 +243,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    val busDirectionsChooserItems by lazy {
+    private val busDirectionsChooserItems by lazy {
         BusUtils.buses.map {
             BusDirectionChooserAdapter.AdapterItem(it, false)
         }
     }
 
-    val busDirectionsChooserAdapter by lazy {
+    private val busDirectionsChooserAdapter by lazy {
         BusDirectionChooserAdapter(busDirectionsChooserItems) { bus, checked, item ->
             if (checked) {
                 busMap.showBusRoute(bus)
@@ -323,7 +323,7 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    class BusDirectionChooserAdapter(
+    private class BusDirectionChooserAdapter(
         val items: List<AdapterItem>,
         val onBusChosen: (Bus, Boolean, AdapterItem) -> Unit
     ) :
