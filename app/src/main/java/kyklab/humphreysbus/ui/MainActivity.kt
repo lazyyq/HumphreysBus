@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
-import android.graphics.PointF
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -19,7 +18,6 @@ import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -245,75 +243,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     val busDirectionsChooserItems by lazy {
-        BusUtils.buses.filter { it.busRouteOverlayFilename != null }.map {
+        BusUtils.buses.map {
             BusDirectionChooserAdapter.AdapterItem(it, false)
         }
     }
 
-    inline fun PointF.resize(s: Float): PointF {
-        return PointF(x*s, y*s)
-    }
-
     val busDirectionsChooserAdapter by lazy {
-        val maps = ArrayList<MultiplePinView>(BusUtils.buses.size)
-        val scales = 2f // TODO: Generify
-        ivMap.setOnStateChangedListener(object : SubsamplingScaleImageView.OnStateChangedListener {
-            override fun onScaleChanged(newScale: Float, origin: Int) {
-//                ivMap.post {
-                    maps.forEach { it.setScaleAndCenter(newScale*scales, ivMap.center?.resize(1/scales)) }
-//                }
-            }
-
-            override fun onCenterChanged(newCenter: PointF?, origin: Int) {
-//                ivMap.post {
-                    maps.forEach { it.setScaleAndCenter(ivMap.scale*scales, ivMap.center?.resize(1/scales)) }
-//                }
-            }
-        })
-        BusDirectionChooserAdapter(busDirectionsChooserItems) { bus, checked, map, setMap ->
-//            pin?.let { if (checked) ivMap.addPin(pin) else ivMap.removePin(pin) }
-           /* bus.busRouteOverlayFilename?.let { filename ->
-                ivBusRouteOverlay.setImage(ImageSource.asset(filename))
-                ivBusRouteOverlay.setScaleAndCenter(ivMap.scale, ivMap.center)
-                ivMap.setOnStateChangedListener(object: SubsamplingScaleImageView.OnStateChangedListener{
-                    override fun onScaleChanged(newScale: Float, origin: Int) {
-                        ivBusRouteOverlay.setScaleAndCenter(newScale, ivMap.center)
-                    }
-
-                    override fun onCenterChanged(newCenter: PointF?, origin: Int) {
-                        ivBusRouteOverlay.setScaleAndCenter(ivMap.scale, ivMap.center)
-                    }
-                })
-            }
-            ivBusRouteOverlay.visibility = View.VISIBLE
-            ivBusRouteOverlay.setOnTouchListener { v, event -> ivMap.onTouchEvent(event) }*/
-
+        BusDirectionChooserAdapter(busDirectionsChooserItems) { bus, checked, item ->
             if (checked) {
-                MultiplePinView(this@MainActivity).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    setOnTouchListener { v, event -> ivMap.onTouchEvent(event) }
-                    setImage(ImageSource.asset(bus.busRouteOverlayFilename!!).dimensions(4800, 3600))
-                    setScaleAndCenter(ivMap.scale*scales, ivMap.center?.resize(1/scales))
-                    maxScale = ivMap.maxScale * scales
-                    mapOverlayContainer.addView(this)
-                    maps.add(this)
-                    if (setMap != null) {
-                        setMap(this)
-                    }
-                }
+                busMap.showBusRoute(bus)
             } else {
-                map?.let {
-                    val res = maps.remove(map)
-                    if (res) {
-                        mapOverlayContainer.removeView(map)
-                    }
-                    Log.e(TAG, res.toString())
-                }
+                busMap.hideBusRoute(bus)
             }
         }
     }
@@ -384,8 +325,7 @@ class MainActivity : AppCompatActivity() {
 
     class BusDirectionChooserAdapter(
         val items: List<AdapterItem>,
-        val onBusChosen: (Bus, Boolean, MultiplePinView?,
-                          setMap: ((MultiplePinView) -> Unit)?) -> Unit
+        val onBusChosen: (Bus, Boolean, AdapterItem) -> Unit
     ) :
         RecyclerView.Adapter<BusDirectionChooserAdapter.ViewHolder>() {
 
@@ -418,21 +358,7 @@ class MainActivity : AppCompatActivity() {
                     val checked = itemView.cbBus.isChecked
                     val item = items[adapterPosition]
                     item.checked = checked
-
-                    /*if (checked) {
-                        // Add bus route image as pin to map
-                        val filename = item.bus.busRouteOverlayFilename
-                        filename ?: return@setOnClickListener
-
-                        App.context.assets.open(filename).use {
-                            val bitmap = BitmapFactory.decodeStream(it)
-                            item.pin = MultiplePinView.Pin(
-                                item.bus.name, PointF(0f, 0f),
-                                bitmap, null, 0, null
-                            )
-                        }
-                    }*/
-                    onBusChosen(item.bus, checked, item.map) { map -> item.map = map }
+                    onBusChosen(item.bus, checked, item)
                 }
             }
         }

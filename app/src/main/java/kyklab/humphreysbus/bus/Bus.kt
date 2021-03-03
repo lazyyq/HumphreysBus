@@ -1,5 +1,6 @@
 package kyklab.humphreysbus.bus
 
+import android.graphics.PointF
 import androidx.annotation.ColorInt
 import kyklab.humphreysbus.data.BusStop
 
@@ -7,7 +8,8 @@ data class Bus(
     val name: String, @ColorInt val colorInt: Int,
     val stopPoints: List<BusStop>,
     val instances: List<BusInstance>,
-    val busRouteOverlayFilename: String?
+    val busRouteImageCoords: List<PointF>,
+    val busRouteImageFilenames: List<String>
 ) {
     companion object {
         private const val TAG = "Bus"
@@ -37,6 +39,22 @@ data class Bus(
             return map
         }
     */
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Bus
+
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+
     data class BusInstance(val stopTimes: List<String>, val isHoliday: Boolean)
 
     data class StopDeprecated(val stopNo: String, val stopTime: String)

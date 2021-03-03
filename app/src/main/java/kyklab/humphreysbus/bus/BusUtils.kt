@@ -1,6 +1,7 @@
 package kyklab.humphreysbus.bus
 
 import android.graphics.Color
+import android.graphics.PointF
 import android.util.Log
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
@@ -113,7 +114,13 @@ object BusUtils {
             BusDBHelper.db.use { db ->
                 val cursor = db.kQuery(
                     table = DB_TABLE_BUSES,
-                    columns = arrayOf("name", "stop_points", "color", "route_overlay_filename"),
+                    columns = arrayOf(
+                        "name",
+                        "stop_points",
+                        "color",
+                        "route_image_coords",
+                        "route_image_filenames"
+                    ),
                     orderBy = "buses._id ASC"
                 )
                 buses = ArrayList(cursor.count)
@@ -128,7 +135,21 @@ object BusUtils {
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
                     val busColorInt = Color.parseColor(c.getString(2))
-                    val busRouteOverlayFilename = c.getStringOrNull(3)
+                    val busRouteImageCoordsRaw = c.getStringOrNull(3)?.split(';')
+                    val busRouteImageCoords = ArrayList<PointF>(0)
+                    busRouteImageCoordsRaw?.let {
+                        busRouteImageCoords.ensureCapacity(it.size + 1)
+                        for (i in 1 until it.size step 2) {
+                            val point = PointF(it[i - 1].toFloat(), it[i].toFloat())
+                            busRouteImageCoords.add(point)
+                        }
+                    }
+                    val busRouteImageFilenamesRaw = c.getStringOrNull(4)?.split(';')
+                    val busRouteImageFilenames = ArrayList<String>(0)
+                    busRouteImageFilenamesRaw?.let {
+                        busRouteImageFilenames.ensureCapacity(it.size + 1)
+                        it.forEach { s -> busRouteImageFilenames.add(s) }
+                    }
 
                     val cursor2 = db.kQuery(
                         table = "bus_details",
@@ -155,7 +176,8 @@ object BusUtils {
                             busColorInt,
                             busStops,
                             instances,
-                            busRouteOverlayFilename
+                            busRouteImageCoords,
+                            busRouteImageFilenames
                         )
                     )
                 }
@@ -163,7 +185,4 @@ object BusUtils {
             }
         }
     }
-
 }
-
-
