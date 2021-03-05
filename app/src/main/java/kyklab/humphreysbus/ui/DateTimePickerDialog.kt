@@ -1,43 +1,37 @@
 package kyklab.humphreysbus.ui
 
+import android.app.Dialog
 import android.content.Context
 import android.icu.util.Calendar
-import androidx.fragment.app.DialogFragment
+import android.os.Bundle
 import kotlinx.android.synthetic.main.dialog_datetime_picker.*
+import kyklab.humphreysbus.R
 import java.util.*
 
-class DateTimePickerDialogFragment(
+class DateTimePickerDialog(
     context: Context,
     private val calendar: Calendar = Calendar.getInstance(),
-    private val onNegativeClicked: DateTimePickerDialog.OnDateTimeSetListener? = null,
-    private val onPositiveClicked: DateTimePickerDialog.OnDateTimeSetListener? = null
-) : DialogFragment() /*{
+    private val onNegativeClicked: OnDateTimeSetListener? = null,
+    private val onPositiveClicked: OnDateTimeSetListener? = null
+) : Dialog(context) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.dialog_datetime_picker)
 
-        *//*window?.attributes?.apply {
+        /*window?.attributes?.apply {
             flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
             dimAmount = 0.8f
             window?.attributes = this
-        }*//*
+        }*/
 
         setupCalendar()
         setupCallbacks()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-
+    fun configChanged() {
+        onCreate(null)
     }
 
     private fun setupCalendar() {
@@ -89,14 +83,13 @@ class DateTimePickerDialogFragment(
     }
 
     fun interface OnDateTimeSetListener {
-        */
-/**
- * @param year       the selected year
- * @param month      the selected month (0-11 for compatibility with {@link Calendar#MONTH})
- * @param dayOfMonth the selected day of the month (1-31, depending on month)
- * @param hourOfDay  the hour that was set
- * @param minute     the minute that was set
- *//*
+        /**
+         * @param year       the selected year
+         * @param month      the selected month (0-11 for compatibility with {@link Calendar#MONTH})
+         * @param dayOfMonth the selected day of the month (1-31, depending on month)
+         * @param hourOfDay  the hour that was set
+         * @param minute     the minute that was set
+         */
         fun onDateTimeSet(year: Int, month: Int, dayOfMonth: Int, hourOfDay: Int, minute: Int)
     }
-}*/
+}

@@ -16,6 +16,7 @@
         <item name="actionBarStyle">@style/ActionBarStyle</item>
 
         <item name="android:textColor">@android:color/black</item>
+        <item name="materialTimePickerTheme">@style/TimePickerStyle</item>
     </style>
 
     <style name="Theme.HumphreysBus.TranslucentActionBar">

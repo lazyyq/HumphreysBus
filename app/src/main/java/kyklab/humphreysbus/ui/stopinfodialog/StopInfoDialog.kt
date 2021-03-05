@@ -2,36 +2,35 @@ package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.Activity
 import android.app.Dialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.core.text.bold
-import androidx.core.text.italic
-import androidx.core.text.scale
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
-import kotlinx.android.synthetic.main.fragment_stop_info_timetable_column_item.view.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.ui.DateTimePickerDialog
 import kyklab.humphreysbus.ui.MainActivity
 import kyklab.humphreysbus.utils.*
 import java.util.*
@@ -42,8 +41,11 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
     private val sdf by lazy { SimpleDateFormat("HHmm") }
     private var isHoliday = isHoliday()
     private var stopId = -1
+    private lateinit var stop: BusStop
 
     private var loadBusJob: Job? = null
+    private lateinit var rvAdapter: NewAdapter
+    private val rvAdapterItems: MutableList<NewAdapter.NewAdapterItem> = ArrayList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,6 +62,22 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
         super.onViewCreated(view, savedInstanceState)
         showCurrentTime()
         showBuses()
+
+        // Adjust peek (default expanded) height to match that of its contents size
+        view.bottomSheetContents.viewTreeObserver.addOnGlobalLayoutListener(
+            object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    val bottomSheetDialog =
+                        dialog?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+                    bottomSheetDialog?.let {
+                        val behavior = BottomSheetBehavior.from(it)
+                        behavior.peekHeight = view.bottomSheetContents.measuredHeight
+                    }
+                    view.bottomSheetContents.viewTreeObserver
+                        .removeOnGlobalLayoutListener(this)
+                }
+            }
+        )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -76,13 +94,59 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
         val view = requireView()
 
         stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
-        val stop = BusUtils.getBusStop(stopId) ?: return
+        stop = BusUtils.getBusStop(stopId) ?: return
         view.tvStopInfo.text = stop.name
 
-        updateBuses()
+//        updateBuses()
+        initBusList()
+        newUpdateBuses()
     }
 
-    private fun updateBuses() {
+    private fun initBusList() {
+        val activity = requireActivity()
+
+        rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
+        rvClosestBuses.adapter = rvAdapter
+        val layoutManager = LinearLayoutManager(activity)
+        rvClosestBuses.layoutManager = layoutManager
+    }
+
+    private fun newUpdateBuses() {
+        progressBar.visibility = View.VISIBLE
+        rvAdapterItems.clear()
+
+        BusUtils.buses.forEach { bus ->
+            val stopIndexes =
+                bus.stopPoints.withIndex().filter { it.value.id == stopId }.map { it.index }
+            stopIndexes.forEach { index ->
+                val times = bus.instances.filter { it.isHoliday == isHoliday }
+                    .map { it.stopTimes[index].toInt() }
+                // Find closest bus time
+                var closest: Int = -1
+                for (i in times.indices) {
+                    if (isBetween(
+                            currentTime.toInt(),
+                            times.getWithWrappedIndex(i - 1)!!, times[i]
+                        )
+                    ) {
+                        closest = i
+                        break
+                    }
+                }
+                val newAdapterItem = NewAdapter.NewAdapterItem(
+                    bus, stopId, index, times[closest], times.getWithWrappedIndex(closest + 1)!!
+                )
+                rvAdapterItems.add(newAdapterItem)
+            }
+        }
+
+        rvAdapterItems.sortBy { it.closestBusTime }
+        rvAdapter.notifyDataSetChanged()
+
+        progressBar.visibility = View.GONE
+    }
+
+    /*private fun updateBuses() {
         val view = requireView()
         val activity = requireActivity()
 
@@ -93,10 +157,10 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
                 val adapter =
                     StopInfoDialogAdapter(activity, lifecycleScope, stopId, currentTime, isHoliday)
                 launch(Dispatchers.Main) {
-                    view.vpTimeTable.adapter = adapter
-                    TabLayoutMediator(view.busTabLayout, view.vpTimeTable) { tab, position ->
-                        tab.text = adapter.adapterItems[position].bus.name
-                    }.attach()
+//                    view.vpTimeTable.adapter = adapter
+//                    TabLayoutMediator(view.busTabLayout, view.vpTimeTable) { tab, position ->
+//                        tab.text = adapter.adapterItems[position].bus.name
+//                    }.attach()
 
                     view.progressBar.visibility = View.GONE
 
@@ -118,34 +182,48 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
                 }
             }
         }
-    }
+    }*/
 
     private fun showCurrentTime() {
         updateDateTime()
 
-        switchHoliday.setOnClickListener {
+        cbHoliday.setOnClickListener {
             if (it is CompoundButton) {
                 isHoliday = it.isChecked
             }
             updateDateTime()
-            updateBuses()
+            newUpdateBuses()
         }
 
         tvCurrentTime.setOnClickListener {
-            DatePickerFragment(calendar) { d, year, month, dayOfMonth ->
-                TimePickerFragment(calendar) { t, hourOfDay, minute ->
+            DateTimePickerDialog(requireContext(), calendar,
+                onNegativeClicked = null,
+                onPositiveClicked = { year, month, dayOfMonth, hourOfDay, minute ->
                     calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                     currentTime = sdf.format(calendar.time)
+                    rvAdapter.currentTime = currentTime
                     isHoliday = calendar.time.isHoliday()
                     updateDateTime()
-                    updateBuses()
+                    newUpdateBuses()
+                }).show()
+        }
+        /*tvCurrentTime.setOnClickListener {
+            DatePickerFragment(calendar) { d, year, month, dayOfMonth ->
+                TimePickerFragment(calendar)
+                { t, hourOfDay, minute ->
+                    calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                    currentTime = sdf.format(calendar.time)
+                    rvAdapter.currentTime = currentTime
+                    isHoliday = calendar.time.isHoliday()
+                    updateDateTime()
+                    newUpdateBuses()
                 }.show(parentFragmentManager, "timePicker")
             }.show(parentFragmentManager, "datePicker")
-        }
+        }*/
     }
 
     private fun updateDateTime() {
-        switchHoliday.isChecked = isHoliday // TODO: Check if this triggers listener
+        cbHoliday.isChecked = isHoliday // TODO: Check if this triggers listener
         tvCurrentTime.text = "As of ${currentTime.insert(2, ":")}"
     }
 
@@ -164,9 +242,88 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
             }
             activity.startActivityForResult(intent, MainActivity.REQ_CODE_SELECT_STOP)
         }
+
+        private fun isBetween(_curTime: Int, _prevTime: Int, _nextTime: Int): Boolean {
+            val currTime: Int
+            val nextTime: Int
+            if (_nextTime < _prevTime) {
+                nextTime = _nextTime + 2400
+                currTime =
+                    if (_curTime < _prevTime) _curTime + 2400
+                    else _curTime
+            } else {
+                nextTime = _nextTime
+                currTime = _curTime
+            }
+            return currTime in (_prevTime + 1)..nextTime
+        }
     }
 
-    private class StopInfoDialogAdapter(
+    class NewAdapter(
+        private val activity: Activity,
+        private val scope: CoroutineScope,
+        private val items: List<NewAdapterItem>,
+        var currentTime: String,
+    ) : RecyclerView.Adapter<NewAdapter.NewViewHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewViewHolder {
+            return NewViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.fragment_stop_info_bus_item,
+                    parent,
+                    false
+                )
+            )
+        }
+
+        override fun onBindViewHolder(holder: NewViewHolder, position: Int) {
+            val item = items[position]
+
+            holder.ivBus.imageTintList = ColorStateList.valueOf(item.bus.colorInt)
+            holder.tvBusName.text = item.bus.name
+            holder.tvBusName.setTextColor(item.bus.colorInt)
+            if (item.stopPointIndex + 1 < item.bus.stopPoints.size) {
+                holder.tvTowards.text =
+                    "Towards " + item.bus.stopPoints[item.stopPointIndex + 1].name
+            } else {
+                holder.tvTowards.text = "(End of bus)"
+            }
+
+            val closestLeft = calcTimeLeft(currentTime.toInt(), item.closestBusTime)
+            val nextClosestLeft = calcTimeLeft(currentTime.toInt(), item.nextClosestBusTime)
+            holder.tvNextBus.text =
+                "${item.closestBusTime.format("%04d").insert(2, ":")} ($closestLeft mins)"
+            holder.tvNextNextBus.text =
+                "${item.nextClosestBusTime.format("%04d").insert(2, ":")} ($nextClosestLeft mins)"
+        }
+
+        override fun getItemCount() = items.size
+
+        inner class NewViewHolder(val itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val ivBus = itemView.findViewById<ImageView>(R.id.ivBus)
+            val tvBusName = itemView.findViewById<TextView>(R.id.tvBusName)
+            val tvTowards = itemView.findViewById<TextView>(R.id.tvTowards)
+            val tvNextBus = itemView.findViewById<TextView>(R.id.tvNextBus)
+            val tvNextNextBus = itemView.findViewById<TextView>(R.id.tvNextNextBus)
+
+            init {
+                itemView.setOnClickListener {
+                    val item = items[adapterPosition]
+                    showBusSchedules(activity, item.bus.name, item.stopPointIndex)
+                }
+            }
+        }
+
+        data class NewAdapterItem(
+            val bus: Bus,
+            val stopId: Int,
+            val stopPointIndex: Int,
+            val closestBusTime: Int,
+            val nextClosestBusTime: Int
+        )
+    }
+
+    /*private class StopInfoDialogAdapter(
         private val context: Context,
         private val scope: CoroutineScope,
         private val stopId: Int,
@@ -400,5 +557,5 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
         )
 
 //    data class InternalItem(val bus: Bus, val stopIndexAndTimes: Map<Int, List<Int>>)
-    }
+    }*/
 }

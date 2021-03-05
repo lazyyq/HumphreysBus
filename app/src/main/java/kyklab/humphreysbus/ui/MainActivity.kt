@@ -306,9 +306,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         // Collapse on click outside of directions chooser
+        /*
         busDirectionsChooserLayout.setOnClickListener {
             busDirectionsChooserLayout.visibility = View.GONE
         }
+        */
 
         btnCloseDirectionChooser.setOnClickListener {
             busDirectionsChooserLayout.visibility = View.GONE

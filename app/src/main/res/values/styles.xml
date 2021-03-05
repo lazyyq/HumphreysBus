@@ -51,4 +51,7 @@
         <item name="android:padding">4dp</item>
     </style>
 
+    <style name="TimePickerStyle" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="android:timePickerMode">spinner</item>
+    </style>
 </resources>

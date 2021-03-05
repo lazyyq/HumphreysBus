@@ -2,6 +2,7 @@ package kyklab.humphreysbus.ui
 
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
@@ -20,13 +21,14 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
+import kotlinx.android.synthetic.main.activity_bus_details.progressBar
+import kotlinx.android.synthetic.main.activity_bus_details.tvCurrentTime
 import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
+import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.coroutines.*
 import kyklab.humphreysbus.*
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
-import kyklab.humphreysbus.ui.stopinfodialog.DatePickerFragment
-import kyklab.humphreysbus.ui.stopinfodialog.TimePickerFragment
 import kyklab.humphreysbus.utils.*
 import java.util.*
 
@@ -270,6 +272,8 @@ class BusDetailsActivity : AppCompatActivity() {
         return currTime in (_prevTime + 1)..nextTime
     }
 
+    var pickerDialog: DateTimePickerDialog? = null
+
     private fun showCurrentTime() {
         updateDateTime()
 
@@ -281,16 +285,24 @@ class BusDetailsActivity : AppCompatActivity() {
         }
 
         tvCurrentTime.setOnClickListener {
-            DatePickerFragment(calendar) { d, year, month, dayOfMonth ->
-                TimePickerFragment(calendar) { t, hourOfDay, minute ->
+            pickerDialog = DateTimePickerDialog(this, calendar,
+                onNegativeClicked = null,
+                onPositiveClicked = { year, month, dayOfMonth, hourOfDay, minute ->
                     calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                     currentTime = sdf.format(calendar.time)
                     isHoliday = calendar.time.isHoliday()
                     updateDateTime()
                     updateBusTimeTable()
-                }.show(supportFragmentManager, "timePicker")
-            }.show(supportFragmentManager, "datePicker")
+                    pickerDialog = null
+                })
+            pickerDialog?.show()
+//            Handler(Looper.getMainLooper()).postDelayed({pickerDialog?.dismiss()},1000L)
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        pickerDialog?.configChanged()
     }
 
     private fun updateDateTime() {
