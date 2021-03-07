@@ -272,8 +272,6 @@ class BusDetailsActivity : AppCompatActivity() {
         return currTime in (_prevTime + 1)..nextTime
     }
 
-    var pickerDialog: DateTimePickerDialog? = null
-
     private fun showCurrentTime() {
         updateDateTime()
 
@@ -285,24 +283,19 @@ class BusDetailsActivity : AppCompatActivity() {
         }
 
         tvCurrentTime.setOnClickListener {
-            pickerDialog = DateTimePickerDialog(this, calendar,
-                onNegativeClicked = null,
-                onPositiveClicked = { year, month, dayOfMonth, hourOfDay, minute ->
-                    calendar.set(year, month, dayOfMonth, hourOfDay, minute)
-                    currentTime = sdf.format(calendar.time)
-                    isHoliday = calendar.time.isHoliday()
-                    updateDateTime()
-                    updateBusTimeTable()
-                    pickerDialog = null
-                })
-            pickerDialog?.show()
-//            Handler(Looper.getMainLooper()).postDelayed({pickerDialog?.dismiss()},1000L)
+            DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
+                calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                currentTime = sdf.format(calendar.time)
+                isHoliday = calendar.time.isHoliday()
+                updateDateTime()
+                updateBusTimeTable()
+            }.show(supportFragmentManager, "dateTimePicker")
         }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        pickerDialog?.configChanged()
+//        pickerDialog?.configChanged()
     }
 
     private fun updateDateTime() {

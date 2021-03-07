@@ -30,12 +30,13 @@ import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.ui.BusDetailsActivity
-import kyklab.humphreysbus.ui.DateTimePickerDialog
+import kyklab.humphreysbus.ui.DateTimePickerFragment
 import kyklab.humphreysbus.ui.MainActivity
 import kyklab.humphreysbus.utils.*
 import java.util.*
 
-class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragment() {
+class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetDialogFragment() {
+    private lateinit var activity: Activity
     private val calendar = Calendar.getInstance()
     private var currentTime = currentTimeHHmm
     private val sdf by lazy { SimpleDateFormat("HHmm") }
@@ -52,6 +53,11 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        try {
+            activity = requireActivity()
+        } catch (e: IllegalStateException) {
+            dismiss()
+        }
         val view = inflater.inflate(R.layout.fragment_stop_info_dialog, container, false)
         arguments ?: dismiss()
 
@@ -91,7 +97,12 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
     }
 
     private fun showBuses() {
-        val view = requireView()
+        lateinit var view: View
+        try {
+            view = requireView()
+        } catch (e: IllegalStateException) {
+            dismiss()
+        }
 
         stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
         stop = BusUtils.getBusStop(stopId) ?: return
@@ -103,8 +114,6 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
     }
 
     private fun initBusList() {
-        val activity = requireActivity()
-
         rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
         rvClosestBuses.adapter = rvAdapter
         val layoutManager = LinearLayoutManager(activity)
@@ -195,17 +204,30 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
             newUpdateBuses()
         }
 
+
         tvCurrentTime.setOnClickListener {
-            DateTimePickerDialog(requireContext(), calendar,
-                onNegativeClicked = null,
-                onPositiveClicked = { year, month, dayOfMonth, hourOfDay, minute ->
-                    calendar.set(year, month, dayOfMonth, hourOfDay, minute)
-                    currentTime = sdf.format(calendar.time)
-                    rvAdapter.currentTime = currentTime
-                    isHoliday = calendar.time.isHoliday()
-                    updateDateTime()
-                    newUpdateBuses()
-                }).show()
+            DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
+                calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                currentTime = sdf.format(calendar.time)
+                rvAdapter.currentTime = currentTime
+                isHoliday = calendar.time.isHoliday()
+                updateDateTime()
+                newUpdateBuses()
+            }.show(parentFragmentManager, "dateTimePicker")
+            /*
+            DateTimePickerDialog(
+               activity,
+                calendar
+            ) { year, month, dayOfMonth, hourOfDay, minute ->
+                calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                currentTime = sdf.format(calendar.time)
+                rvAdapter.currentTime = currentTime
+                isHoliday = calendar.time.isHoliday()
+                updateDateTime()
+                newUpdateBuses()
+            }.show()
+            */
+
         }
         /*tvCurrentTime.setOnClickListener {
             DatePickerFragment(calendar) { d, year, month, dayOfMonth ->
@@ -228,7 +250,7 @@ class StopInfoDialog(private val onDismiss: () -> Unit) : BottomSheetDialogFragm
     }
 
     override fun onDismiss(dialog: DialogInterface) {
-        onDismiss()
+        onDismiss?.invoke()
         super.onDismiss(dialog)
     }
 
