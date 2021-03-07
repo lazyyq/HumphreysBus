@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="stop_info_dialog_bus_list_height">160dp</dimen>
+</resources>

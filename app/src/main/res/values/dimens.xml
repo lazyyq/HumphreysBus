@@ -2,4 +2,5 @@
 <resources>
     <dimen name="bus_directions_chooser_width">160dp</dimen>
     <dimen name="bus_directions_chooser_height">160dp</dimen>
+    <dimen name="stop_info_dialog_bus_list_height">400dp</dimen>
 </resources>

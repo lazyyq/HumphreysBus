@@ -57,6 +57,11 @@ class SettingsActivity : AppCompatActivity() {
                 appUpdateChecker.checkAppUpdate(true)
                 true
             }
+
+            // Debug
+            findPreference<Preference>("cause_crash")?.setOnPreferenceClickListener {
+                throw RuntimeException("CRASH TEST")
+            }
         }
 
         override fun onResume() {

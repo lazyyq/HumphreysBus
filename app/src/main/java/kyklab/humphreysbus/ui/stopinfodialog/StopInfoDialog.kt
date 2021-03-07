@@ -5,18 +5,17 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewTreeObserver
+import android.view.*
 import android.widget.CompoundButton
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -96,6 +95,17 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        view ?: return
+        val view = requireView()
+        /*val lp = LinearLayout.LayoutParams(view.rvClosestBuses.layoutParams)
+        lp.height =  resources.getDimension(R.dimen.stop_info_dialog_bus_list_height).toInt()
+        view.rvClosestBuses.layoutParams = lp*/
+        dismiss()
+        show(parentFragmentManager, tag)
+    }
+
     private fun showBuses() {
         lateinit var view: View
         try {
@@ -116,7 +126,17 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     private fun initBusList() {
         rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
         rvClosestBuses.adapter = rvAdapter
-        val layoutManager = LinearLayoutManager(activity)
+        val layoutManager: RecyclerView.LayoutManager
+
+        val rotation = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            activity.display?.rotation ?: 0
+        } else {
+            activity.windowManager.defaultDisplay.rotation
+        }
+        layoutManager = when (rotation) {
+            Surface.ROTATION_0, Surface.ROTATION_180 -> LinearLayoutManager(activity)
+            else -> GridLayoutManager(activity, 2)
+        }
         rvClosestBuses.layoutManager = layoutManager
     }
 
@@ -246,7 +266,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
     private fun updateDateTime() {
         cbHoliday.isChecked = isHoliday // TODO: Check if this triggers listener
-        tvCurrentTime.text = "As of ${currentTime.insert(2, ":")}"
+        tvCurrentTime.text = currentTime.insert(2, ":")
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -306,7 +326,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
             holder.tvBusName.setTextColor(item.bus.colorInt)
             if (item.stopPointIndex + 1 < item.bus.stopPoints.size) {
                 holder.tvTowards.text =
-                    "Towards " + item.bus.stopPoints[item.stopPointIndex + 1].name
+                    "Heading " + item.bus.stopPoints[item.stopPointIndex + 1].name
             } else {
                 holder.tvTowards.text = "(End of bus)"
             }

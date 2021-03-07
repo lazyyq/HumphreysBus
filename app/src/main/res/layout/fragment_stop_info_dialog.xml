@@ -59,7 +59,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvClosestBuses"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="@dimen/stop_info_dialog_bus_list_height"
         android:layout_marginTop="16dp"
         android:scrollbars="vertical"
         tools:listitem="@layout/fragment_stop_info_bus_item" />
@@ -74,6 +74,8 @@
         android:layout_height="42dp">
 
         <CheckBox
+            android:scaleX="0.8"
+            android:scaleY="0.8"
             android:id="@+id/cbHoliday"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -84,12 +86,12 @@
             android:gravity="center"
             android:padding="4dp"
             android:text="Holiday"
-            android:layout_marginEnd="16dp"
             android:textColor="#777"
-            android:textSize="12sp"
-            tools:layout_editor_absoluteX="76dp" />
+            android:textSize="16sp" />
 
         <TextView
+            android:scaleX="0.8"
+            android:scaleY="0.8"
             android:id="@+id/tvCurrentTime"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -99,9 +101,9 @@
             android:drawablePadding="8dp"
             android:gravity="center"
             android:textColor="#777"
-            android:textSize="12sp"
+            android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:text="As of 12:00" />
+            tools:text="12:00" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

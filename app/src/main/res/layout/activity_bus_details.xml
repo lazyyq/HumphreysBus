@@ -7,10 +7,10 @@
 
     <ImageView
         android:id="@+id/ivBus"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_bus" />
@@ -19,9 +19,8 @@
         android:id="@+id/tvBus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:text="Bus"
-        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="@id/ivBus"
         app:layout_constraintStart_toEndOf="@+id/ivBus"
         app:layout_constraintTop_toTopOf="@id/ivBus" />
@@ -29,41 +28,42 @@
     <LinearLayout
         android:id="@+id/timeContainer"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:orientation="horizontal"
+        android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toTopOf="@id/progressBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tvCurrentTime"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:drawablePadding="4dp"
-            android:drawableTint="@color/details_action_icons"
+        <CheckBox
+            android:id="@+id/cbHoliday"
+            android:layout_width="wrap_content"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:layout_height="36dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="?android:attr/selectableItemBackground"
             android:gravity="center"
-            android:padding="4dp"
-            android:textColor="@color/details_action_icons"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:drawableTopCompat="@drawable/ic_alarm_28dp"
-            tools:text="12:00" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tvHoliday"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:drawablePadding="4dp"
-            android:drawableTint="@color/details_action_icons"
-            android:gravity="center"
+            style="@style/Widget.AppCompat.CompoundButton.CheckBox"
             android:padding="4dp"
             android:text="Holiday"
-            android:textColor="@color/details_action_icons"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:drawableTopCompat="@drawable/ic_event_28dp" />
+            android:textColor="#777"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:layout_gravity="end|center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:drawableStart="@drawable/ic_alarm"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:textColor="#777"
+            android:textSize="16sp"
+            tools:text="12:00" />
     </LinearLayout>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -71,7 +71,7 @@
         style="@style/Widget.MaterialComponents.LinearProgressIndicator"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:indeterminate="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

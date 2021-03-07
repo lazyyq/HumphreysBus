@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.android.synthetic.main.activity_bus_details.*
+import kotlinx.android.synthetic.main.activity_bus_details.cbHoliday
 import kotlinx.android.synthetic.main.activity_bus_details.progressBar
 import kotlinx.android.synthetic.main.activity_bus_details.tvCurrentTime
 import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
@@ -275,7 +276,7 @@ class BusDetailsActivity : AppCompatActivity() {
     private fun showCurrentTime() {
         updateDateTime()
 
-        tvHoliday.setOnClickListener {
+        cbHoliday.setOnClickListener {
             isHoliday = !isHoliday
 
             updateDateTime()
@@ -299,7 +300,7 @@ class BusDetailsActivity : AppCompatActivity() {
     }
 
     private fun updateDateTime() {
-        tvHoliday.isSelected = isHoliday
+        cbHoliday.isChecked = isHoliday
         tvCurrentTime.text = currentTime.insert(2, ":")
     }
 }
