@@ -1,33 +1,21 @@
 package kyklab.humphreysbus.ui
 
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Matrix
-import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.LinearLayout
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.text.bold
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.textview.MaterialTextView
-import com.otaliastudios.zoom.ZoomEngine
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_bus_details.*
-import kotlinx.android.synthetic.main.activity_bus_details.cbHoliday
-import kotlinx.android.synthetic.main.activity_bus_details.progressBar
-import kotlinx.android.synthetic.main.activity_bus_details.tvCurrentTime
-import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
-import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
-import kotlinx.coroutines.*
-import kyklab.humphreysbus.*
+import kotlinx.android.synthetic.main.activity_bus_details_column_item.view.*
+import kotlinx.coroutines.Job
+import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.utils.*
@@ -70,7 +58,7 @@ class BusDetailsActivity : AppCompatActivity() {
             finish()
         }
 
-        zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
+        /*zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
             override fun onIdle(engine: ZoomEngine) {
 
             }
@@ -92,10 +80,18 @@ class BusDetailsActivity : AppCompatActivity() {
             }
         })
         // Block touch for stop names to prevent scrolling
-        zoomLayoutStopName.setOnTouchListener { _, _ -> true }
+        zoomLayoutStopName.setOnTouchListener { _, _ -> true }*/
 
         showCurrentTime()
         showBusTimeTable()
+
+
+        val adapter = ViewPagerAdapter(busToShow, stopToHighlightIndex ?: -1,
+            currentTime, isHoliday, busToShow.instances.filter { it.isHoliday == isHoliday })
+        vpTimeTables.adapter = adapter
+        TabLayoutMediator(tabLayout, vpTimeTables) { tab, position ->
+            tab.text = busToShow.stopPoints[position].name
+        }.attach()
     }
 
     private fun showBusTimeTable() {
@@ -104,10 +100,115 @@ class BusDetailsActivity : AppCompatActivity() {
             tvBus.text = busName
             tvBus.setTextColor(it)
         }
-        updateBusTimeTable()
+        newUpdateBusTimeTable()
+//        updateBusTimeTable()
     }
 
-    private fun updateBusTimeTable() {
+    private fun newUpdateBusTimeTable() {
+
+    }
+
+    private class ViewPagerAdapter(
+        private val bus: Bus,
+        private val stopIndex: Int,
+        private val currentTime: String,
+        private val isHoliday: Boolean,
+        private val items: List<Bus.BusInstance>
+    ) :
+        RecyclerView.Adapter<ViewPagerAdapter.ViewPagerViewHolder>() {
+        private class ViewPagerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val rvTimeTable: RecyclerView = itemView.findViewById(R.id.rvTimeTable)
+        }
+
+        class ViewPagerItem(
+            val instance: Bus.BusInstance
+        )
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewPagerViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(
+                R.layout.activity_bus_details_column_item,
+                parent, false
+            )
+            val adapter = RecyclerViewAdapter(
+                bus.instances.filter { it.isHoliday == isHoliday },
+                ArrayList<RecyclerViewAdapter.RecyclerViewItem>(bus.stopPoints.size).apply {
+                    fill(
+                        RecyclerViewAdapter.RecyclerViewItem()
+                    )
+                },
+                -1, currentTime
+            )
+
+            view.rvTimeTable.adapter = adapter
+            return ViewPagerViewHolder(
+                view
+            )
+        }
+
+        override fun onBindViewHolder(holder: ViewPagerViewHolder, position: Int) {
+            /*holder.itemView.rvTimeTable.adapter.let {
+                if (it is RecyclerViewAdapter) {
+                    it.indexInViewPager = position
+                    it.notifyDataSetChanged()
+                }
+            }*/
+
+            (holder.itemView.rvTimeTable.adapter as? RecyclerViewAdapter)?.apply {
+                indexInViewPager = position
+                notifyDataSetChanged()
+            }
+        }
+
+        override fun getItemCount() = bus.stopPoints.size
+    }
+
+    private class RecyclerViewAdapter(
+        private val busInstances: List<Bus.BusInstance>,
+        var items: List<RecyclerViewItem>,
+        var indexInViewPager: Int,
+        private val currentTime: String
+    ) :
+        RecyclerView.Adapter<RecyclerViewAdapter.RecyclerViewViewHolder>() {
+        private class RecyclerViewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvTime: TextView = itemView.findViewById(R.id.tvTime)
+            val tvTimeLeft: TextView = itemView.findViewById(R.id.tvTimeLeft)
+        }
+
+        class RecyclerViewItem(
+//            val stopIndex: Int,
+            val closestTimeInListIndex: Int = 0,
+        )
+
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewViewHolder {
+            return RecyclerViewViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.activity_bus_details_time_item,
+                    parent, false
+                )
+            )
+        }
+
+        override fun onBindViewHolder(holder: RecyclerViewViewHolder, position: Int) {
+            holder.tvTime.text = busInstances[indexInViewPager].stopTimes[position]
+            if (position == items[indexInViewPager].closestTimeInListIndex) {
+                // TODO: Make tvTime bold here
+                holder.tvTimeLeft.visibility = View.VISIBLE
+                val timeLeft =
+                    calcTimeLeft(
+                        currentTime.toInt(),
+                        busInstances[indexInViewPager].stopTimes[position].toInt()
+                    )
+                holder.tvTimeLeft.text = timeLeft.toString()
+            } else {
+                holder.tvTimeLeft.visibility = View.GONE
+            }
+        }
+
+        override fun getItemCount() = busInstances.size
+    }
+
+    /*private fun updateBusTimeTable() {
         lifecycleScope.launch(Dispatchers.Default) {
             loadScheduleJob?.let { if (it.isActive) it.cancelAndJoin() }
             loadScheduleJob = launch {
@@ -253,7 +354,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 }
             }
         }
-    }
+    }*/
 
     /**
      * Decide if we're between previous and next stop time
@@ -280,7 +381,8 @@ class BusDetailsActivity : AppCompatActivity() {
             isHoliday = !isHoliday
 
             updateDateTime()
-            updateBusTimeTable()
+            newUpdateBusTimeTable()
+//            updateBusTimeTable()
         }
 
         tvCurrentTime.setOnClickListener {
@@ -289,7 +391,8 @@ class BusDetailsActivity : AppCompatActivity() {
                 currentTime = sdf.format(calendar.time)
                 isHoliday = calendar.time.isHoliday()
                 updateDateTime()
-                updateBusTimeTable()
+                newUpdateBusTimeTable()
+//                updateBusTimeTable()
             }.show(supportFragmentManager, "dateTimePicker")
         }
     }
