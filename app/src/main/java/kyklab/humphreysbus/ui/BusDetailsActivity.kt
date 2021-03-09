@@ -3,7 +3,6 @@ package kyklab.humphreysbus.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
@@ -12,11 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.annotation.DimenRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_bus_details_column_item.view.*
 import kotlinx.coroutines.Job
@@ -63,52 +61,20 @@ class BusDetailsActivity : AppCompatActivity() {
             finish()
         }
 
-
-
-        btnPrev.setOnClickListener {
-            vpTimeTables.setCurrentItem(vpTimeTables.currentItem - 1, false)
-        }
-        btnNext.setOnClickListener {
-            vpTimeTables.setCurrentItem(vpTimeTables.currentItem + 1, false)
-        }
-
-
-        /*zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
-            override fun onIdle(engine: ZoomEngine) {
-
-            }
-
-            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
-            }
-        })
-        // Automatically resize header ZoomLayout height based on actual displayed layout height
-        zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
-            override fun onIdle(engine: ZoomEngine) {
-
-            }
-
-            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                val lp = zoomLayoutStopName.layoutParams
-                lp.height = (stopNameContainer.height * engine.zoom).toInt()
-                zoomLayoutStopName.layoutParams = lp
-            }
-        })
-        // Block touch for stop names to prevent scrolling
-        zoomLayoutStopName.setOnTouchListener { _, _ -> true }*/
-
         showCurrentTime()
         showBusTimeTable()
 
-        val adapter = ViewPagerAdapter(this, busToShow, stopToHighlightIndex ?: -1,
+        val adapter = ColumnAdapter(this, busToShow, stopToHighlightIndex ?: -1,
             currentTime, isHoliday, busToShow.instances.filter { it.isHoliday == isHoliday })
-        vpTimeTables.adapter = adapter
-        TabLayoutMediator(tabLayout, vpTimeTables) { tab, position ->
-            tab.text = busToShow.stopPoints[position].name
-        }.attach()
+        rvTimeTables.adapter = adapter
+        rvTimeTables.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+        LinearSnapHelper().attachToRecyclerView(rvTimeTables)
+
+        rvTimeTables.setHasFixedSize(true)
 
         progressBar.hide()
-        vpTimeTables.setCurrentItem(stopToHighlightIndex ?: 0, false)
     }
 
     private fun showBusTimeTable() {
@@ -141,37 +107,7 @@ class BusDetailsActivity : AppCompatActivity() {
         }
     }
 
-    class HorizontalMarginItemDecoration(context: Context, @DimenRes horizontalMarginInDp: Int) :
-        RecyclerView.ItemDecoration() {
-
-        private val horizontalMarginInPx: Int =
-            context.resources.getDimension(horizontalMarginInDp).toInt()
-
-        override fun getItemOffsets(
-            outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
-        ) {
-            outRect.right = horizontalMarginInPx
-            outRect.left = horizontalMarginInPx
-        }
-
-    }
-
-    class HorizontalMarginItemDecoration2(
-        context: Context,
-        @DimenRes val horizontalMarginInPx: Int
-    ) :
-        RecyclerView.ItemDecoration() {
-
-        override fun getItemOffsets(
-            outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
-        ) {
-            outRect.right = horizontalMarginInPx
-            outRect.left = horizontalMarginInPx
-        }
-
-    }
-
-    private class ViewPagerAdapter(
+    private class ColumnAdapter(
         private val context: Context,
         private val bus: Bus,
         private val stopIndex: Int,
@@ -179,45 +115,39 @@ class BusDetailsActivity : AppCompatActivity() {
         private val isHoliday: Boolean,
         private val items: List<Bus.BusInstance>
     ) :
-        RecyclerView.Adapter<ViewPagerAdapter.ViewPagerViewHolder>() {
+        RecyclerView.Adapter<ColumnAdapter.ColumnViewHolder>() {
 
-        var firstVisible = 0
+        var rvScrollY = 0
+        var list = ArrayList<RecyclerView>(100)
 
         val scrollListener = object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    firstVisible =
-                        (recyclerView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                    this@ViewPagerAdapter.notifyDataSetChanged()
-//                    this@ViewPagerAdapter.notifyItemRangeChanged(0, this@ViewPagerAdapter.itemCount,                        firstVisible     )
-//                    recyclerView.smoothScrollToPosition(firstVisible)
-                    Log.e(TAG, "first visible: $firstVisible")
-                }
             }
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
+                rvScrollY += dy
+                list.forEach {
+                    if (it !== recyclerView) {
+                        it.clearOnScrollListeners()
+//                        (it.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(0,rvScrollY)
+                        it.scrollToPosition(0)
+                        it.scrollBy(0, rvScrollY)
+                        it.addOnScrollListener(this)
+                        Log.e(TAG, "listsize ${list.size}, scroll called")
+                    }
+                }
             }
         }
 
-        private inner class ViewPagerViewHolder(itemView: View) :
+        private inner class ColumnViewHolder(itemView: View) :
             RecyclerView.ViewHolder(itemView) {
             val rvTimeTable: RecyclerView = itemView.findViewById(R.id.rvTimeTable)
 
             init {
-                rvTimeTable.addOnScrollListener(scrollListener)
-                /*rvTimeTable.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                        super.onScrollStateChanged(recyclerView, newState)
-                    }
-
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        rvScrollY += dy
-
-                    }
-                })*/
+//                rvTimeTable.addOnScrollListener(scrollListener)
+                rvTimeTable.setHasFixedSize(true)
             }
         }
 
@@ -225,7 +155,7 @@ class BusDetailsActivity : AppCompatActivity() {
             val instance: Bus.BusInstance
         )
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewPagerViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColumnViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(
                 R.layout.activity_bus_details_column_item,
                 parent, false
@@ -238,18 +168,18 @@ class BusDetailsActivity : AppCompatActivity() {
 
                     ) { add(RecyclerViewAdapter.RecyclerViewItem()) }
                 },
-                this@ViewPagerAdapter.itemCount, -1, this.currentTime
+                this@ColumnAdapter.itemCount, -1, this.currentTime
             )
 
             view.rvTimeTable.adapter = adapter
             val lm = NotifyingLinearLayoutManager(context)
             view.rvTimeTable.layoutManager = lm
-            return ViewPagerViewHolder(view)
+            return ColumnViewHolder(view)
         }
 
 //        val scrollsync = RecyclerViewSynchronizer()
 
-        override fun onBindViewHolder(holder: ViewPagerViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: ColumnViewHolder, position: Int) {
 
             (holder.itemView.rvTimeTable.adapter as? RecyclerViewAdapter)?.apply {
                 indexInViewPager = position
@@ -257,15 +187,18 @@ class BusDetailsActivity : AppCompatActivity() {
             }
 
             holder.itemView.rvTimeTable.apply {
-                val lm = layoutManager as LinearLayoutManager
-//                lm.listener = NotifyingLinearLayoutManager.OnLayoutCompleteListener{scrollToPosition(firstVisible)}
-                lm.smoothScrollToPosition(this, RecyclerView.State(), firstVisible)
-                Log.e(TAG, "scrolling to position $firstVisible")
+                clearOnScrollListeners()
+//                (layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(0, rvScrollY)
+                scrollToPosition(0)
+                scrollBy(0, rvScrollY)
+                addOnScrollListener(scrollListener)
+                list.add(this)
             }
         }
 
+
         override fun onBindViewHolder(
-            holder: ViewPagerViewHolder,
+            holder: ColumnViewHolder,
             position: Int,
             payloads: MutableList<Any>
         ) {
@@ -275,25 +208,13 @@ class BusDetailsActivity : AppCompatActivity() {
                 val payload = payloads[0]
                 if (payload is Int) {
                     holder.itemView.rvTimeTable.apply {
-//                        scrollToPosition(payload)
-
-                        val lm = layoutManager as LinearLayoutManager
-                        lm.smoothScrollToPosition(this, RecyclerView.State(), firstVisible)
-                        Log.e(TAG, "scroll called, firstVisible: $payload")
-                        /*clearOnScrollListeners()
-//                        scrollToPosition(0)
-//                        scrollBy(0, payload)
-                        val lm = layoutManager as LinearLayoutManager
-                        lm.scrollToPositionWithOffset(1, payload)
-                        addOnScrollListener(scrollListener)*/
                     }
                 }
             }
         }
 
-        override fun onViewDetachedFromWindow(holder: ViewPagerViewHolder) {
-//            Log.e(TAG, "detached ${holder.hashCode()}")
-//            scrollsync.removeRecyclerView(holder.rvTimeTable)
+        override fun onViewDetachedFromWindow(holder: ColumnViewHolder) {
+            list.remove(holder.rvTimeTable)
             super.onViewDetachedFromWindow(holder)
         }
 
@@ -349,12 +270,8 @@ class BusDetailsActivity : AppCompatActivity() {
     ) : RecyclerView.Adapter<RecyclerViewAdapter.RecyclerViewViewHolder>() {
 
         private class RecyclerViewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val tvTimePrev: TextView = itemView.findViewById(R.id.tvTimePrev)
-            val tvTimeLeftPrev: TextView = itemView.findViewById(R.id.tvTimeLeftPrev)
             val tvTime: TextView = itemView.findViewById(R.id.tvTime)
             val tvTimeLeft: TextView = itemView.findViewById(R.id.tvTimeLeft)
-            val tvTimeNext: TextView = itemView.findViewById(R.id.tvTimeNext)
-            val tvTimeLeftNext: TextView = itemView.findViewById(R.id.tvTimeLeftNext)
         }
 
         class RecyclerViewItem(
@@ -374,26 +291,6 @@ class BusDetailsActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: RecyclerViewViewHolder, position: Int) {
 //            Log.e("RecyclerViewAdapter", "onBindViewHolder ${holder.hashCode()}")
-            if (indexInViewPager > 0) {
-                holder.tvTimePrev.text =
-                    busInstances[position].stopTimes[indexInViewPager - 1].insert(2, ":")
-
-                if (position == items[indexInViewPager - 1].closestTimeInListIndex) {
-                    // TODO: Make tvTime bold here
-                    holder.tvTimeLeftPrev.visibility = View.VISIBLE
-                    val timeLeft =
-                        calcTimeLeft(
-                            currentTime.toInt(),
-                            busInstances[position].stopTimes[indexInViewPager - 1].toInt()
-                        )
-                    holder.tvTimeLeftPrev.text = "(${timeLeft}mins left)"
-                } else {
-                    holder.tvTimeLeftPrev.visibility = View.GONE
-                }
-            } else {
-                holder.tvTimePrev.text = ""
-                holder.tvTimeLeftPrev.text = ""
-            }
 
 
             holder.tvTime.text = busInstances[position].stopTimes[indexInViewPager].insert(2, ":")
@@ -408,27 +305,6 @@ class BusDetailsActivity : AppCompatActivity() {
                 holder.tvTimeLeft.text = "(${timeLeft}mins left)"
             } else {
                 holder.tvTimeLeft.visibility = View.GONE
-            }
-
-            if (indexInViewPager + 1 < viewPagerSize) {
-                holder.tvTimeNext.text =
-                    busInstances[position].stopTimes[indexInViewPager + 1].insert(2, ":")
-
-                if (position == items[indexInViewPager + 1].closestTimeInListIndex) {
-                    // TODO: Make tvTime bold here
-                    holder.tvTimeLeftNext.visibility = View.VISIBLE
-                    val timeLeft =
-                        calcTimeLeft(
-                            currentTime.toInt(),
-                            busInstances[position].stopTimes[indexInViewPager + 1].toInt()
-                        )
-                    holder.tvTimeLeftNext.text = "(${timeLeft}mins left)"
-                } else {
-                    holder.tvTimeLeftNext.visibility = View.GONE
-                }
-            } else {
-                holder.tvTimeNext.text = ""
-                holder.tvTimeLeftNext.text = ""
             }
         }
 
