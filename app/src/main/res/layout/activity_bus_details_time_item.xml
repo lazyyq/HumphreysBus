@@ -1,27 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="80dp"
-    android:layout_height="40dp"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/tvTime"
-        android:layout_width="match_parent"
-        tools:textStyle="bold"
-        android:layout_height="wrap_content"
-        android:gravity="top|center_horizontal"
-        tools:text="12:00" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvTimeLeft"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#777"
-        android:textSize="12sp"
-        android:visibility="gone"
-        tools:visibility="visible"
-        android:gravity="top|center_horizontal"
-        tools:text="(3mins left)" />
+        <TextView
+            android:id="@+id/tvTimePrev"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            tools:text="12:00"
+            tools:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/tvTimeLeftPrev"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            android:textColor="#777"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:text="(3mins left)"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            tools:text="12:00"
+            tools:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTimeLeft"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            android:textColor="#777"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:text="(3mins left)"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTimeNext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            tools:text="12:00"
+            tools:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTimeLeftNext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|center_horizontal"
+            android:textColor="#777"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:text="(3mins left)"
+            tools:visibility="visible" />
+    </LinearLayout>
 </LinearLayout>
