@@ -6,12 +6,14 @@ import android.content.res.Configuration
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -122,6 +124,8 @@ class BusDetailsActivity : AppCompatActivity() {
 
         var rvPos = 0
 
+        var rvY = 0
+
         var array = Array<RecyclerView?>(itemCount) { null }
 
         val scrollListener = object : RecyclerView.OnScrollListener() {
@@ -141,6 +145,7 @@ class BusDetailsActivity : AppCompatActivity() {
                 if (recyclerView.tag as? Int == touchedRvTag) {
                     array.withIndex().filter { it.index != touchedRvTag }
                         .forEach { it.value?.scrollBy(0, dy) }
+                    rvY += dy
                 }
             }
         }
@@ -149,10 +154,22 @@ class BusDetailsActivity : AppCompatActivity() {
             RecyclerView.ViewHolder(itemView) {
             val rvTimeTable: RecyclerView = itemView.findViewById(R.id.rvTimeTable)
             val tv: TextView = itemView.findViewById(R.id.tv)
+            val snapHelper = StartSnapHelper()
 
             init {
                 rvTimeTable.setHasFixedSize(true)
+//                setIsRecyclable(false) //TODO: test or remove
             }
+
+            fun attachHelper() {
+                snapHelper.attachToRecyclerView(rvTimeTable)
+            }
+
+            fun detachHelper() {
+                snapHelper.attachToRecyclerView(null)
+            }
+
+            
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColumnViewHolder {
@@ -180,38 +197,67 @@ class BusDetailsActivity : AppCompatActivity() {
 
 
             view.rvTimeTable.adapter = adapter
+            view.rvTimeTable.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
             view.rvTimeTable.layoutManager = LinearLayoutManager(context)
-            StartSnapHelper().attachToRecyclerView(view.rvTimeTable)
             return ColumnViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ColumnViewHolder, position: Int) {
-//            val e = Log.e("onBindViewHolder()", "binding $position")
+            val e = Log.e("onBindViewHolder()", "binding $position")
             holder.rvTimeTable.apply {
                 (adapter as? RecyclerViewAdapter)?.apply {
                     indexInViewPager = position
                     notifyDataSetChanged()
                 }
                 tag = position
+                scrollToPosition(rvPos)
+                array[position] = this
+                addOnScrollListener(scrollListener)
             }
+            holder.attachHelper()
 
             holder.tv.text = position.toString()
         }
 
-        override fun onViewAttachedToWindow(holder: ColumnViewHolder) {
-            super.onViewAttachedToWindow(holder)
-            holder.rvTimeTable.clearOnScrollListeners()
-            holder.rvTimeTable.scrollToPosition(rvPos)
 
-            array[holder.adapterPosition] = holder.rvTimeTable
-            holder.rvTimeTable.addOnScrollListener(scrollListener)
+
+        override fun onViewAttachedToWindow(holder: ColumnViewHolder) {
+//            Log.e("onViewAttachedToWindow()", "attached ${holder.adapterPosition}")
+            super.onViewAttachedToWindow(holder)
+//            holder.rvTimeTable.clearOnScrollListeners()
+//            holder.rvTimeTable.scrollToPosition(rvPos)
+
+//            array[holder.adapterPosition] = holder.rvTimeTable
+//            holder.rvTimeTable.addOnScrollListener(scrollListener)
         }
 
         override fun onViewDetachedFromWindow(holder: ColumnViewHolder) {
 //            Log.e("onViewDetachedFromWindow()", "Detaching ${holder.adapterPosition}")
-            array[holder.adapterPosition] = null
-            holder.rvTimeTable.clearOnScrollListeners()
+//            array[holder.adapterPosition] = null
+//            holder.rvTimeTable.clearOnScrollListeners()
             super.onViewDetachedFromWindow(holder)
+        }
+
+        override fun onViewRecycled(holder: ColumnViewHolder) {
+            val position = holder.adapterPosition
+            Log.e("onViewRecycled()", "Recycled ${position}")
+            array[position] = null
+            holder.rvTimeTable.clearOnScrollListeners()
+            holder.rvTimeTable.scrollToPosition(rvPos)
+            holder.detachHelper()
+            super.onViewRecycled(holder)
+        }
+
+
+
+        override fun onFailedToRecycleView(holder: ColumnViewHolder): Boolean {
+            val position = holder.adapterPosition
+            Log.e("onFailedToRecycleView()", "Failed to recycle ${position}")
+            array[position] = null
+            holder.rvTimeTable.clearOnScrollListeners()
+            holder.rvTimeTable.scrollToPosition(rvPos)
+            holder.detachHelper()
+            return super.onFailedToRecycleView(holder)
         }
 
         override fun getItemCount() = bus.stopPoints.size
