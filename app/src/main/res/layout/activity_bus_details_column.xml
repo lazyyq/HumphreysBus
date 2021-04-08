@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Item which displays time the bus stops and time left -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="12dp"
+    tools:layout_gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/tvStopTimeColumn"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:textColor="#BF000000"
+        android:gravity="start"
+        android:bufferType="spannable"
+        android:textStyle="bold"
+        android:lineSpacingExtra="12sp"
+        android:textSize="16sp"
+        tools:text="12:00\n13:00\n14:00\n15:00\n16:00\n17:00\n18:00" />
+
+    <View
+        android:layout_width="16dp"
+        android:layout_height="match_parent"
+        tools:layout_weight="1" />
+
+    <TextView
+        android:textColor="#99000000"
+        android:id="@+id/tvTimeLeftColumn"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:gravity="end"
+        android:lineSpacingExtra="12sp"
+        android:textSize="16sp"
+        tools:text="00:00 left\n00:10 left\n00:20 left\n00:30 left\n00:40 left\n00:50 left\n01:00 left" />
+</LinearLayout>

@@ -21,8 +21,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="Bus"
-        android:textAllCaps="true"
-        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="@id/ivBus"
         app:layout_constraintStart_toEndOf="@+id/ivBus"
         app:layout_constraintTop_toTopOf="@id/ivBus" />
@@ -79,31 +77,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivBus" />
 
-    <com.google.android.material.tabs.TabLayout
-        app:tabMode="scrollable"
-        android:id="@+id/tabLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content">
-
-    </com.google.android.material.tabs.TabLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:id="@+id/rvTimeTables"
-        android:scrollbars="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/activity_bus_details_column_item"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-
-    <!--
-
     <com.otaliastudios.zoom.ZoomLayout
         android:id="@+id/zoomLayoutStopName"
         android:layout_width="0dp"
@@ -156,5 +129,5 @@
             android:divider="@drawable/list_divider_material_1dp"
             android:orientation="horizontal"
             android:showDividers="middle" />
-    </com.otaliastudios.zoom.ZoomLayout>-->
+    </com.otaliastudios.zoom.ZoomLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
