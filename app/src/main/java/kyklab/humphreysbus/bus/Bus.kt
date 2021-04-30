@@ -3,6 +3,7 @@ package kyklab.humphreysbus.bus
 import android.graphics.PointF
 import androidx.annotation.ColorInt
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.utils.MinDateTime
 
 data class Bus(
     val name: String, @ColorInt val colorInt: Int,
@@ -55,7 +56,7 @@ data class Bus(
         return name.hashCode()
     }
 
-    data class BusInstance(val stopTimes: List<String>, val isHoliday: Boolean)
+    data class BusInstance(val stopTimes: List<MinDateTime>, val isHoliday: Boolean)
 
     data class StopDeprecated(val stopNo: String, val stopTime: String)
 }

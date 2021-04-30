@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.CompoundButton
 import android.widget.FrameLayout
@@ -32,12 +33,14 @@ import kyklab.humphreysbus.ui.BusDetailsActivity
 import kyklab.humphreysbus.ui.DateTimePickerFragment
 import kyklab.humphreysbus.ui.MainActivity
 import kyklab.humphreysbus.utils.*
+import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
+import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import java.util.*
 
 class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetDialogFragment() {
     private lateinit var activity: Activity
     private val calendar = Calendar.getInstance()
-    private var currentTime = currentTimeHHmm
+    private var currentTime = MinDateTime().apply {setCalendar(calendar);s="00"}
     private val sdf by lazy { SimpleDateFormat("HHmm") }
     private var isHoliday = isHoliday()
     private var stopId = -1
@@ -149,27 +152,20 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
                 bus.stopPoints.withIndex().filter { it.value.id == stopId }.map { it.index }
             stopIndexes.forEach { index ->
                 val times = bus.instances.filter { it.isHoliday == isHoliday }
-                    .map { it.stopTimes[index].toInt() }
+                    .map { it.stopTimes[index] }
                 // Find closest bus time
-                var closest: Int = -1
-                for (i in times.indices) {
-                    if (isBetween(
-                            currentTime.toInt(),
-                            times.getWithWrappedIndex(i - 1)!!, times[i]
-                        )
-                    ) {
-                        closest = i
-                        break
-                    }
+                var closestIndex = currentTime.getNextClosestTimeIndex(times, true)
+                if (closestIndex >= 0) {
+                    val newAdapterItem = NewAdapter.NewAdapterItem(
+                        bus, stopId, index, times[closestIndex],
+                        times.getWithWrappedIndex(closestIndex + 1)!!
+                    )
+                    rvAdapterItems.add(newAdapterItem)
                 }
-                val newAdapterItem = NewAdapter.NewAdapterItem(
-                    bus, stopId, index, times[closest], times.getWithWrappedIndex(closest + 1)!!
-                )
-                rvAdapterItems.add(newAdapterItem)
             }
         }
 
-        rvAdapterItems.sortBy { it.closestBusTime }
+        rvAdapterItems.sortBy { (it.closestBusTime - currentTime).h_m }
         rvAdapter.notifyDataSetChanged()
 
         progressBar.visibility = View.GONE
@@ -228,7 +224,8 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
-                currentTime = sdf.format(calendar.time)
+                currentTime.setCalendar(calendar)
+                currentTime.s = "00"
                 rvAdapter.currentTime = currentTime
                 isHoliday = calendar.time.isHoliday()
                 updateDateTime()
@@ -266,7 +263,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
     private fun updateDateTime() {
         cbHoliday.isChecked = isHoliday // TODO: Check if this triggers listener
-        tvCurrentTime.text = currentTime.insert(2, ":")
+        tvCurrentTime.text = currentTime.h_m
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -305,7 +302,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         private val activity: Activity,
         private val scope: CoroutineScope,
         private val items: List<NewAdapterItem>,
-        var currentTime: String,
+        var currentTime: MinDateTime,
     ) : RecyclerView.Adapter<NewAdapter.NewViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewViewHolder {
@@ -331,12 +328,12 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
                 holder.tvTowards.text = "(End of bus)"
             }
 
-            val closestLeft = calcTimeLeft(currentTime.toInt(), item.closestBusTime)
-            val nextClosestLeft = calcTimeLeft(currentTime.toInt(), item.nextClosestBusTime)
+            val closestLeft = (item.closestBusTime - currentTime).h_m
+            val secondClosestLeft = (item.secondClosestBusTime - currentTime).h_m
             holder.tvNextBus.text =
-                "${item.closestBusTime.format("%04d").insert(2, ":")} ($closestLeft mins)"
+                "${item.closestBusTime.h_m} ($closestLeft left)"
             holder.tvNextNextBus.text =
-                "${item.nextClosestBusTime.format("%04d").insert(2, ":")} ($nextClosestLeft mins)"
+                "${item.secondClosestBusTime.h_m} ($secondClosestLeft left)"
         }
 
         override fun getItemCount() = items.size
@@ -360,8 +357,8 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
             val bus: Bus,
             val stopId: Int,
             val stopPointIndex: Int,
-            val closestBusTime: Int,
-            val nextClosestBusTime: Int
+            val closestBusTime: MinDateTime,
+            val secondClosestBusTime: MinDateTime
         )
     }
 

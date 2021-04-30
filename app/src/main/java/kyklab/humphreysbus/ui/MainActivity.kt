@@ -92,6 +92,15 @@ class MainActivity : AppCompatActivity() {
 
         setupViews()
 
+
+        btnTest.setOnClickListener {
+            startActivity(Intent(this, BusTestActivity::class.java))
+        }
+
+
+
+
+
         val locationRequest = LocationRequest.create()?.apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             interval = 10000

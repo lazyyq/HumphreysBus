@@ -10,6 +10,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.forEachCursor
 import kyklab.humphreysbus.utils.kQuery
 import java.util.concurrent.locks.ReentrantLock
@@ -158,7 +159,8 @@ object BusUtils {
                         orderBy = "bus_details._id ASC"
                     )
                     cursor2.forEachCursor { c1 ->
-                        val stopTimes = ArrayList(c1.getString(0).split(';'))
+                        val split = c1.getString(0).split(';')
+                        val stopTimes = ArrayList(split.map { MinDateTime().apply { hm = it } })
                         if (stopTimes.size == busStops.size) {
                             val isHoliday =
                                 when (c1.getIntOrNull(1)) {

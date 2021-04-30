@@ -31,6 +31,8 @@ import kyklab.humphreysbus.*
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.utils.*
+import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
+import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import java.util.*
 
 
@@ -44,7 +46,7 @@ class BusDetailsActivity : AppCompatActivity() {
     private lateinit var busToShow: Bus
 
     private val calendar = Calendar.getInstance()
-    private var currentTime = currentTimeHHmm
+    private var currentTime = MinDateTime.getCurDateTime().apply {s="00"}
     private val sdf by lazy { SimpleDateFormat("HHmm") }
     private var isHoliday = isHoliday()
 
@@ -135,31 +137,32 @@ class BusDetailsActivity : AppCompatActivity() {
                 var autoScrollLine = 0
                 val autoScrollOffset = 5
 
+                val instances = busToShow.instances.filter { i -> i.isHoliday == isHoliday }
+
+                // Get next closest bus time in highlighted column
+                var nextClosestTimeIndex = -1
+                stopToHighlightIndex?.let { index ->
+                    val tmpList = instances.map { it.stopTimes[index] }
+                    nextClosestTimeIndex = currentTime.getNextClosestTimeIndex(tmpList, true)
+                }
+
                 // Columns, which are LinearLayout, that contain list of stop time and time left
                 val stopColumns = Array(busToShow.stopPoints.size) { column ->
-                    var closestTimeFound = false
                     LayoutInflater.from(this@BusDetailsActivity).inflate(
                         R.layout.activity_bus_details_column, timeTableContainer, false
                     ).apply {
                         val timeTextBuilder = SpannableStringBuilder()
                         val timeLeftTextBuilder = SpannableStringBuilder()
-                        val instances = busToShow.instances.filter { i -> i.isHoliday == isHoliday }
+
                         autoScrollTotalLines = instances.size + 1
                         for (i in instances.indices) {
                             val time = instances[i].stopTimes[column]
 
-                            // If this is the stop to highlight, find line to auto scroll to
-                            if (!closestTimeFound && column == stopToHighlightIndex &&
-                                isBetween(
-                                    currentTime.toInt(),
-                                    instances.getWithWrappedIndex(i - 1)!!.stopTimes[column].toInt(),
-                                    time.toInt()
-                                )
-                            ) {
+                            // If this is the stop to highlight, auto scroll to next closest time line
+                            if (column == stopToHighlightIndex && i == nextClosestTimeIndex) {
                                 autoScrollLine = i
-                                closestTimeFound = true
 
-                                var text = time.insert(2, ":") + '\n'
+                                var text = time.h_m + '\n'
                                 timeTextBuilder.bold {
                                     append(
                                         SpannableStringBuilder(text).apply {
@@ -171,9 +174,7 @@ class BusDetailsActivity : AppCompatActivity() {
                                             )
                                         })
                                 }
-                                text = minToHH_mm(
-                                    calcTimeLeft(currentTimeHHmm.toInt(), time.toInt())
-                                ) + " left" + '\n'
+                                text = (time - currentTime).h_m + " left" + '\n'
                                 timeLeftTextBuilder.bold {
                                     append(
                                         SpannableStringBuilder(text).apply {
@@ -186,11 +187,9 @@ class BusDetailsActivity : AppCompatActivity() {
                                         })
                                 }
                             } else {
-                                timeTextBuilder.append(time.insert(2, ":") + '\n')
+                                timeTextBuilder.append(time.h_m + '\n')
                                 timeLeftTextBuilder.append(
-                                    minToHH_mm(
-                                        calcTimeLeft(currentTimeHHmm.toInt(), time.toInt())
-                                    ) + " left" + '\n'
+                                    (time - currentTime).h_m + " left" + '\n'
                                 )
                             }
                         }
@@ -255,24 +254,6 @@ class BusDetailsActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Decide if we're between previous and next stop time
-     */
-    private fun isBetween(_curTime: Int, _prevTime: Int, _nextTime: Int): Boolean {
-        val currTime: Int
-        val nextTime: Int
-        if (_nextTime < _prevTime) {
-            nextTime = _nextTime + 2400
-            currTime =
-                if (_curTime < _prevTime) _curTime + 2400
-                else _curTime
-        } else {
-            nextTime = _nextTime
-            currTime = _curTime
-        }
-        return currTime in (_prevTime + 1)..nextTime
-    }
-
     private fun showCurrentTime() {
         updateDateTime()
 
@@ -286,7 +267,7 @@ class BusDetailsActivity : AppCompatActivity() {
         tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
-                currentTime = sdf.format(calendar.time)
+                currentTime.setCalendar(calendar)
                 isHoliday = calendar.time.isHoliday()
                 updateDateTime()
                 updateBusTimeTable()
@@ -301,6 +282,6 @@ class BusDetailsActivity : AppCompatActivity() {
 
     private fun updateDateTime() {
         cbHoliday.isChecked = isHoliday
-        tvCurrentTime.text = currentTime.insert(2, ":")
+        tvCurrentTime.text = currentTime.h_m
     }
 }

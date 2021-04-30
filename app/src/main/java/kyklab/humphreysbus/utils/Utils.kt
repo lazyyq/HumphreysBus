@@ -12,6 +12,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+import android.provider.Settings
 import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
 import android.util.TypedValue
@@ -22,9 +23,11 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kyklab.humphreysbus.App
 import java.util.*
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 
 fun Context.toast(text: String? = null) {
@@ -188,20 +191,29 @@ fun <T : Activity, S : View> T.attachViewOnLeft(
     })
 }
 
+/*
 val currentTimeHHmm: String
     @SuppressLint("SimpleDateFormat")
     get() = SimpleDateFormat("HHmm").format(Date())
 
-/**
- * Calculate minutes in hhmm format between `from` to `to`
- */
-fun calcTimeLeft(from: Int, to: Int): Int {
-    var fromH = from / 100
-    var fromM = from % 100
-    var toH = to / 100
-    var toM = to % 100
+val currentTimeHHmmss: String
+    @SuppressLint("SimpleDateFormat")
+    get() = SimpleDateFormat("HHmmss").format(Date())
 
-    if (from > to) toH += 24
+val currentTimemmss: String
+    @SuppressLint("SimpleDateFormat")
+    get() = SimpleDateFormat("mmss").format(Date())
+
+/**
+ * Calculate minutes in HHmm format between `from` to `to`
+ */
+fun calcMinsLeft(from_HHmm: Int, to_HHmm: Int): Int {
+    var fromH = from_HHmm / 100
+    var fromM = from_HHmm % 100
+    var toH = to_HHmm / 100
+    var toM = to_HHmm % 100
+
+    if (from_HHmm > to_HHmm) toH += 24
 
     val fromMins = fromH * 60 + fromM
     val toMins = toH * 60 + toM
@@ -209,10 +221,26 @@ fun calcTimeLeft(from: Int, to: Int): Int {
     return toMins - fromMins
 }
 
+/**
+ * Calculate seconds in HHmmss format between `from` to `to`
+ */
+fun calcSecsLeft(from_HHmmss: Int, to_HHmmss: Int): Int {
+    var fromH = from_HHmmss / 10000
+    var fromM = from_HHmmss / 100 % 100
+    var fromS = from_HHmmss % 100
+    var toH = to_HHmmss / 10000
+    var toM = to_HHmmss / 100 % 100
+    var toS = to_HHmmss % 100
+
+    val fromSecs = fromH * 3600 + fromM * 60 + fromS
+    val toSecs = toH * 3600 + toM * 60 + toS
+
+    return toSecs - fromSecs
+}
+
 fun minToHH_mm(totalMins: Int) =
     "${(totalMins / 60 % 24).format("%02d")}:${(totalMins % 60).format("%02d")}"
 
-/*
 @SuppressLint("SimpleDateFormat")
 fun minToHH_mm(totalMins: Int): String {
     val cal = Calendar.getInstance()
@@ -266,6 +294,15 @@ fun Date.isHoliday(): Boolean {
     cal.time = this
     return ((cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
             || (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY))
+}
+
+/**
+ * Get animation duration independent of user's animation scale preference in dev settings
+ */
+fun getRealAnimDuration(orig: Long): Long {
+    val userAnimScale = Settings.Global.getFloat(
+        App.context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+    return (orig / userAnimScale).roundToLong()
 }
 
 @JvmOverloads
