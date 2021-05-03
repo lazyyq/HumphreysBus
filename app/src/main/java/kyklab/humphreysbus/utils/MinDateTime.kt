@@ -138,7 +138,7 @@ class MinDateTime {
         }
 
         var tmpYy = yy.fourDigits()
-        if (tmpYy.length > 4) tmpYy = tmpYy.substring(tmpYy.length-4..tmpYy.length-1)
+        if (tmpYy.length > 4) tmpYy = tmpYy.substring(tmpYy.length - 4 until tmpYy.length)
         this.yy = tmpYy
         this.mm = mm.twoDigits()
         this.dd = dd.twoDigits()
@@ -470,21 +470,41 @@ class MinDateTime {
                 if (prev == this && this == next) {
                     true
                 } else if (prevInclusive) {
-                    (prev <= this && this < next) ||
-                            (prev >= this && this > next)
+                    prev <= this && this < next ||
+                            prev >= this && this > next
                 } else {
-                    (prev < this && this <= next) ||
-                            (prev > this && this >= next)
+                    prev < this && this <= next ||
+                            prev > this && this >= next
                 }
             } else {
-                if (prev.compare(this, false) == 0 && this.compare(next, false) == 0) {
+                if (prev.compare(this, false) == 0 &&
+                    this.compare(next, false) == 0
+                ) {
                     true
-                } else if (prevInclusive) {
-                    (prev.compare(this, false) <= 0 && this.compare(next, false) < 0) ||
-                            (prev.compare(this, false) >= 0 && this.compare(next, false) > 0)
                 } else {
-                    (prev.compare(this, false) < 0 && this.compare(next, false) <= 0) ||
-                            (prev.compare(this, false) > 0 && this.compare(next, false) >= 0)
+                    var nextAdjusted = next
+                    var thisAdjusted = this
+                    if (next.compare(prev, false) < 0) {
+                        nextAdjusted = MinDateTime(next).apply {
+                            h = (h.toInt() + 24).toString()
+                        }
+                        if (this.compare(prev, false) < 0) {
+                            thisAdjusted = MinDateTime(this).apply {
+                                h = (h.toInt() + 24).toString()
+                            }
+                        }
+                    }
+                    if (prevInclusive) {
+                        prev.compare(thisAdjusted, false) <= 0 &&
+                                thisAdjusted.compare(nextAdjusted, false) < 0 ||
+                                prev.compare(thisAdjusted, false) >= 0 &&
+                                thisAdjusted.compare(nextAdjusted, false) > 0
+                    } else {
+                        prev.compare(thisAdjusted, false) < 0 &&
+                                thisAdjusted.compare(nextAdjusted, false) <= 0 ||
+                                prev.compare(thisAdjusted, false) > 0 &&
+                                thisAdjusted.compare(nextAdjusted, false) >= 0
+                    }
                 }
             }
 
