@@ -417,7 +417,7 @@ class MinDateTime {
                 mm = (c.get(Calendar.MONTH) + 1).twoDigits(),
                 dd = c.get(Calendar.DAY_OF_MONTH).twoDigits(),
                 h = c.get(Calendar.HOUR_OF_DAY).twoDigits(),
-                m = c.get(Calendar.MONTH).twoDigits(),
+                m = c.get(Calendar.MINUTE).twoDigits(),
                 s = c.get(Calendar.SECOND).twoDigits()
             )
         }
@@ -431,18 +431,12 @@ class MinDateTime {
             s = calendar.get(Calendar.SECOND).twoDigits()
         }
 
-        fun MinDateTime.timeMillis(includeDa: Boolean = false) =
-            Calendar.getInstance().apply {
-                if (includeDa) {
-                    set(Calendar.YEAR, yy.toInt())
-                    set(Calendar.MONTH, mm.toInt() - 1)
-                    set(Calendar.DAY_OF_MONTH, dd.toInt())
-                }
-                set(Calendar.HOUR_OF_DAY, h.toInt())
-                set(Calendar.MINUTE, m.toInt())
-                set(Calendar.SECOND, s.toInt())
-                set(Calendar.MILLISECOND, 0) //TODO: Check
-            }.timeInMillis
+        val MinDateTime.timeInSecs: Int
+            get() = h.toInt() * 3600 + m.toInt() * 60 + s.toInt()
+
+        val MinDateTime.timeInMillis: Long
+            get() = timeInSecs * 1000L
+
 
         fun MinDateTime.compare(other: MinDateTime, considerDates: Boolean): Int {
             val a: String

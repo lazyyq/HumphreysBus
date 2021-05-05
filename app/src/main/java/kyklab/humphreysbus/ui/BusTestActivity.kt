@@ -3,7 +3,6 @@ package kyklab.humphreysbus.ui
 import android.animation.Animator
 import android.graphics.*
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -24,7 +23,8 @@ import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.*
 import kyklab.humphreysbus.utils.MinDateTime.Companion.isBetween
-import kyklab.humphreysbus.utils.MinDateTime.Companion.timeMillis
+import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInMillis
+import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInSecs
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,6 +32,7 @@ class BusTestActivity : AppCompatActivity() {
 
     var itemheight = 0
     private val timer = Timer()
+    private val curTime = MinDateTime.getCurDateTime()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,17 +56,15 @@ class BusTestActivity : AppCompatActivity() {
 
 
         val topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 48f) / 2
-        val curtime = MinDateTime.getCurDateTime()
 
         val rvheight = itemheight * adapter.itemCount
         container.layoutParams.height = rvheight
 
-
-        val tmplist = LinkedList<IconItem>()
+        val animationPlayer = AnimationPlayer()
 
 
         // Add bus icons
-        bus.instances.filter{it.isHoliday== isHoliday()}.withIndex().forEach { instanceTmp ->
+        bus.instances.filter { it.isHoliday == isHoliday() }.withIndex().forEach { instanceTmp ->
 
             val instance = instanceTmp.value
 
@@ -74,7 +73,7 @@ class BusTestActivity : AppCompatActivity() {
                 val nextTime = instance.stopTimes[i + 1]
 //                if (prevTime.toInt() <= curtime.toInt() && curtime.toInt() < nextTime.toInt()) {
 //                if (isBetween(curtime.toInt(), prevTime.toInt(), nextTime.toInt())) {
-                if (curtime.isBetween(prevTime, nextTime, true, false)) {
+                if (curTime.isBetween(prevTime, nextTime, true, false)) {
                     val busicon = ImageView(this).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             dpToPx(this@BusTestActivity, 48f),
@@ -85,7 +84,7 @@ class BusTestActivity : AppCompatActivity() {
                         setImageResource(R.drawable.ic_bus)
                         imageTintList = getColorStateList(android.R.color.black)
                     }
-                    tmplist.add(IconItem(busicon, instance, i + 1))
+                    animationPlayer.addIcon(IconItem(busicon, instance, i + 1))
 
 
                     // Add animation start
@@ -121,27 +120,12 @@ class BusTestActivity : AppCompatActivity() {
                     // Add animation done
 
                     container.addView(busicon)
-
-
                     continue
                 }
             }
         }
 
-        val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
-        Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
-        Log.e("ANIMATION", "launched init anim")
-        tmplist.forEach { it.startAnimation() }
-        timer.schedule(object : TimerTask() {
-            override fun run() {
-                runOnUiThread {
-                    Log.e("ANIMATION", "launching scheduled anim")
-                    tmplist.forEach {
-                        it.startAnimation()
-                    }
-                }
-            }
-        }, secUntilNextMin * 1000L, 60000)
+        animationPlayer.startAnimation()
     }
 
     override fun onDestroy() {
@@ -149,7 +133,33 @@ class BusTestActivity : AppCompatActivity() {
         timer.cancel()
     }
 
-    val STAYINGTIME = 3
+    val STAYINGTIME = 15
+
+    private inner class AnimationPlayer {
+        private val timer = Timer()
+        val icons: MutableList<IconItem> = LinkedList()
+
+        fun addIcon(icon: IconItem) {
+            icons.add(icon)
+        }
+
+        fun startAnimation() {
+            val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
+            Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
+            Log.e("ANIMATION", "launched init anim")
+            icons.forEach { it.startAnimation() }
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    runOnUiThread {
+                        Log.e("ANIMATION", "launching scheduled anim")
+                        icons.forEach {
+                            it.startAnimation()
+                        }
+                    }
+                }
+            }, secUntilNextMin * 1000L, 60000)
+        }
+    }
 
     /**
      * @param indexInStopTimes  index the bus instance is currently heading to
@@ -165,9 +175,9 @@ class BusTestActivity : AppCompatActivity() {
             override fun onAnimationStart(animation: Animator?) {
                 isRunning = true
                 val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
-                val past = bus!!.stopPoints[indexInStopTimes-1].name
+                val past = bus!!.stopPoints[indexInStopTimes - 1].name
                 debugEta = busInstance.stopTimes[indexInStopTimes]
-                icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes-1].m + "~"+busInstance.stopTimes[indexInStopTimes].m))
+                icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
                 Log.e("ANIMATION", "Just started past $past, eta $debugEta")
             }
 
@@ -180,6 +190,14 @@ class BusTestActivity : AppCompatActivity() {
                     val arrived = bus!!.stopPoints[indexInStopTimes].name
                     Log.e("ANIMATION", "Just arrived $arrived")
                 }
+
+                icon.setImageBitmap(
+                    createBmp(
+                        busInstance.stopTimes[indexInStopTimes - 1].m + "~" +
+                                if (indexInStopTimes >= bus!!.stopPoints.size) "ENDOFBUS" else busInstance.stopTimes[indexInStopTimes].m
+                                        + "\nEND"
+                    )
+                )
             }
 
             override fun onAnimationCancel(animation: Animator?) {}
@@ -207,25 +225,25 @@ class BusTestActivity : AppCompatActivity() {
 
             if (isRunning) return
 
+            val prevTime = busInstance.stopTimes[indexInStopTimes - 1]
+            val nextTime = busInstance.stopTimes[indexInStopTimes]
             if (firstAnim) {
                 val sec = Calendar.getInstance().get(Calendar.SECOND)
-                if (sec < 60 - STAYINGTIME) {
-                    val prevTime = busInstance.stopTimes[indexInStopTimes - 1]
-                    val nextTime = busInstance.stopTimes[indexInStopTimes]
-                    val currTime = MinDateTime.getCurDateTime()
-                    val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeMillis()
-                    val animTimeLeftMillis = (nextTime - currTime - STAYINGTIME).timeMillis()
-                    val startingPos =
-                        itemheight * (animTimeLeftMillis.toFloat() / animTimeTotalMillis)
-                    animator.translationYBy(startingPos).setDuration(0).setListener(null).start()
+                if ((nextTime - curTime).timeInSecs > STAYINGTIME) {
+                    val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeInMillis
+                    val animTimeLeftMillis = (nextTime - curTime - STAYINGTIME).timeInMillis
+                    val initialOffset =
+                        itemheight * (animTimeTotalMillis - animTimeLeftMillis).toFloat() / animTimeTotalMillis
+                    animator.translationYBy(initialOffset).setDuration(0).setListener(null)
+                        .start()
                     /*icon.layoutParams.apply {
                         if (this is LinearLayout.LayoutParams)
                             topMargin += startingPos.toInt()
                     }*/
 
-                        animator.translationYBy(itemheight - startingPos)
-                            .setDuration(getRealAnimDuration(animTimeLeftMillis.toLong()))
-                            .setListener(animListener).start()
+                    animator.translationYBy(itemheight - initialOffset)
+                        .setDuration(getRealAnimDuration(animTimeLeftMillis.toLong()))
+                        .setListener(animListener).start()
                     Log.e(
                         "ICONITEM",
                         "first anim, eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} duration ${animTimeLeftMillis / 1000}"
@@ -236,9 +254,7 @@ class BusTestActivity : AppCompatActivity() {
                 }
                 firstAnim = false
             } else {
-                val prevTime = busInstance.stopTimes[indexInStopTimes - 1]
-                val nextTime = busInstance.stopTimes[indexInStopTimes]
-                val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeMillis()
+                val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeInMillis
                 animator.translationYBy(itemheight.toFloat())
                     .setDuration(getRealAnimDuration(animTimeTotalMillis.toLong()))
                     .setListener(animListener).start()
