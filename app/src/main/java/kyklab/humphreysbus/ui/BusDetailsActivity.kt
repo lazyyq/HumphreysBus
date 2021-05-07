@@ -72,6 +72,13 @@ class BusDetailsActivity : AppCompatActivity() {
             finish()
         }
 
+        btnTimeline.setOnClickListener {
+            val timelineIntent = Intent(this, BusDetailsActivity::class.java).apply {
+                putExtra("busname", busToShow.name)
+            }
+            startActivity(timelineIntent)
+        }
+
         zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
             override fun onIdle(engine: ZoomEngine) {
 

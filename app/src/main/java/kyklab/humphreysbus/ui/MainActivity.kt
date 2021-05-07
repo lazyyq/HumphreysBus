@@ -94,12 +94,11 @@ class MainActivity : AppCompatActivity() {
 
 
         btnTest.setOnClickListener {
-            startActivity(Intent(this, BusTestActivity::class.java))
+            val intent = Intent(this, BusDetailsActivity::class.java).apply {
+                putExtra("busname", "Red")
+            }
+            startActivity(intent)
         }
-
-
-
-
 
         val locationRequest = LocationRequest.create()?.apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
