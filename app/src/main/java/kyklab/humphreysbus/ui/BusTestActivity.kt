@@ -1,6 +1,7 @@
 package kyklab.humphreysbus.ui
 
 import android.animation.Animator
+import android.content.res.ColorStateList
 import android.graphics.*
 import android.os.Bundle
 import android.util.Log
@@ -51,7 +52,7 @@ class BusTestActivity : AppCompatActivity() {
             }
         })
 
-        val adapter = MyAdapter(bus.stopPoints)
+        val adapter = MyAdapter(bus.stopPoints, bus.colorInt)
         rv.adapter = adapter
 
 
@@ -76,8 +77,8 @@ class BusTestActivity : AppCompatActivity() {
                 if (curTime.isBetween(prevTime, nextTime, true, false)) {
                     val busicon = ImageView(this).apply {
                         layoutParams = LinearLayout.LayoutParams(
-                            dpToPx(this@BusTestActivity, 48f),
-                            dpToPx(this@BusTestActivity, 48f)
+                            dpToPx(this@BusTestActivity, 36f),
+                            dpToPx(this@BusTestActivity, 36f)
                         ).apply {
                             topMargin = i * itemheight + topmargin
                         }
@@ -85,39 +86,6 @@ class BusTestActivity : AppCompatActivity() {
                         imageTintList = getColorStateList(android.R.color.black)
                     }
                     animationPlayer.addIcon(IconItem(busicon, instance, i + 1))
-
-
-                    // Add animation start
-                    /*
-                    val totalTime = (nextTime.toInt()-prevTime.toInt())*60-stayingTime
-                    val animExecTime = max(getSecondsLeft(currentTimemmss.toInt(), nextTime.toInt())-stayingTime,0)
-                    val anim = ObjectAnimator.ofFloat(busicon, "translationY",
-                        (animExecTime/totalTime.toFloat())*itemheight)
-                    anim.setDuration(animExecTime.toLong()*1000)
-                    anim.repeatCount = instance.stopTimes.size - 1 - i
-                    anim.addListener(object: Animator.AnimatorListener{
-                        override fun onAnimationStart(animation: Animator?) {
-                        }
-
-                        override fun onAnimationEnd(animation: Animator?) {
-                        }
-
-                        override fun onAnimationCancel(animation: Animator?) {
-                        }
-
-                        override fun onAnimationRepeat(animation: Animator?) {
-                            if (animation != null) {
-                                animation.pause()
-                                Handler(mainLooper).postDelayed(animation::resume,
-                                    stayingTime.toLong()
-                                )
-                            }
-                        }
-                    })
-                    anim.start()
-                    Log.e("tag", "found $i in ${instanceTmp.index}")
-                    */
-                    // Add animation done
 
                     container.addView(busicon)
                     continue
@@ -150,6 +118,7 @@ class BusTestActivity : AppCompatActivity() {
             icons.forEach { it.startAnimation() }
             timer.schedule(object : TimerTask() {
                 override fun run() {
+                    icons.removeIf { icon -> icon.isDone } // Remove done buses
                     runOnUiThread {
                         Log.e("ANIMATION", "launching scheduled anim")
                         icons.forEach {
@@ -169,7 +138,12 @@ class BusTestActivity : AppCompatActivity() {
         val busInstance: Bus.BusInstance,
         var indexInStopTimes: Int
     ) {
+        var isDone = false
         var debugEta = MinDateTime()
+
+        private val animator = icon.animate().apply { interpolator = null }
+        private var firstAnim = true
+        private var isRunning = false
 
         private val animListener = object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {
@@ -177,7 +151,7 @@ class BusTestActivity : AppCompatActivity() {
                 val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
                 val past = bus!!.stopPoints[indexInStopTimes - 1].name
                 debugEta = busInstance.stopTimes[indexInStopTimes]
-                icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
+                //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
                 Log.e("ANIMATION", "Just started past $past, eta $debugEta")
             }
 
@@ -191,23 +165,18 @@ class BusTestActivity : AppCompatActivity() {
                     Log.e("ANIMATION", "Just arrived $arrived")
                 }
 
-                icon.setImageBitmap(
+                /*icon.setImageBitmap(
                     createBmp(
                         busInstance.stopTimes[indexInStopTimes - 1].m + "~" +
                                 if (indexInStopTimes >= bus!!.stopPoints.size) "ENDOFBUS" else busInstance.stopTimes[indexInStopTimes].m
                                         + "\nEND"
                     )
-                )
+                )*/
             }
 
             override fun onAnimationCancel(animation: Animator?) {}
             override fun onAnimationRepeat(animation: Animator?) {}
         }
-
-        private val animator = icon.animate().apply { interpolator = null }
-        private var firstAnim = true
-        private var isRunning = false
-        private var isDone = false
 
         fun startAnimation() {
             if (isDone) return
@@ -267,18 +236,24 @@ class BusTestActivity : AppCompatActivity() {
         }
     }
 
-    private class MyAdapter(val items: List<BusStop>) :
+    private class MyAdapter(val items: List<BusStop>, val tintColor: Int) :
         RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
-        class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        class MyViewHolder(itemView: View, tintColor: Int) : RecyclerView.ViewHolder(itemView) {
+            val waypoint: ImageView = itemView.findViewById(R.id.waypoint)
             val stopname: TextView = itemView.findViewById(R.id.stopname)
             val arrivetime: TextView = itemView.findViewById(R.id.arrivetime)
+
+            init {
+                waypoint.imageTintList = ColorStateList.valueOf(tintColor)
+            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             return MyViewHolder(
                 LayoutInflater.from(parent.context)
-                    .inflate(R.layout.acitivity_test_bus_stop_item, parent, false)
+                    .inflate(R.layout.acitivity_test_bus_stop_item, parent, false),
+                tintColor
             )
         }
 

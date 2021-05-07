@@ -4,15 +4,17 @@
     android:orientation="horizontal"
     android:layout_height="84dp">
     <ImageView
-        android:layout_width="wrap_content"
+        android:layout_width="32dp"
         android:layout_height="match_parent"
         android:src="@drawable/stoppoint"
+        android:id="@+id/waypoint"
         android:scaleType="fitXY" />
 
     <LinearLayout
-        android:layout_marginVertical="8dp"
+        android:layout_marginVertical="12dp"
         android:layout_width="match_parent"
         android:orientation="vertical"
+        android:layout_marginStart="16dp"
         android:layout_height="match_parent">
         <TextView
             android:id="@+id/stopname"
