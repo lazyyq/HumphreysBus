@@ -33,7 +33,7 @@ class BusTestActivity : AppCompatActivity() {
     private var itemheight = 0
     private val curTime = MinDateTime.getCurDateTime()
     private lateinit var busStatusUpdater: BusStatusUpdater
-    private var recyclerView = rv
+    private lateinit var recyclerView: RecyclerView
     private lateinit var bus: Bus
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +52,7 @@ class BusTestActivity : AppCompatActivity() {
             toast("No schedule for bus $busName available")
             finish()
         }
+        recyclerView = rv
 
         busStatusUpdater = BusStatusUpdater()
         busStatusUpdater.init()
@@ -66,7 +67,7 @@ class BusTestActivity : AppCompatActivity() {
 
     private inner class BusStatusUpdater {
         private val animationPlayer = AnimationPlayer()
-        private val topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 48f) / 2
+        private val topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 36f) / 2
         private val instancesOnTimeline = LinkedList<IconItem>()
         private lateinit var items: List<MyAdapter.MyAdapterItem>
         private lateinit var adapter: MyAdapter
@@ -192,9 +193,10 @@ class BusTestActivity : AppCompatActivity() {
                 isRunning = true
                 val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
                 val past = bus!!.stopPoints[indexHeadingTo - 1].name
+                val next = bus!!.stopPoints[indexHeadingTo].name
                 debugEta = busInstance.stopTimes[indexHeadingTo]
                 //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
-                Log.e("ANIMATION", "Just started past $past, eta $debugEta")
+                Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
             }
 
             override fun onAnimationEnd(animation: Animator?) {

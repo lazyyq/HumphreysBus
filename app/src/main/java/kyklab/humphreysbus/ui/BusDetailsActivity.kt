@@ -73,7 +73,7 @@ class BusDetailsActivity : AppCompatActivity() {
         }
 
         btnTimeline.setOnClickListener {
-            val timelineIntent = Intent(this, BusDetailsActivity::class.java).apply {
+            val timelineIntent = Intent(this, BusTestActivity::class.java).apply {
                 putExtra("busname", busToShow.name)
             }
             startActivity(timelineIntent)

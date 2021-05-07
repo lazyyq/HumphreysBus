@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
 
 
         btnTest.setOnClickListener {
-            val intent = Intent(this, BusDetailsActivity::class.java).apply {
+            val intent = Intent(this, BusTestActivity::class.java).apply {
                 putExtra("busname", "Red")
             }
             startActivity(intent)
