@@ -67,13 +67,14 @@ class BusTestActivity : AppCompatActivity() {
 
     private inner class BusStatusUpdater {
         private val animationPlayer = AnimationPlayer()
-        private val topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 36f) / 2
+        private var topmargin = 0
         private val instancesOnTimeline = LinkedList<IconItem>()
         private lateinit var items: List<MyAdapter.MyAdapterItem>
         private lateinit var adapter: MyAdapter
 
         fun init() {
             itemheight = dpToPx(this@BusTestActivity, 84f)
+            topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 36f) / 2
 
             // Sync recyclerview scroll with scrollview
             rv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -113,7 +114,9 @@ class BusTestActivity : AppCompatActivity() {
                                 setImageResource(R.drawable.ic_bus)
                                 imageTintList = getColorStateList(android.R.color.black)
                             }
-                            animationPlayer.addIcon(IconItem(busicon, instance, i + 1))
+                            val icon = IconItem(busicon, instance, i)
+                            animationPlayer.addIcon(icon)
+                            instancesOnTimeline.add(icon)
 
                             container.addView(busicon)
                             continue
@@ -127,6 +130,7 @@ class BusTestActivity : AppCompatActivity() {
 
         fun updateEtas() {
             items.forEach { it.eta = null }
+            instancesOnTimeline.removeIf {it.isDone}
             instancesOnTimeline.reversed().forEach {
                 for (i in it.indexHeadingTo until it.busInstance.stopTimes.size) {
                     items[i].eta = it.busInstance.stopTimes[i]
@@ -173,16 +177,14 @@ class BusTestActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * @param indexHeadingTo  index the bus instance is currently heading to
-     */
     private inner class IconItem(
         val icon: ImageView,
         val busInstance: Bus.BusInstance,
-        var indexHeadingTo: Int
+        var initialIndex: Int
     ) {
         var isDone = false
         var debugEta = MinDateTime()
+var indexHeadingTo = -1
 
         private val animator = icon.animate().apply { interpolator = null }
         private var firstAnim = true
@@ -202,7 +204,7 @@ class BusTestActivity : AppCompatActivity() {
             override fun onAnimationEnd(animation: Animator?) {
                 isRunning = false
                 val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
-                if (indexHeadingTo >= bus!!.stopPoints.size) {
+                if (indexHeadingTo > bus!!.stopPoints.size-1) {
                     Log.e("ANIMATION", "Just arrived END OF BUS")
                 } else {
                     val arrived = bus!!.stopPoints[indexHeadingTo].name
@@ -223,20 +225,19 @@ class BusTestActivity : AppCompatActivity() {
         }
 
         fun startAnimation() {
-            if (isDone) return
+            if (isDone || isRunning) return
 
-            if (indexHeadingTo <= 0) {
-                Log.e(javaClass.simpleName, "index must be larger than 0")
-                return
+            if (firstAnim) {
+                indexHeadingTo = initialIndex + 1
+            } else {
+                ++indexHeadingTo
             }
 
             // Check if bus reached the end
-            if (busInstance.stopTimes.size <= indexHeadingTo) {
+            if (busInstance.stopTimes.size -1 < indexHeadingTo) {
                 isDone = true
                 return
             }
-
-            if (isRunning) return
 
             val prevTime = busInstance.stopTimes[indexHeadingTo - 1]
             val nextTime = busInstance.stopTimes[indexHeadingTo]
@@ -276,7 +277,6 @@ class BusTestActivity : AppCompatActivity() {
                     "eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} animation duration ${animTimeTotalMillis / 1000}"
                 )
             }
-            ++indexHeadingTo
         }
     }
 
@@ -305,7 +305,8 @@ class BusTestActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             holder.stopname.text = items[position].stop.name
-            holder.arrivetime.text = items[position].eta?.let { "Arriving at ${it.h_m}" } ?:""
+            Log.e("BIND", (items[position].eta != null).toString())
+            holder.arrivetime.text = items[position].eta?.let {"Arriving at ${it.h_m}"} ?: ""
         }
 
         override fun getItemCount(): Int {
