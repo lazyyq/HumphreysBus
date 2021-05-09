@@ -18,6 +18,7 @@ import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.ui.BusTestActivity
 
 class AllBusesFragment : Fragment() {
     override fun onCreateView(
@@ -42,7 +43,7 @@ class AllBusesFragment : Fragment() {
 
             init {
                 itemView.setOnClickListener {
-                    val intent = Intent(activity, BusDetailsActivity::class.java).apply {
+                    val intent = Intent(activity, BusTestActivity::class.java).apply {
                         putExtra("busname", items[adapterPosition].name)
                     }
                     activity?.startActivity(intent)

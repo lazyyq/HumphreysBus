@@ -1,6 +1,8 @@
 package kyklab.humphreysbus.ui
 
 import android.animation.Animator
+import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.*
 import android.os.Bundle
@@ -16,7 +18,10 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_test.*
+import kotlinx.android.synthetic.main.activity_test.ivBus
+import kotlinx.android.synthetic.main.activity_test.tvBus
 import kotlinx.android.synthetic.main.activity_test.view.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
@@ -62,6 +67,18 @@ class BusTestActivity : AppCompatActivity() {
             toast("No schedule for bus $busName available")
             finish()
         }
+
+        ivBus.imageTintList = ColorStateList.valueOf(bus.colorInt)
+        tvBus.text = busName
+        tvBus.setTextColor(bus.colorInt)
+
+        ivTimeTable.imageTintList = ColorStateList.valueOf(bus.colorInt)
+        ivTimeTable.setOnClickListener {
+            val intent = Intent(this, BusDetailsActivity::class.java)
+            intent.putExtra("busname", busName)
+            startActivity(intent)
+        }
+
         recyclerView = rv
 
         busStatusUpdater = BusStatusUpdater()
@@ -87,7 +104,7 @@ class BusTestActivity : AppCompatActivity() {
         private var closestFirstBusIndex = -1
 
         fun init() {
-            itemheight = dpToPx(this@BusTestActivity, 84f)
+            itemheight = dpToPx(this@BusTestActivity, 72f)
             topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 36f) / 2
 
             // Sync recyclerview scroll with scrollview
@@ -95,7 +112,7 @@ class BusTestActivity : AppCompatActivity() {
 
             val emptyTime = MinDateTime()
             adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
-            adapter = MyAdapter(adapterItems, bus.colorInt)
+            adapter = MyAdapter(this@BusTestActivity, bus, adapterItems)
             rv.adapter = adapter
 
             val rvheight = itemheight * adapter.itemCount
@@ -179,12 +196,12 @@ class BusTestActivity : AppCompatActivity() {
             // Scroll to highlighted stop
             if (stopToHighlightIndex != null) {
                 val scrollOffset = (stopToHighlightIndex!! - 3) * itemheight
-                recyclerView.onViewReady rv@ {
+                recyclerView.onViewReady rv@{
                     clearOnScrollListeners()
                     scrollBy(0, scrollOffset)
                     addOnScrollListener(rvOnScrollListener)
                 }
-                sv.onViewReady {scrollBy(0, scrollOffset)}
+                sv.onViewReady { scrollBy(0, scrollOffset) }
                 /*
                 val lm = recyclerView.layoutManager
                 if (lm is LinearLayoutManager) {
@@ -359,49 +376,75 @@ class BusTestActivity : AppCompatActivity() {
         }
     }
 
-    private class MyAdapter(val items: List<MyAdapterItem>, val tintColor: Int) :
+    private  class MyAdapter(
+        val context: Context,
+        val bus: Bus,
+        val items: List<MyAdapterItem>,
+    ) :
         RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
-        class MyAdapterItem(
+          class MyAdapterItem(
             val stop: BusStop,
             var eta: MinDateTime?,
             var isHighlighted: Boolean = false
         )
 
-        class MyViewHolder(itemView: View, tintColor: Int) : RecyclerView.ViewHolder(itemView) {
+          class MyViewHolder(context: Context, itemView: View, busName: String, tintColor: Int) : RecyclerView.ViewHolder(itemView) {
             val waypoint: ImageView = itemView.findViewById(R.id.waypoint)
+            val itemBackground: ViewGroup = itemView.findViewById(R.id.itemBackground)
             val stopname: TextView = itemView.findViewById(R.id.stopname)
             val arrivetime: TextView = itemView.findViewById(R.id.arrivetime)
 
             init {
                 waypoint.imageTintList = ColorStateList.valueOf(tintColor)
+
+//                itemView.findViewById<ImageView>(R.id.ivShowOnMap).setOnClickListener { }
+                itemView.findViewById<ImageView>(R.id.ivShowOnTimeTable).setOnClickListener {
+                    val intent = Intent(context, BusDetailsActivity::class.java)
+                    intent.putExtra("busname", busName)
+                    intent.putExtra("highlightstopindex", adapterPosition)
+                    context.startActivity(intent)
+                }
             }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             return MyViewHolder(
+                context,
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.acitivity_test_bus_stop_item, parent, false),
-                tintColor
+                bus.name,
+                bus.colorInt
             )
         }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
             val item = items[position]
+
             holder.stopname.text = item.stop.name
+            holder.arrivetime.text = item.eta?.let { "Arriving at ${it.h_m}" } ?: ""
+            holder.waypoint.setImageResource(
+                when (position) {
+                    0 -> R.drawable.waypoint_start
+                    itemCount - 1 -> R.drawable.waypoint_end
+                    else -> R.drawable.waypoint_mid
+                }
+            )
+
+            if (item.isHighlighted) {
+                holder.itemBackground.setBackgroundColor(
+                    context.resources.getColor(R.color.lighter_gray, context.theme)
+                )
+                holder.stopname.setTypeface(null, Typeface.BOLD)
+                holder.arrivetime.setTypeface(null, Typeface.BOLD)
+            } else {
+                context.getResId(R.attr.backgroundColor)
+                holder.stopname.setTypeface(null, Typeface.NORMAL)
+                holder.arrivetime.setTypeface(null, Typeface.NORMAL)
+            }
             // Not updating properly
             // holder.stopname.setTypeface(holder.stopname.typeface,
             //     if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL)
-            holder.stopname.setTypeface(
-                null,
-                if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL
-            )
-            Log.e("BIND", (item.eta != null).toString())
-            holder.arrivetime.text = item.eta?.let { "Arriving at ${it.h_m}" } ?: ""
-            holder.arrivetime.setTypeface(
-                null,
-                if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL
-            )
         }
 
         override fun getItemCount(): Int {

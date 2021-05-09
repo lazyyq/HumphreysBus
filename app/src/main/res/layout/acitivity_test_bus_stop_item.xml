@@ -1,36 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:orientation="horizontal"
-    android:layout_height="84dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/itemBackground"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:orientation="horizontal">
+
     <ImageView
-        android:layout_width="32dp"
-        android:layout_marginStart="64dp"
-        android:layout_height="match_parent"
-        android:src="@drawable/stoppoint"
         android:id="@+id/waypoint"
+        android:layout_width="32dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="64dp"
         android:scaleType="fitXY" />
 
     <LinearLayout
-        android:layout_marginVertical="12dp"
-        android:layout_width="match_parent"
-        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginVertical="16dp"
         android:layout_marginStart="16dp"
-        android:layout_height="match_parent">
+        android:orientation="vertical">
+
         <TextView
             android:id="@+id/stopname"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_weight="1"
             android:gravity="center_vertical"
-            android:text="Stop name"
-            android:layout_weight="1"/>
+            android:text="Stop name" />
+
         <TextView
             android:id="@+id/arrivetime"
             android:layout_width="match_parent"
-            android:gravity="center_vertical"
             android:layout_height="0dp"
-            android:text="Arriving time"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="Arriving time" />
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:padding="12dp"
+        android:background="?selectableItemBackground"
+        android:src="@drawable/ic_place_outlined"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/ivShowOnMap" />
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?selectableItemBackground"
+        android:padding="12dp"
+        android:src="@drawable/ic_table_chart"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/ivShowOnTimeTable"
+        android:layout_marginEnd="8dp"/>
 
 </LinearLayout>
