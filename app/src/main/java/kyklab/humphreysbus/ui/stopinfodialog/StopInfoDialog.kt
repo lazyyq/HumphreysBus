@@ -29,7 +29,7 @@ import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
-import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.ui.BusTestActivity
 import kyklab.humphreysbus.ui.DateTimePickerFragment
 import kyklab.humphreysbus.ui.MainActivity
 import kyklab.humphreysbus.utils.*
@@ -275,7 +275,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         const val ARGUMENT_STOP_ID = "argument_id"
 
         fun showBusSchedules(activity: Activity, busName: String, stopIndex: Int) {
-            val intent = Intent(activity, BusDetailsActivity::class.java).apply {
+            val intent = Intent(activity, BusTestActivity::class.java).apply {
                 putExtra("busname", busName)
                 putExtra("highlightstopindex", stopIndex)
             }

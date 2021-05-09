@@ -5,6 +5,7 @@
     android:layout_height="84dp">
     <ImageView
         android:layout_width="32dp"
+        android:layout_marginStart="64dp"
         android:layout_height="match_parent"
         android:src="@drawable/stoppoint"
         android:id="@+id/waypoint"

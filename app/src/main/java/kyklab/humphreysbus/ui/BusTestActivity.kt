@@ -23,6 +23,8 @@ import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.*
+import kyklab.humphreysbus.utils.MinDateTime.Companion.compare
+import kyklab.humphreysbus.utils.MinDateTime.Companion.getCurDateTime
 import kyklab.humphreysbus.utils.MinDateTime.Companion.isBetween
 import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInMillis
 import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInSecs
@@ -31,16 +33,24 @@ import java.util.*
 
 class BusTestActivity : AppCompatActivity() {
     private var itemheight = 0
-    private val curTime = MinDateTime.getCurDateTime()
+    private var curTime = MinDateTime.getCurDateTime()
     private lateinit var busStatusUpdater: BusStatusUpdater
     private lateinit var recyclerView: RecyclerView
     private lateinit var bus: Bus
+    private var stopToHighlightIndex: Int? = null
+    private val rvOnScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+            sv.scrollBy(dx, dy)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
 
         val busName = intent.extras?.get("busname") as? String
+        stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
         when (val found = BusUtils.buses.find { b -> b.name == busName }) {
             null -> {
                 toast("Bus not found")
@@ -66,216 +76,285 @@ class BusTestActivity : AppCompatActivity() {
     val STAYINGTIME = 15
 
     private inner class BusStatusUpdater {
-        private val animationPlayer = AnimationPlayer()
+        private val timer = Timer()
         private var topmargin = 0
-        private val instancesOnTimeline = LinkedList<IconItem>()
-        private lateinit var items: List<MyAdapter.MyAdapterItem>
+        private lateinit var instances: List<Bus.BusInstance>
+        private val runningInstances = LinkedList<InstanceItem>()
+        private lateinit var adapterItems: List<MyAdapter.MyAdapterItem>
         private lateinit var adapter: MyAdapter
+        private var lastBusIndex: Int? = null
+        private var lastScannedLeftTime: MinDateTime? = null
+        private var closestFirstBusIndex = -1
 
         fun init() {
             itemheight = dpToPx(this@BusTestActivity, 84f)
             topmargin = itemheight / 2 - dpToPx(this@BusTestActivity, 36f) / 2
 
             // Sync recyclerview scroll with scrollview
-            rv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    sv.scrollBy(dx, dy)
-                }
-            })
+            rv.addOnScrollListener(rvOnScrollListener)
 
             val emptyTime = MinDateTime()
-            items = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
-            adapter = MyAdapter(items, bus.colorInt)
+            adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
+            adapter = MyAdapter(adapterItems, bus.colorInt)
             rv.adapter = adapter
 
             val rvheight = itemheight * adapter.itemCount
             container.layoutParams.height = rvheight
 
             // Add bus icons
-            bus.instances.filter { it.isHoliday == isHoliday() }.withIndex()
-                .forEach { instanceTmp ->
+            instances = bus.instances.filter { it.isHoliday == isHoliday() }
+            addInitialBuses()
+            scheduleNextBus()
 
-                    val instance = instanceTmp.value
+            start()
+        }
 
-                    for (i in 0..instance.stopTimes.size - 2) {
-                        val prevTime = instance.stopTimes[i]
-                        val nextTime = instance.stopTimes[i + 1]
-//                if (prevTime.toInt() <= curtime.toInt() && curtime.toInt() < nextTime.toInt()) {
-//                if (isBetween(curtime.toInt(), prevTime.toInt(), nextTime.toInt())) {
-                        if (curTime.isBetween(prevTime, nextTime, true, false)) {
-                            val busicon = ImageView(this@BusTestActivity).apply {
-                                layoutParams = LinearLayout.LayoutParams(
-                                    dpToPx(this@BusTestActivity, 36f),
-                                    dpToPx(this@BusTestActivity, 36f)
-                                ).apply {
-                                    topMargin = i * itemheight + topmargin
-                                }
-                                setImageResource(R.drawable.ic_bus)
-                                imageTintList = getColorStateList(android.R.color.black)
-                            }
-                            val icon = IconItem(busicon, instance, i)
-                            animationPlayer.addIcon(icon)
-                            instancesOnTimeline.add(icon)
+        fun addInitialBuses() {
+            instances.withIndex().forEach { instanceTmp ->
+                val instance = instanceTmp.value
 
-                            container.addView(busicon)
-                            continue
-                        }
+                for (i in 0..instance.stopTimes.size - 2) {
+                    val prevTime = instance.stopTimes[i]
+                    val nextTime = instance.stopTimes[i + 1]
+                    if (curTime.isBetween(prevTime, nextTime, true, false)) {
+                        lastBusIndex = instanceTmp.index
+                        val busIcon = getBusIcon(i)
+                        val item = InstanceItem(busIcon, instance, i)
+                        runningInstances.add(item)
+                        container.addView(busIcon)
+                        continue
                     }
                 }
 
-            animationPlayer.onEachAnimationDone = ::updateEtas
-            animationPlayer.startAnimation()
+                if (lastBusIndex == null) {
+                    if (lastScannedLeftTime == null) {
+                        lastScannedLeftTime = instance.stopTimes[0] - curTime
+                        closestFirstBusIndex = instanceTmp.index
+                    } else {
+                        if (lastScannedLeftTime!!.compare(
+                                instance.stopTimes[0] - curTime,
+                                false
+                            ) > 0
+                        ) {
+                            closestFirstBusIndex = instanceTmp.index
+                        }
+                    }
+                }
+            }
+        }
+
+        fun scheduleNextBus() {
+            val nextIndex = if (lastBusIndex != null) {
+                (lastBusIndex!! + 1) % instances.size
+            } else {
+                closestFirstBusIndex
+            }
+            val nextBus = instances[nextIndex]
+            val icon = getBusIcon(0)/*.apply { visibility = View.INVISIBLE}*/
+            val nextBusItem =
+                InstanceItem(icon, nextBus, 0).apply { isReady = false }
+            runningInstances.add(nextBusItem)
+//                container.addView(icon)
+        }
+
+        fun getBusIcon(index: Int): ImageView {
+            return ImageView(this@BusTestActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    dpToPx(this@BusTestActivity, 36f),
+                    dpToPx(this@BusTestActivity, 36f)
+                ).apply {
+                    topMargin = index * itemheight + topmargin
+                }
+                setImageResource(R.drawable.ic_bus)
+                imageTintList = getColorStateList(android.R.color.black)
+            }
+        }
+
+        fun start() {
+            val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
+            Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
+            Log.e("ANIMATION", "launched init anim")
+            updateInstanceStatus()
+
+            // Scroll to highlighted stop
+            if (stopToHighlightIndex != null) {
+                val scrollOffset = (stopToHighlightIndex!! - 3) * itemheight
+                recyclerView.onViewReady rv@ {
+                    clearOnScrollListeners()
+                    scrollBy(0, scrollOffset)
+                    addOnScrollListener(rvOnScrollListener)
+                }
+                sv.onViewReady {scrollBy(0, scrollOffset)}
+                /*
+                val lm = recyclerView.layoutManager
+                if (lm is LinearLayoutManager) {
+                    val visibleItemsOnScreen =
+                        lm.findLastVisibleItemPosition() - lm.findFirstVisibleItemPosition()
+                    val scrollPosition = stopToHighlightIndex!! - visibleItemsOnScreen / 2 + 1
+                    recyclerView.scrollToPosition(scrollPosition)
+                }
+                */
+                adapterItems[stopToHighlightIndex!!].isHighlighted = true
+            }
+
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    runOnUiThread {
+                        Log.e("ANIMATION", "launching scheduled anim")
+//                        instances.removeIf { it.isDone }
+                        updateInstanceStatus()
+                    }
+                }
+            }, secUntilNextMin * 1000L, 60000)
+        }
+
+        fun updateInstanceStatus() {
+            curTime = getCurDateTime()
+
+            if (runningInstances.first.isDone) {
+                runningInstances.removeAt(0)
+                container.removeViewAt(0)
+            }
+            // Check if it is time for the scheduled bus to run
+            runningInstances.last.apply {
+                if (!isReady) {
+                    if (busInstance.stopTimes[0]
+                            .compare(MinDateTime.getCurDateTime(), false) == 0
+                    ) {
+                        isReady = true
+                        container.addView(icon)
+//                        icon.visibility = View.VISIBLE
+                        scheduleNextBus()
+                    }
+                }
+            }
+            runningInstances.forEach { it.depart() }
+            updateEtas()
         }
 
         fun updateEtas() {
-            items.forEach { it.eta = null }
-            instancesOnTimeline.removeIf {it.isDone}
-            instancesOnTimeline.reversed().forEach {
+            adapterItems.forEach { it.eta = null }
+            runningInstances.reversed().forEach {
                 for (i in it.indexHeadingTo until it.busInstance.stopTimes.size) {
-                    items[i].eta = it.busInstance.stopTimes[i]
+                    adapterItems[i].eta = it.busInstance.stopTimes[i]
                 }
             }
             adapter.notifyDataSetChanged()
         }
 
         fun stop() {
-            animationPlayer.stop()
-        }
-    }
-
-    private inner class AnimationPlayer {
-        private val timer = Timer()
-        val icons: MutableList<IconItem> = LinkedList()
-        var onEachAnimationDone: (() -> Unit)? = null
-
-        fun addIcon(icon: IconItem) {
-            icons.add(icon)
-        }
-
-        fun startAnimation() {
-            val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
-            Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
-            Log.e("ANIMATION", "launched init anim")
-            icons.forEach { it.startAnimation() }
-            icons.removeIf { icon -> icon.isDone } // Remove done buses
-            onEachAnimationDone?.invoke()
-            timer.schedule(object : TimerTask() {
-                override fun run() {
-                    runOnUiThread {
-                        Log.e("ANIMATION", "launching scheduled anim")
-                        icons.forEach { it.startAnimation() }
-                        icons.removeIf { icon -> icon.isDone } // Remove done buses
-                        onEachAnimationDone?.invoke()
-                    }
-                }
-            }, secUntilNextMin * 1000L, 60000)
-        }
-
-        fun stop() {
             timer.cancel()
         }
-    }
 
-    private inner class IconItem(
-        val icon: ImageView,
-        val busInstance: Bus.BusInstance,
-        var initialIndex: Int
-    ) {
-        var isDone = false
-        var debugEta = MinDateTime()
-var indexHeadingTo = -1
+        private inner class InstanceItem(
+            val icon: ImageView,
+            val busInstance: Bus.BusInstance,
+            var initialIndex: Int
+        ) {
+            /**
+             *  Whether the bus has departed already, or is scheduled for departure
+             */
+            var isReady = true
+            var isDone = false
+            var debugEta = MinDateTime()
+            var indexHeadingTo = 0
 
-        private val animator = icon.animate().apply { interpolator = null }
-        private var firstAnim = true
-        private var isRunning = false
+            private val animator = icon.animate().apply { interpolator = null }
+            private var firstAnim = true
+            private var isRunning = false
 
-        private val animListener = object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator?) {
-                isRunning = true
-                val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
-                val past = bus!!.stopPoints[indexHeadingTo - 1].name
-                val next = bus!!.stopPoints[indexHeadingTo].name
-                debugEta = busInstance.stopTimes[indexHeadingTo]
-                //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
-                Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
-            }
+            private val animListener = object : Animator.AnimatorListener {
+                override fun onAnimationStart(animation: Animator?) {
+                    isRunning = true
 
-            override fun onAnimationEnd(animation: Animator?) {
-                isRunning = false
-                val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
-                if (indexHeadingTo > bus!!.stopPoints.size-1) {
-                    Log.e("ANIMATION", "Just arrived END OF BUS")
-                } else {
-                    val arrived = bus!!.stopPoints[indexHeadingTo].name
-                    Log.e("ANIMATION", "Just arrived $arrived")
+                    // DEBUG
+                    val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
+                    val past = bus!!.stopPoints[indexHeadingTo - 1].name
+                    val next = bus!!.stopPoints[indexHeadingTo].name
+                    debugEta = busInstance.stopTimes[indexHeadingTo]
+                    //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
+                    Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
+                    // DEBUG
                 }
 
-                /*icon.setImageBitmap(
-                    createBmp(
-                        busInstance.stopTimes[indexInStopTimes - 1].m + "~" +
-                                if (indexInStopTimes >= bus!!.stopPoints.size) "ENDOFBUS" else busInstance.stopTimes[indexInStopTimes].m
-                                        + "\nEND"
-                    )
-                )*/
+                override fun onAnimationEnd(animation: Animator?) {
+                    isRunning = false
+                    // Check if bus reached the end
+                    isDone = busInstance.stopTimes.size - 1 < indexHeadingTo
+
+                    // DEBUG
+                    val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
+                    if (indexHeadingTo > bus!!.stopPoints.size - 1) {
+                        Log.e("ANIMATION", "Just arrived END OF BUS")
+                    } else {
+                        val arrived = bus!!.stopPoints[indexHeadingTo].name
+                        Log.e("ANIMATION", "Just arrived $arrived")
+                    }
+                    // DEBUG
+                    /*icon.setImageBitmap(
+                        createBmp(
+                            busInstance.stopTimes[indexInStopTimes - 1].m + "~" +
+                                    if (indexInStopTimes >= bus!!.stopPoints.size) "ENDOFBUS" else busInstance.stopTimes[indexInStopTimes].m
+                                            + "\nEND"
+                        )
+                    )*/
+                }
+
+                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationRepeat(animation: Animator?) {}
             }
 
-            override fun onAnimationCancel(animation: Animator?) {}
-            override fun onAnimationRepeat(animation: Animator?) {}
-        }
+            fun depart() {
+                if (isDone || isRunning || !isReady) return
 
-        fun startAnimation() {
-            if (isDone || isRunning) return
+                if (firstAnim) {
+                    indexHeadingTo = initialIndex + 1
+                } else {
+                    ++indexHeadingTo
+                }
 
-            if (firstAnim) {
-                indexHeadingTo = initialIndex + 1
-            } else {
-                ++indexHeadingTo
-            }
+                // Check if bus reached the end
+                if (busInstance.stopTimes.size - 1 < indexHeadingTo) {
+                    return
+                }
 
-            // Check if bus reached the end
-            if (busInstance.stopTimes.size -1 < indexHeadingTo) {
-                isDone = true
-                return
-            }
+                val prevTime = busInstance.stopTimes[indexHeadingTo - 1]
+                val nextTime = busInstance.stopTimes[indexHeadingTo]
+                if (firstAnim) {
+                    if ((nextTime - curTime).timeInSecs > STAYINGTIME) {
+                        val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeInMillis
+                        val animTimeLeftMillis = (nextTime - curTime - STAYINGTIME).timeInMillis
+                        val initialOffset =
+                            itemheight * (animTimeTotalMillis - animTimeLeftMillis).toFloat() / animTimeTotalMillis
+                        Log.e(
+                            "sdf",
+                            "next: $nextTime, prev: $prevTime, cur: $curTime, initialOffset: $initialOffset"
+                        )
+                        animator.translationYBy(initialOffset).setDuration(0).setListener(null)
+                            .start()
 
-            val prevTime = busInstance.stopTimes[indexHeadingTo - 1]
-            val nextTime = busInstance.stopTimes[indexHeadingTo]
-            if (firstAnim) {
-                val sec = Calendar.getInstance().get(Calendar.SECOND)
-                if ((nextTime - curTime).timeInSecs > STAYINGTIME) {
+                        animator.translationYBy(itemheight - initialOffset)
+                            .setDuration(getRealAnimDuration(animTimeLeftMillis.toLong()))
+                            .setListener(animListener).start()
+                        Log.e(
+                            "ICONITEM",
+                            "first anim, eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} duration ${animTimeLeftMillis / 1000}"
+                        )
+                    } else {
+                        animator.translationYBy(itemheight.toFloat())
+                            .setDuration(0).setListener(null).start()
+                    }
+                    firstAnim = false
+                } else {
                     val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeInMillis
-                    val animTimeLeftMillis = (nextTime - curTime - STAYINGTIME).timeInMillis
-                    val initialOffset =
-                        itemheight * (animTimeTotalMillis - animTimeLeftMillis).toFloat() / animTimeTotalMillis
-                    animator.translationYBy(initialOffset).setDuration(0).setListener(null)
-                        .start()
-                    /*icon.layoutParams.apply {
-                        if (this is LinearLayout.LayoutParams)
-                            topMargin += startingPos.toInt()
-                    }*/
-
-                    animator.translationYBy(itemheight - initialOffset)
-                        .setDuration(getRealAnimDuration(animTimeLeftMillis.toLong()))
+                    animator.translationYBy(itemheight.toFloat())
+                        .setDuration(getRealAnimDuration(animTimeTotalMillis.toLong()))
                         .setListener(animListener).start()
                     Log.e(
                         "ICONITEM",
-                        "first anim, eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} duration ${animTimeLeftMillis / 1000}"
+                        "eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} animation duration ${animTimeTotalMillis / 1000}"
                     )
-                } else {
-                    animator.translationYBy(itemheight.toFloat())
-                        .setDuration(0).setListener(null).start()
                 }
-                firstAnim = false
-            } else {
-                val animTimeTotalMillis = (nextTime - prevTime - STAYINGTIME).timeInMillis
-                animator.translationYBy(itemheight.toFloat())
-                    .setDuration(getRealAnimDuration(animTimeTotalMillis.toLong()))
-                    .setListener(animListener).start()
-                Log.e(
-                    "ICONITEM",
-                    "eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} animation duration ${animTimeTotalMillis / 1000}"
-                )
             }
         }
     }
@@ -283,7 +362,11 @@ var indexHeadingTo = -1
     private class MyAdapter(val items: List<MyAdapterItem>, val tintColor: Int) :
         RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
-        class MyAdapterItem(val stop: BusStop, var eta: MinDateTime?)
+        class MyAdapterItem(
+            val stop: BusStop,
+            var eta: MinDateTime?,
+            var isHighlighted: Boolean = false
+        )
 
         class MyViewHolder(itemView: View, tintColor: Int) : RecyclerView.ViewHolder(itemView) {
             val waypoint: ImageView = itemView.findViewById(R.id.waypoint)
@@ -304,9 +387,21 @@ var indexHeadingTo = -1
         }
 
         override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-            holder.stopname.text = items[position].stop.name
-            Log.e("BIND", (items[position].eta != null).toString())
-            holder.arrivetime.text = items[position].eta?.let {"Arriving at ${it.h_m}"} ?: ""
+            val item = items[position]
+            holder.stopname.text = item.stop.name
+            // Not updating properly
+            // holder.stopname.setTypeface(holder.stopname.typeface,
+            //     if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL)
+            holder.stopname.setTypeface(
+                null,
+                if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL
+            )
+            Log.e("BIND", (item.eta != null).toString())
+            holder.arrivetime.text = item.eta?.let { "Arriving at ${it.h_m}" } ?: ""
+            holder.arrivetime.setTypeface(
+                null,
+                if (item.isHighlighted) Typeface.BOLD else Typeface.NORMAL
+            )
         }
 
         override fun getItemCount(): Int {
