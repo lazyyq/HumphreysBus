@@ -35,6 +35,7 @@ import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInMillis
 import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInSecs
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.max
 
 class BusTestActivity : AppCompatActivity() {
     private var itemheight = 0
@@ -85,15 +86,20 @@ class BusTestActivity : AppCompatActivity() {
         busStatusUpdater.init()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onResume() {
+        super.onResume()
+        busStatusUpdater.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
         busStatusUpdater.stop()
     }
 
     val STAYINGTIME = 15
 
     private inner class BusStatusUpdater {
-        private val timer = Timer()
+        private var timer: Timer? = null
         private var topmargin = 0
         private lateinit var instances: List<Bus.BusInstance>
         private val runningInstances = LinkedList<InstanceItem>()
@@ -102,6 +108,7 @@ class BusTestActivity : AppCompatActivity() {
         private var lastBusIndex: Int? = null
         private var lastScannedLeftTime: MinDateTime? = null
         private var closestFirstBusIndex = -1
+        private var scrolled = false
 
         fun init() {
             itemheight = dpToPx(this@BusTestActivity, 72f)
@@ -117,13 +124,6 @@ class BusTestActivity : AppCompatActivity() {
 
             val rvheight = itemheight * adapter.itemCount
             container.layoutParams.height = rvheight
-
-            // Add bus icons
-            instances = bus.instances.filter { it.isHoliday == isHoliday() }
-            addInitialBuses()
-            scheduleNextBus()
-
-            start()
         }
 
         fun addInitialBuses() {
@@ -188,15 +188,21 @@ class BusTestActivity : AppCompatActivity() {
         }
 
         fun start() {
+            // Add bus icons
+            instances = bus.instances.filter { it.isHoliday == isHoliday() }
+            cleanup()
+            addInitialBuses()
+            scheduleNextBus()
+
             val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
             Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
             Log.e("ANIMATION", "launched init anim")
             updateInstanceStatus()
 
             // Scroll to highlighted stop
-            if (stopToHighlightIndex != null) {
+            if (!scrolled && stopToHighlightIndex != null) {
                 val scrollOffset = (stopToHighlightIndex!! - 3) * itemheight
-                recyclerView.onViewReady rv@{
+                recyclerView.onViewReady {
                     clearOnScrollListeners()
                     scrollBy(0, scrollOffset)
                     addOnScrollListener(rvOnScrollListener)
@@ -212,9 +218,11 @@ class BusTestActivity : AppCompatActivity() {
                 }
                 */
                 adapterItems[stopToHighlightIndex!!].isHighlighted = true
+                scrolled = true
             }
 
-            timer.schedule(object : TimerTask() {
+            timer = Timer()
+            timer!!.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread {
                         Log.e("ANIMATION", "launching scheduled anim")
@@ -223,6 +231,14 @@ class BusTestActivity : AppCompatActivity() {
                     }
                 }
             }, secUntilNextMin * 1000L, 60000)
+        }
+
+        fun cleanup() {
+            runningInstances.clear()
+            container.removeAllViews()
+            lastBusIndex = null
+            lastScannedLeftTime = null
+            closestFirstBusIndex = -1
         }
 
         fun updateInstanceStatus() {
@@ -260,7 +276,13 @@ class BusTestActivity : AppCompatActivity() {
         }
 
         fun stop() {
-            timer.cancel()
+            timer?.cancel()
+        }
+
+        fun restart() {
+            stop()
+            cleanup()
+            start()
         }
 
         private inner class InstanceItem(
@@ -376,20 +398,21 @@ class BusTestActivity : AppCompatActivity() {
         }
     }
 
-    private  class MyAdapter(
+    private class MyAdapter(
         val context: Context,
         val bus: Bus,
         val items: List<MyAdapterItem>,
     ) :
         RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
-          class MyAdapterItem(
+        class MyAdapterItem(
             val stop: BusStop,
             var eta: MinDateTime?,
             var isHighlighted: Boolean = false
         )
 
-          class MyViewHolder(context: Context, itemView: View, busName: String, tintColor: Int) : RecyclerView.ViewHolder(itemView) {
+        class MyViewHolder(context: Context, itemView: View, busName: String, tintColor: Int) :
+            RecyclerView.ViewHolder(itemView) {
             val waypoint: ImageView = itemView.findViewById(R.id.waypoint)
             val itemBackground: ViewGroup = itemView.findViewById(R.id.itemBackground)
             val stopname: TextView = itemView.findViewById(R.id.stopname)
@@ -438,7 +461,7 @@ class BusTestActivity : AppCompatActivity() {
                 holder.stopname.setTypeface(null, Typeface.BOLD)
                 holder.arrivetime.setTypeface(null, Typeface.BOLD)
             } else {
-                context.getResId(R.attr.backgroundColor)
+                holder.itemBackground.setBackgroundColor(context.getResId(R.attr.backgroundColor))
                 holder.stopname.setTypeface(null, Typeface.NORMAL)
                 holder.arrivetime.setTypeface(null, Typeface.NORMAL)
             }
@@ -490,7 +513,7 @@ class BusTestActivity : AppCompatActivity() {
         val innerImageMargin = 2.dpToPx()
         val resultImageMargin = 2.dpToPx()
 
-        val resultImageWidth = Math.max(
+        val resultImageWidth = max(
             textBounds.width(),
             innerImageWidth + innerImageMargin * 2
         ) + resultImageMargin * 2
