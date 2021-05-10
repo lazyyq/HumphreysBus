@@ -2,14 +2,12 @@ package kyklab.humphreysbus.ui.stopinfodialog
 
 import android.app.Activity
 import android.app.Dialog
-import android.content.DialogInterface
-import android.content.Intent
+import android.content.*
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.CompoundButton
 import android.widget.FrameLayout
@@ -25,6 +23,7 @@ import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
@@ -32,15 +31,18 @@ import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.ui.BusTestActivity
 import kyklab.humphreysbus.ui.DateTimePickerFragment
 import kyklab.humphreysbus.ui.MainActivity
-import kyklab.humphreysbus.utils.*
+import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
+import kyklab.humphreysbus.utils.getWithWrappedIndex
+import kyklab.humphreysbus.utils.isHoliday
+import kyklab.humphreysbus.utils.lbm
 import java.util.*
 
 class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetDialogFragment() {
     private lateinit var activity: Activity
     private val calendar = Calendar.getInstance()
-    private var currentTime = MinDateTime().apply {setCalendar(calendar);s="00"}
+    private var currentTime = MinDateTime().apply { setCalendar(calendar);s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
     private var isHoliday = isHoliday()
     private var stopId = -1
@@ -49,6 +51,15 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     private var loadBusJob: Job? = null
     private lateinit var rvAdapter: NewAdapter
     private val rvAdapterItems: MutableList<NewAdapter.NewAdapterItem> = ArrayList()
+
+    private val intentFilter = IntentFilter(Const.Intent.ACTION_BACK_TO_MAP)
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Const.Intent.ACTION_BACK_TO_MAP) {
+                dismissAllowingStateLoss()
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -96,6 +107,18 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
                     ?.setBackgroundResource(R.drawable.bottom_sheet_dialog_rounded_corner)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        activity.lbm.registerReceiver(
+            receiver, intentFilter
+        )
+    }
+
+    override fun onDestroy() {
+        activity.lbm.unregisterReceiver(receiver)
+        super.onDestroy()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

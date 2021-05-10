@@ -2,7 +2,10 @@ package kyklab.humphreysbus.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.os.Build
@@ -29,6 +32,7 @@ import kotlinx.android.synthetic.main.bus_directions_chooser.*
 import kotlinx.android.synthetic.main.bus_directions_chooser_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusDBHelper
@@ -64,6 +68,16 @@ class MainActivity : AppCompatActivity() {
 
                 hideLocationProgressBar()
                 isLoadingLocation = false
+            }
+        }
+    }
+
+    private var scheduledIntent: Intent? = null
+    private val intentFilter = IntentFilter(Const.Intent.ACTION_SHOW_ON_MAP)
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Const.Intent.ACTION_SHOW_ON_MAP) {
+                scheduledIntent = intent
             }
         }
     }
@@ -163,6 +177,25 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        lbm.registerReceiver(receiver, intentFilter)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (scheduledIntent != null) {
+            val intent = scheduledIntent!!
+            scheduledIntent = null
+            val x = intent.extras?.get(Const.Intent.EXTRA_X_COR)
+            val y = intent.extras?.get(Const.Intent.EXTRA_Y_COR)
+            if (x == null || y == null || x !is Number || y !is Number) return
+
+            Log.e("RECEIVER", "received x:$x, y:$y")
+
+            busMap.highlight(x.toFloat(), y.toFloat(), animateDuration = 500L)
+
+            val stopId = intent.extras?.getInt(Const.Intent.EXTRA_STOP_ID)
+            stopId?.let { Handler(mainLooper).post { showStopInfoDialog(it) } }
+        }
     }
 
     override fun onPause() {
@@ -174,30 +207,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQ_CODE_SELECT_STOP) {
-            if (resultCode == RESULT_STOP_SELECTED) {
-                data?.let {
-                    val x = data.getFloatExtra("xCor", -1f)
-                    val y = data.getFloatExtra("yCor", -1f)
-                    val id = data.getIntExtra("stopId", -1)
-                    if (x > 0 && y > 0 && id > 0) {
-                        busMap.highlight(x, y, animateDuration = 500L)
-                        // Workaround for IllegalStateException
-                        Handler(Looper.getMainLooper()).post {
-                            showStopInfoDialog(id)
-                        }
-                    }
-                }
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
     override fun onDestroy() {
         BusDBHelper.close()
         appUpdateChecker.unregisterDownloadReceiver()
+        lbm.unregisterReceiver(receiver)
         super.onDestroy()
     }
 

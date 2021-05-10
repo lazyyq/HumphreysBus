@@ -1,6 +1,9 @@
 package kyklab.humphreysbus.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Matrix
@@ -46,11 +49,20 @@ class BusDetailsActivity : AppCompatActivity() {
     private lateinit var busToShow: Bus
 
     private val calendar = Calendar.getInstance()
-    private var currentTime = MinDateTime.getCurDateTime().apply {s="00"}
+    private var currentTime = MinDateTime.getCurDateTime().apply { s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
     private var isHoliday = isHoliday()
 
     private var loadScheduleJob: Job? = null
+
+    private val intentFilter = IntentFilter(Const.Intent.ACTION_BACK_TO_MAP)
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Const.Intent.ACTION_BACK_TO_MAP) {
+                finish()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,8 +108,15 @@ class BusDetailsActivity : AppCompatActivity() {
         // Block touch for stop names to prevent scrolling
         zoomLayoutStopName.setOnTouchListener { _, _ -> true }
 
+        lbm.registerReceiver(receiver, intentFilter)
+
         showCurrentTime()
         showBusTimeTable()
+    }
+
+    override fun onDestroy() {
+        lbm.unregisterReceiver(receiver)
+        super.onDestroy()
     }
 
     private fun showBusTimeTable() {
@@ -198,12 +217,15 @@ class BusDetailsActivity : AppCompatActivity() {
 
                         setOnClickListener {
                             val stop = busToShow.stopPoints[column]
-                            val intent = Intent().apply {
-                                putExtra("xCor", stop.xCenter.toFloat())
-                                putExtra("yCor", stop.yCenter.toFloat())
-                                putExtra("stopId", stop.id)
-                            }
-                            setResult(MainActivity.RESULT_STOP_SELECTED, intent)
+                            val intents = arrayOf(
+                                Intent(Const.Intent.ACTION_SHOW_ON_MAP).apply {
+                                    putExtra(Const.Intent.EXTRA_STOP_ID, stop.id)
+                                    putExtra(Const.Intent.EXTRA_X_COR, stop.xCenter)
+                                    putExtra(Const.Intent.EXTRA_Y_COR, stop.yCenter.toFloat())
+                                },
+                                Intent(Const.Intent.ACTION_BACK_TO_MAP)
+                            )
+                            lbm.sendBroadcast(*intents)
                             finish()
                         }
                     }

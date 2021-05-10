@@ -1,9 +1,13 @@
 package kyklab.humphreysbus.ui
 
 import android.animation.Animator
+import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.*
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +27,7 @@ import kotlinx.android.synthetic.main.activity_test.*
 import kotlinx.android.synthetic.main.activity_test.ivBus
 import kotlinx.android.synthetic.main.activity_test.tvBus
 import kotlinx.android.synthetic.main.activity_test.view.*
+import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
@@ -52,6 +57,15 @@ class BusTestActivity : AppCompatActivity() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
             sv.scrollBy(dx, dy)
+        }
+    }
+
+    private val intentFilter = IntentFilter(Const.Intent.ACTION_BACK_TO_MAP)
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Const.Intent.ACTION_BACK_TO_MAP) {
+                finish()
+            }
         }
     }
 
@@ -88,6 +102,8 @@ class BusTestActivity : AppCompatActivity() {
 
         busStatusUpdater = BusStatusUpdater()
         busStatusUpdater.init()
+
+        lbm.registerReceiver(receiver, intentFilter)
     }
 
     override fun onResume() {
@@ -100,6 +116,11 @@ class BusTestActivity : AppCompatActivity() {
         Log.e(TAG, "onPause() called")
         super.onPause()
         busStatusUpdater.stop()
+    }
+
+    override fun onDestroy() {
+        lbm.unregisterReceiver(receiver)
+        super.onDestroy()
     }
 
     val STAYINGTIME = 15
@@ -209,13 +230,18 @@ class BusTestActivity : AppCompatActivity() {
 
             // Scroll to highlighted stop
             if (!scrolled && stopToHighlightIndex != null) {
-                val scrollOffset = (stopToHighlightIndex!! - 3) * itemheight
+                val scrollOffsetCount =
+                    when (resources.configuration.orientation) {
+                        Configuration.ORIENTATION_LANDSCAPE -> 1
+                        else -> 3 // Portrait, undefined
+                    }
+                val scrollOffsetPx = (stopToHighlightIndex!! - scrollOffsetCount) * itemheight
                 recyclerView.onViewReady {
                     clearOnScrollListeners()
-                    scrollBy(0, scrollOffset)
+                    scrollBy(0, scrollOffsetPx)
                     addOnScrollListener(rvOnScrollListener)
                 }
-                sv.onViewReady { scrollBy(0, scrollOffset) }
+                sv.onViewReady { scrollBy(0, scrollOffsetPx) }
                 /*
                 val lm = recyclerView.layoutManager
                 if (lm is LinearLayoutManager) {
@@ -330,15 +356,15 @@ class BusTestActivity : AppCompatActivity() {
                 override fun onAnimationEnd(animation: Animator?) {
                     isRunning = false
                     // Check if bus reached the end
-                    isDone = busInstance.stopTimes.size - 1 < indexHeadingTo
+                    isDone = busInstance.stopTimes.size - 1 <= indexHeadingTo
 
                     // DEBUG
                     val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
-                    if (indexHeadingTo > bus!!.stopPoints.size - 1) {
+                    val arrived = bus!!.stopPoints[indexHeadingTo].name
+                    Log.e("ANIMATION", "Just arrived $arrived")
+
+                    if (indexHeadingTo >= bus!!.stopPoints.size - 1) {
                         Log.e("ANIMATION", "Just arrived END OF BUS")
-                    } else {
-                        val arrived = bus!!.stopPoints[indexHeadingTo].name
-                        Log.e("ANIMATION", "Just arrived $arrived")
                     }
                     // DEBUG
                     /*icon.setImageBitmap(
@@ -394,8 +420,11 @@ class BusTestActivity : AppCompatActivity() {
                             "first anim, eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} duration ${animTimeLeftMillis / 1000}"
                         )
                     } else {
+                        // Bus has already arrived, so this has to share some of the codes with
+                        // animation done listener!!
                         animator.translationYBy(itemheight.toFloat())
                             .setDuration(0).setListener(null).start()
+                        isDone = busInstance.stopTimes.size - 1 <= indexHeadingTo
                     }
                     firstAnim = false
                 } else {
@@ -417,11 +446,13 @@ class BusTestActivity : AppCompatActivity() {
     }
 
     private class MyAdapter(
-        val context: Context,
+        val activity: Activity,
         val bus: Bus,
         val items: List<MyAdapterItem>,
-    ) :
-        RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    ) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+
+        private val selectableItemBackground =
+            activity.getResId(R.attr.selectableItemBackground)
 
         class MyAdapterItem(
             val stop: BusStop,
@@ -429,7 +460,12 @@ class BusTestActivity : AppCompatActivity() {
             var isHighlighted: Boolean = false
         )
 
-        class MyViewHolder(context: Context, itemView: View, busName: String, tintColor: Int) :
+        inner class MyViewHolder(
+            activity: Activity,
+            itemView: View,
+            busName: String,
+            tintColor: Int
+        ) :
             RecyclerView.ViewHolder(itemView) {
             val waypoint: ImageView = itemView.findViewById(R.id.waypoint)
             val itemBackground: ViewGroup = itemView.findViewById(R.id.itemBackground)
@@ -439,19 +475,31 @@ class BusTestActivity : AppCompatActivity() {
             init {
                 waypoint.imageTintList = ColorStateList.valueOf(tintColor)
 
-//                itemView.findViewById<ImageView>(R.id.ivShowOnMap).setOnClickListener { }
+                itemBackground.setOnClickListener {
+                    val stop = bus.stopPoints[adapterPosition]
+                    val intents = arrayOf(
+                        Intent(Const.Intent.ACTION_SHOW_ON_MAP).apply {
+                            putExtra(Const.Intent.EXTRA_STOP_ID, stop.id)
+                            putExtra(Const.Intent.EXTRA_X_COR, stop.xCenter)
+                            putExtra(Const.Intent.EXTRA_Y_COR, stop.yCenter)
+                        },
+                        Intent(Const.Intent.ACTION_BACK_TO_MAP)
+                    )
+                    activity.lbm.sendBroadcast(*intents)
+                    activity.finish()
+                }
                 itemView.findViewById<ImageView>(R.id.ivShowOnTimeTable).setOnClickListener {
-                    val intent = Intent(context, BusDetailsActivity::class.java)
+                    val intent = Intent(activity, BusDetailsActivity::class.java)
                     intent.putExtra("busname", busName)
                     intent.putExtra("highlightstopindex", adapterPosition)
-                    context.startActivity(intent)
+                    activity.startActivity(intent)
                 }
             }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
             return MyViewHolder(
-                context,
+                activity,
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.acitivity_test_bus_stop_item, parent, false),
                 bus.name,
@@ -474,12 +522,12 @@ class BusTestActivity : AppCompatActivity() {
 
             if (item.isHighlighted) {
                 holder.itemBackground.setBackgroundColor(
-                    context.resources.getColor(R.color.lighter_gray, context.theme)
+                    activity.resources.getColor(R.color.lighter_gray, activity.theme)
                 )
                 holder.stopname.setTypeface(null, Typeface.BOLD)
                 holder.arrivetime.setTypeface(null, Typeface.BOLD)
             } else {
-                holder.itemBackground.setBackgroundColor(context.getResId(R.attr.backgroundColor))
+                holder.itemBackground.setBackgroundResource(selectableItemBackground)
                 holder.stopname.setTypeface(null, Typeface.NORMAL)
                 holder.arrivetime.setTypeface(null, Typeface.NORMAL)
             }

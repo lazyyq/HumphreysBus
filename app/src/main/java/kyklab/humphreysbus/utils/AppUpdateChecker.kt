@@ -15,9 +15,9 @@ import com.github.javiersantos.appupdater.enums.AppUpdaterError
 import com.github.javiersantos.appupdater.enums.UpdateFrom
 import com.github.javiersantos.appupdater.objects.Update
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kyklab.humphreysbus.APP_UPDATE_JSON
 import kyklab.humphreysbus.App
 import kyklab.humphreysbus.BuildConfig
+import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import java.io.File
 import java.util.*
@@ -72,7 +72,7 @@ class AppUpdateChecker(private val activity: Activity) {
         appUpdaterUtils?.stop()
         appUpdaterUtils = AppUpdaterUtils(activity)
             .setUpdateFrom(UpdateFrom.JSON)
-            .setUpdateJSON(APP_UPDATE_JSON)
+            .setUpdateJSON(Const.APP_UPDATE_JSON)
             .withListener(object : AppUpdaterUtils.UpdateListener {
                 override fun onSuccess(update: Update?, isUpdateAvailable: Boolean?) {
                     Prefs.lastUpdateChecked = Date().time

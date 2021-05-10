@@ -4,13 +4,13 @@ import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.provider.Settings
 import android.text.style.ReplacementSpan
@@ -19,6 +19,7 @@ import android.util.TypedValue
 import android.view.*
 import android.widget.Toast
 import androidx.annotation.ColorInt
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.android.synthetic.main.activity_bus_details.*
@@ -32,6 +33,13 @@ import kotlin.math.roundToLong
 
 fun Context.toast(text: String? = null) {
     Toast.makeText(this, text ?: "", Toast.LENGTH_SHORT).show()
+}
+
+val Context.lbm: LocalBroadcastManager
+    get() = LocalBroadcastManager.getInstance(this)
+
+fun LocalBroadcastManager.sendBroadcast(vararg intents: Intent) {
+    intents.forEach { sendBroadcast(it) }
 }
 
 fun dpToPx(context: Context, dp: Float): Int {

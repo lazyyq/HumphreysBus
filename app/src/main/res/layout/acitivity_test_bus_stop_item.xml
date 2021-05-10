@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/itemBackground"
     android:layout_width="match_parent"
     android:layout_height="72dp"
@@ -26,13 +27,15 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:gravity="center_vertical"
-            android:text="Stop name" />
+            android:text="Stop name"
+            tools:ignore="NestedWeights" />
 
         <TextView
             android:id="@+id/arrivetime"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:textColor="@android:color/tertiary_text_dark"
             android:gravity="center_vertical"
             android:text="Arriving time" />
     </LinearLayout>
@@ -40,20 +43,11 @@
     <ImageView
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:padding="12dp"
-        android:background="?selectableItemBackground"
-        android:src="@drawable/ic_place_outlined"
-        android:layout_gravity="center_vertical"
-        android:id="@+id/ivShowOnMap" />
-
-    <ImageView
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?selectableItemBackground"
+        android:background="?selectableItemBackgroundBorderless"
         android:padding="12dp"
         android:src="@drawable/ic_table_chart"
         android:layout_gravity="center_vertical"
         android:id="@+id/ivShowOnTimeTable"
-        android:layout_marginEnd="8dp"/>
+        android:layout_marginEnd="12dp" />
 
 </LinearLayout>
