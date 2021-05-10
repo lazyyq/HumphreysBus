@@ -22,10 +22,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_bus_details.*
 import kotlinx.android.synthetic.main.activity_test.*
-import kotlinx.android.synthetic.main.activity_test.ivBus
-import kotlinx.android.synthetic.main.activity_test.tvBus
 import kotlinx.android.synthetic.main.activity_test.view.*
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
@@ -93,7 +90,7 @@ class BusTestActivity : AppCompatActivity() {
 
         ivTimeTable.imageTintList = ColorStateList.valueOf(bus.colorInt)
         ivTimeTable.setOnClickListener {
-            val intent = Intent(this, BusDetailsActivity::class.java)
+            val intent = Intent(this, BusTimeTableActivity::class.java)
             intent.putExtra("busname", busName)
             startActivity(intent)
         }
@@ -489,7 +486,7 @@ class BusTestActivity : AppCompatActivity() {
                     activity.finish()
                 }
                 itemView.findViewById<ImageView>(R.id.ivShowOnTimeTable).setOnClickListener {
-                    val intent = Intent(activity, BusDetailsActivity::class.java)
+                    val intent = Intent(activity, BusTimeTableActivity::class.java)
                     intent.putExtra("busname", busName)
                     intent.putExtra("highlightstopindex", adapterPosition)
                     activity.startActivity(intent)

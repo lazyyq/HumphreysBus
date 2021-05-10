@@ -22,14 +22,11 @@ import androidx.annotation.ColorInt
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import kotlinx.android.synthetic.main.activity_bus_details.*
-import kotlinx.android.synthetic.main.activity_main.*
 import kyklab.humphreysbus.App
 import java.util.*
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-
 
 fun Context.toast(text: String? = null) {
     Toast.makeText(this, text ?: "", Toast.LENGTH_SHORT).show()
@@ -119,7 +116,7 @@ fun <T : Activity, S : View> T.moveViewOnDrag(
 ) {
     var dX = 0f
     var dY = 0f
-        target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+    target.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
     val width = target.measuredWidth
     val height = target.measuredHeight
     val statusBarHeight = statusBarHeight
@@ -169,33 +166,33 @@ fun <T : Activity, S : View> T.attachViewOnLeft(
     attached.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
 
     val updateLocation = {
-            val arr = IntArray(2)
-            target.getLocationOnScreen(arr)
-            val targetX = arr[0]
-            val targetY = arr[1]
-            val margin = dpToPx(this@attachViewOnLeft, 4f)
-            var attachedX = targetX - attached.measuredWidth - margin
-            if (!allowOffBounds) attachedX = max(0, attachedX)
-            val attachedY = targetY
-            attached.animate()
-                .setDuration(0)
-                .x(attachedX.toFloat())
-                .y(attachedY.toFloat())
-                .start()
+        val arr = IntArray(2)
+        target.getLocationOnScreen(arr)
+        val targetX = arr[0]
+        val targetY = arr[1]
+        val margin = dpToPx(this@attachViewOnLeft, 4f)
+        var attachedX = targetX - attached.measuredWidth - margin
+        if (!allowOffBounds) attachedX = max(0, attachedX)
+        val attachedY = targetY
+        attached.animate()
+            .setDuration(0)
+            .x(attachedX.toFloat())
+            .y(attachedY.toFloat())
+            .start()
     }
 
     updateLocation()
 
-    target.animate().setListener(object: Animator.AnimatorListener {
-        override fun onAnimationStart(animation: Animator?) {        }
+    target.animate().setListener(object : Animator.AnimatorListener {
+        override fun onAnimationStart(animation: Animator?) {}
 
         override fun onAnimationEnd(animation: Animator?) {
             updateLocation()
         }
 
-        override fun onAnimationCancel(animation: Animator?) {        }
+        override fun onAnimationCancel(animation: Animator?) {}
 
-        override fun onAnimationRepeat(animation: Animator?) {        }
+        override fun onAnimationRepeat(animation: Animator?) {}
     })
 }
 
@@ -309,7 +306,8 @@ fun Date.isHoliday(): Boolean {
  */
 fun getRealAnimDuration(orig: Long): Long {
     val userAnimScale = Settings.Global.getFloat(
-        App.context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+        App.context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f
+    )
     return (orig / userAnimScale).roundToLong()
 }
 

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/ivBus"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_bus" />
+
+    <TextView
+        android:id="@+id/tvBus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Bus"
+        app:layout_constraintBottom_toBottomOf="@id/ivBus"
+        app:layout_constraintStart_toEndOf="@+id/ivBus"
+        app:layout_constraintTop_toTopOf="@id/ivBus" />
+
+    <LinearLayout
+        android:id="@+id/timeContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/progressBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivSwitchView"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            android:src="@drawable/ic_view_array" />
+
+        <CheckBox
+            android:id="@+id/cbHoliday"
+            style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center"
+            android:padding="4dp"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:text="Holiday"
+            android:textColor="#777"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="end|center_vertical"
+            android:background="?android:attr/selectableItemBackground"
+            android:drawableStart="@drawable/ic_alarm"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:textColor="#777"
+            android:textSize="16sp"
+            tools:text="12:00" />
+    </LinearLayout>
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressBar"
+        style="@style/Widget.MaterialComponents.LinearProgressIndicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivBus" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/simpleViewContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        tools:visibility="visible">
+
+        <include
+            android:id="@+id/simpleViewTab"
+            layout="@layout/activity_bus_timetable_simple_mode_tab"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSimpleTimeTable"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:paddingHorizontal="16dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/simpleViewTab"
+            tools:listitem="@layout/activity_bus_timetable_simple_mode_item" />
+
+        <LinearLayout
+            android:id="@+id/btnSimpleBefore"
+            android:layout_width="42dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="72dp"
+                android:layout_gravity="center"
+                android:scaleType="fitXY"
+                android:scaleX="-1"
+                android:src="@drawable/arrow_next"
+                app:tint="@android:color/darker_gray" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSimpleNext"
+            android:layout_width="42dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="72dp"
+                android:layout_gravity="center"
+                android:scaleType="fitXY"
+                android:scaleX="1"
+                android:src="@drawable/arrow_next"
+                app:tint="@android:color/darker_gray" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/wholeViewContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        tools:visibility="visible">
+
+        <com.otaliastudios.zoom.ZoomLayout
+            android:id="@+id/zoomLayoutStopName"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            app:alignment="center"
+            app:hasClickableChildren="false"
+            app:maxZoom="2"
+            app:minZoom="0.5"
+            app:overScrollHorizontal="false"
+            app:overScrollVertical="false"
+            app:transformation="none"
+            app:transformationGravity="left">
+
+            <LinearLayout
+                android:id="@+id/wholeStopNameContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:divider="@drawable/list_divider_material_1dp"
+                android:orientation="horizontal"
+                android:showDividers="middle" />
+        </com.otaliastudios.zoom.ZoomLayout>
+
+        <com.otaliastudios.zoom.ZoomLayout
+            android:id="@+id/zoomLayoutTimeTable"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollIndicators="top"
+            android:scrollbars="vertical|horizontal"
+            app:alignment="center"
+            app:animationDuration="280"
+            app:hasClickableChildren="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/zoomLayoutStopName"
+            app:maxZoom="2"
+            app:minZoom="0.5"
+            app:overScrollHorizontal="false"
+            app:overScrollVertical="false"
+            app:transformation="none"
+            app:transformationGravity="top">
+
+            <LinearLayout
+                android:id="@+id/wholeTimeTableContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/list_divider_material_1dp"
+                android:orientation="horizontal"
+                android:showDividers="middle" />
+        </com.otaliastudios.zoom.ZoomLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

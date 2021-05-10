@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.BusDetailsActivity"
+            android:name=".ui.BusTimeTableActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
         <activity
             android:name=".ui.allbusstops.AllBusAndStopActivity"

@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.fragment_all_buses.view.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
-import kyklab.humphreysbus.ui.BusDetailsActivity
 import kyklab.humphreysbus.ui.BusTestActivity
 
 class AllBusesFragment : Fragment() {

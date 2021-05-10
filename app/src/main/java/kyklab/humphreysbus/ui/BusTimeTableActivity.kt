@@ -16,18 +16,20 @@ import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.bold
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
-import kotlinx.android.synthetic.main.activity_bus_details.*
-import kotlinx.android.synthetic.main.activity_bus_details.cbHoliday
-import kotlinx.android.synthetic.main.activity_bus_details.progressBar
-import kotlinx.android.synthetic.main.activity_bus_details.tvCurrentTime
-import kotlinx.android.synthetic.main.activity_bus_details_column.view.*
+import kotlinx.android.synthetic.main.activity_bus_timetable.*
+import kotlinx.android.synthetic.main.activity_bus_timetable.cbHoliday
+import kotlinx.android.synthetic.main.activity_bus_timetable.progressBar
+import kotlinx.android.synthetic.main.activity_bus_timetable.tvCurrentTime
+import kotlinx.android.synthetic.main.activity_bus_timetable_whole_mode_column.view.*
 import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.coroutines.*
 import kyklab.humphreysbus.*
@@ -39,9 +41,12 @@ import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import java.util.*
 
 
-class BusDetailsActivity : AppCompatActivity() {
+class BusTimeTableActivity : AppCompatActivity() {
     companion object {
-        private const val TAG = "BusViewActivity"
+        private val TAG = BusTimeTableActivity::class.java.simpleName
+
+        private const val VIEW_MODE_SIMPLE = 0
+        private const val VIEW_MODE_WHOLE = 1
     }
 
     private var busName: String? = null
@@ -55,6 +60,12 @@ class BusDetailsActivity : AppCompatActivity() {
 
     private var loadScheduleJob: Job? = null
 
+    private var viewMode = VIEW_MODE_SIMPLE
+
+    private lateinit var simpleAdapter: SimpleViewAdapter
+
+    private var scrolled = false
+
     private val intentFilter = IntentFilter(Const.Intent.ACTION_BACK_TO_MAP)
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -66,9 +77,7 @@ class BusDetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bus_details)
-
-        val intent = intent
+        setContentView(R.layout.activity_bus_timetable)
 
         busName = intent.extras?.get("busname") as? String
         stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
@@ -84,34 +93,10 @@ class BusDetailsActivity : AppCompatActivity() {
             finish()
         }
 
-        zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
-            override fun onIdle(engine: ZoomEngine) {
-
-            }
-
-            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
-            }
-        })
-        // Automatically resize header ZoomLayout height based on actual displayed layout height
-        zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
-            override fun onIdle(engine: ZoomEngine) {
-
-            }
-
-            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                val lp = zoomLayoutStopName.layoutParams
-                lp.height = (stopNameContainer.height * engine.zoom).toInt()
-                zoomLayoutStopName.layoutParams = lp
-            }
-        })
-        // Block touch for stop names to prevent scrolling
-        zoomLayoutStopName.setOnTouchListener { _, _ -> true }
-
         lbm.registerReceiver(receiver, intentFilter)
 
         showCurrentTime()
-        showBusTimeTable()
+        initBusTimeTable()
     }
 
     override fun onDestroy() {
@@ -119,28 +104,224 @@ class BusDetailsActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun showBusTimeTable() {
+    private fun initSimpleModeView() {
+        val instances = busToShow.instances.filter { it.isHoliday == isHoliday }
+        val closestIndexes = ArrayList<Int>(busToShow.stopPoints.size)
+        for (i in busToShow.stopPoints.indices) {
+            val list = instances.map { it.stopTimes[i] }
+            val index = currentTime.getNextClosestTimeIndex(list)
+            closestIndexes.add(index)
+        }
+        simpleAdapter = SimpleViewAdapter(
+            this,
+            busToShow,
+            instances,
+            closestIndexes,
+            stopToHighlightIndex ?: 0,
+            currentTime
+        )
+        rvSimpleTimeTable.adapter = simpleAdapter
+        val scrollPosition = closestIndexes[stopToHighlightIndex ?: 0] - 3
+        rvSimpleTimeTable.scrollToPosition(scrollPosition)
+        btnSimpleBefore.setOnClickListener {
+            if (simpleAdapter.stopIndex > 0) {
+                --simpleAdapter.stopIndex
+                simpleAdapter.notifyDataSetChanged()
+            }
+        }
+        btnSimpleNext.setOnClickListener {
+            if (simpleAdapter.stopIndex < busToShow.stopPoints.size - 1) {
+                ++simpleAdapter.stopIndex
+                simpleAdapter.notifyDataSetChanged()
+            }
+        }
+    }
+
+    private fun initWholeModeView() {
+        zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
+            override fun onIdle(engine: ZoomEngine) {}
+            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
+                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
+            }
+        })
+        // Automatically resize header ZoomLayout height based on actual displayed layout height
+        zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
+            override fun onIdle(engine: ZoomEngine) {}
+            override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
+                val lp = zoomLayoutStopName.layoutParams
+                lp.height = (wholeStopNameContainer.height * engine.zoom).toInt()
+                zoomLayoutStopName.layoutParams = lp
+            }
+        })
+        // Block touch for stop names to prevent scrolling
+        zoomLayoutStopName.setOnTouchListener { _, _ -> true }
+    }
+
+    private fun initBusTimeTable() {
         busToShow.colorInt.let {
             ivBus.imageTintList = ColorStateList.valueOf(it)
             tvBus.text = busName
             tvBus.setTextColor(it)
         }
-        updateBusTimeTable()
+
+        ivSwitchView.setOnClickListener { switchViewMode() }
+
+        initSimpleModeView()
+        initWholeModeView()
+
+        updateSelectedTimeTable()
     }
 
-    private fun updateBusTimeTable() {
+    private fun switchViewMode() {
+        viewMode = when (viewMode) {
+            VIEW_MODE_SIMPLE -> VIEW_MODE_WHOLE
+            VIEW_MODE_WHOLE -> VIEW_MODE_SIMPLE
+            else -> VIEW_MODE_SIMPLE
+        }
+        updateSelectedTimeTable()
+    }
+
+    private fun updateSelectedTimeTable() {
+        if (viewMode == VIEW_MODE_SIMPLE) {
+            simpleViewContainer.visibility = View.VISIBLE
+            wholeViewContainer.visibility = View.GONE
+            updateSimpleBusTimeTable()
+        } else if (viewMode == VIEW_MODE_WHOLE) {
+            simpleViewContainer.visibility = View.GONE
+            wholeViewContainer.visibility = View.VISIBLE
+            updateWholeBusTimeTable()
+        }
+    }
+
+    private fun updateSimpleBusTimeTable() {
+        val instances = busToShow.instances.filter { it.isHoliday == isHoliday }
+        val closestIndexes = ArrayList<Int>(busToShow.stopPoints.size)
+        for (i in busToShow.stopPoints.indices) {
+            val list = instances.map { it.stopTimes[i] }
+            val index = currentTime.getNextClosestTimeIndex(list)
+            closestIndexes.add(index)
+        }
+        simpleAdapter.instances = instances
+        simpleAdapter.currentTime = currentTime
+        simpleAdapter.closestIndexes = closestIndexes
+        simpleAdapter.notifyDataSetChanged()
+    }
+
+    private class SimpleViewAdapter(
+        val context: Context,
+        val bus: Bus,
+        var instances: List<Bus.BusInstance>,
+        var closestIndexes: List<Int>, // Index of closest bus instance for each stop
+        var stopIndex: Int,
+        var currentTime: MinDateTime
+    ) : RecyclerView.Adapter<SimpleViewAdapter.SimpleViewHolder>() {
+        private var highlightedIndex = -1
+        private var previousHighlightedIndex = 0
+        private val selectableItemBackground =
+            context.getResId(R.attr.selectableItemBackground)
+
+        private inner class SimpleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val itemBackground = itemView.findViewById<ViewGroup>(R.id.itemBackground)
+            val tvPrev = itemView.findViewById<TextView>(R.id.tvPrev)
+            val tvPrevLeft = itemView.findViewById<TextView>(R.id.tvPrevLeft)
+            val tvCurrent = itemView.findViewById<TextView>(R.id.tvCurrent)
+            val tvCurrentLeft = itemView.findViewById<TextView>(R.id.tvCurrentLeft)
+            val tvNext = itemView.findViewById<TextView>(R.id.tvNext)
+            val tvNextLeft = itemView.findViewById<TextView>(R.id.tvNextLeft)
+
+            init {
+                itemBackground.setOnClickListener {
+                    if (adapterPosition == highlightedIndex) {
+                        highlightedIndex = -1
+                    } else {
+                        highlightedIndex = adapterPosition
+                    }
+                    notifyItemChanged(previousHighlightedIndex)
+                    notifyItemChanged(adapterPosition)
+                    previousHighlightedIndex = adapterPosition
+                }
+            }
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleViewHolder {
+            return SimpleViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.activity_bus_timetable_simple_mode_item, parent, false)
+            )
+        }
+
+        override fun onBindViewHolder(holder: SimpleViewHolder, position: Int) {
+            // Set background color if selected
+            if (position == highlightedIndex) {
+                holder.itemBackground.setBackgroundColor(
+                    context.resources.getColor(R.color.lighter_gray, context.theme)
+                )
+            } else {
+                holder.itemBackground.setBackgroundResource(selectableItemBackground)
+            }
+
+            // Prev texts
+            if (stopIndex > 0) {
+                holder.tvPrev.text = instances[position].stopTimes[stopIndex - 1].h_m
+                if (position == closestIndexes[stopIndex - 1]) {
+                    holder.tvPrev.setTypeface(null, Typeface.BOLD)
+                    holder.tvPrevLeft.text =
+                        (instances[position].stopTimes[stopIndex - 1] - currentTime).h_m + " left"
+                } else {
+                    holder.tvPrev.setTypeface(null, Typeface.NORMAL)
+                    holder.tvPrevLeft.text = ""
+                }
+            } else {
+                holder.tvPrev.text = ""
+                holder.tvPrevLeft.text = ""
+            }
+
+            // Current texts
+            holder.tvCurrent.text = instances[position].stopTimes[stopIndex].h_m
+            if (position == closestIndexes[stopIndex]) {
+                holder.tvCurrent.setTypeface(null, Typeface.BOLD)
+                holder.tvCurrentLeft.text =
+                    (instances[position].stopTimes[stopIndex] - currentTime).h_m + " left"
+            } else {
+                holder.tvCurrent.setTypeface(null, Typeface.NORMAL)
+                holder.tvCurrentLeft.text = ""
+            }
+
+            // Next texts
+            if (stopIndex < bus.stopPoints.size - 1) {
+                holder.tvNext.text = instances[position].stopTimes[stopIndex + 1].h_m
+                if (position == closestIndexes[stopIndex + 1]) {
+                    holder.tvNext.setTypeface(null, Typeface.BOLD)
+                    holder.tvNextLeft.text =
+                        (instances[position].stopTimes[stopIndex + 1] - currentTime).h_m + " left"
+                } else {
+                    holder.tvNext.setTypeface(null, Typeface.NORMAL)
+                    holder.tvNextLeft.text = ""
+                }
+            } else {
+                holder.tvNext.text = ""
+                holder.tvNextLeft.text = ""
+            }
+        }
+
+        override fun getItemCount(): Int {
+            return instances.size
+        }
+    }
+
+    private fun updateWholeBusTimeTable() {
         lifecycleScope.launch(Dispatchers.Default) {
             loadScheduleJob?.let { if (it.isActive) it.cancelAndJoin() }
             loadScheduleJob = launch {
                 launch(Dispatchers.Main) {
                     progressBar.visibility = View.VISIBLE
-                    stopNameContainer.removeAllViews()
-                    timeTableContainer.removeAllViews()
+                    wholeStopNameContainer.removeAllViews()
+                    wholeTimeTableContainer.removeAllViews()
                 }
                 // TextViews in header that display stop names
                 val stopNameContainerColumnItems =
                     Array<TextView>(busToShow.stopPoints.size) { i ->
-                        MaterialTextView(this@BusDetailsActivity).apply {
+                        MaterialTextView(this@BusTimeTableActivity).apply {
                             text = busToShow.stopPoints[i].name
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -167,8 +348,10 @@ class BusDetailsActivity : AppCompatActivity() {
 
                 // Columns, which are LinearLayout, that contain list of stop time and time left
                 val stopColumns = Array(busToShow.stopPoints.size) { column ->
-                    LayoutInflater.from(this@BusDetailsActivity).inflate(
-                        R.layout.activity_bus_details_column, timeTableContainer, false
+                    LayoutInflater.from(this@BusTimeTableActivity).inflate(
+                        R.layout.activity_bus_timetable_whole_mode_column,
+                        wholeTimeTableContainer,
+                        false
                     ).apply {
                         val timeTextBuilder = SpannableStringBuilder()
                         val timeLeftTextBuilder = SpannableStringBuilder()
@@ -234,7 +417,7 @@ class BusDetailsActivity : AppCompatActivity() {
                     listOf(android.R.color.white, R.color.details_column_lighter_gray)
                 launch(Dispatchers.Main) {
                     for ((i, stopColumn) in stopColumns.withIndex()) {
-                        timeTableContainer.addView(stopColumn)
+                        wholeTimeTableContainer.addView(stopColumn)
 
                         val bg =
                             if (i == stopToHighlightIndex) R.color.details_column_highlighted_bg
@@ -245,7 +428,7 @@ class BusDetailsActivity : AppCompatActivity() {
                             // Match column header width with column width
                             stopNameContainerColumnItems[i].layoutParams.width =
                                 stopColumn.width
-                            stopNameContainer.addView(stopNameContainerColumnItems[i])
+                            wholeStopNameContainer.addView(stopNameContainerColumnItems[i])
 
                             // Auto scroll to highlighted stop
                             if (i == stopToHighlightIndex) {
@@ -283,16 +466,17 @@ class BusDetailsActivity : AppCompatActivity() {
             isHoliday = !isHoliday
 
             updateDateTime()
-            updateBusTimeTable()
+            updateSelectedTimeTable()
         }
 
         tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
+                calendar.set(Calendar.SECOND, 0)
                 currentTime.setCalendar(calendar)
                 isHoliday = calendar.time.isHoliday()
                 updateDateTime()
-                updateBusTimeTable()
+                updateSelectedTimeTable()
             }.show(supportFragmentManager, "dateTimePicker")
         }
     }
