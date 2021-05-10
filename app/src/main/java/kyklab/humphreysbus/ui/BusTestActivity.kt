@@ -38,8 +38,12 @@ import java.util.*
 import kotlin.math.max
 
 class BusTestActivity : AppCompatActivity() {
+    companion object {
+        private val TAG = BusTestActivity::class.java.simpleName
+    }
+
     private var itemheight = 0
-    private var curTime = MinDateTime.getCurDateTime()
+    private lateinit var curTime: MinDateTime
     private lateinit var busStatusUpdater: BusStatusUpdater
     private lateinit var recyclerView: RecyclerView
     private lateinit var bus: Bus
@@ -87,11 +91,13 @@ class BusTestActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        Log.e(TAG, "onResume() called")
         super.onResume()
         busStatusUpdater.start()
     }
 
     override fun onPause() {
+        Log.e(TAG, "onPause() called")
         super.onPause()
         busStatusUpdater.stop()
     }
@@ -139,6 +145,7 @@ class BusTestActivity : AppCompatActivity() {
                         val item = InstanceItem(busIcon, instance, i)
                         runningInstances.add(item)
                         container.addView(busIcon)
+                        Log.e(TAG, "container.addView() initial called")
                         continue
                     }
                 }
@@ -189,8 +196,9 @@ class BusTestActivity : AppCompatActivity() {
 
         fun start() {
             // Add bus icons
-            instances = bus.instances.filter { it.isHoliday == isHoliday() }
             cleanup()
+            curTime = getCurDateTime()
+            instances = bus.instances.filter { it.isHoliday == isHoliday() }
             addInitialBuses()
             scheduleNextBus()
 
@@ -236,6 +244,7 @@ class BusTestActivity : AppCompatActivity() {
         fun cleanup() {
             runningInstances.clear()
             container.removeAllViews()
+            Log.e(TAG, "container.removeAllViews() called")
             lastBusIndex = null
             lastScannedLeftTime = null
             closestFirstBusIndex = -1
@@ -256,6 +265,7 @@ class BusTestActivity : AppCompatActivity() {
                     ) {
                         isReady = true
                         container.addView(icon)
+                        Log.e(TAG, "container.addView() for last called")
 //                        icon.visibility = View.VISIBLE
                         scheduleNextBus()
                     }
@@ -277,6 +287,7 @@ class BusTestActivity : AppCompatActivity() {
 
         fun stop() {
             timer?.cancel()
+            runningInstances.forEach { it.stop() }
         }
 
         fun restart() {
@@ -339,7 +350,10 @@ class BusTestActivity : AppCompatActivity() {
                     )*/
                 }
 
-                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationCancel(animation: Animator?) {
+                    animation?.removeAllListeners()
+                }
+
                 override fun onAnimationRepeat(animation: Animator?) {}
             }
 
@@ -394,6 +408,10 @@ class BusTestActivity : AppCompatActivity() {
                         "eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} animation duration ${animTimeTotalMillis / 1000}"
                     )
                 }
+            }
+
+            fun stop() {
+                animator.cancel()
             }
         }
     }
