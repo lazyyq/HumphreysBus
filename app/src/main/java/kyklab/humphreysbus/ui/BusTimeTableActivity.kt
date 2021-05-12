@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
@@ -13,6 +12,7 @@ import android.icu.util.Calendar
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -21,10 +21,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.bold
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
+import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
 import kotlinx.android.synthetic.main.activity_bus_timetable.*
 import kotlinx.android.synthetic.main.activity_bus_timetable.cbHoliday
 import kotlinx.android.synthetic.main.activity_bus_timetable.progressBar
@@ -62,6 +65,7 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     private var viewMode = VIEW_MODE_SIMPLE
 
+    private lateinit var tabAdapter: SimpleViewTabAdapter
     private lateinit var simpleAdapter: SimpleViewAdapter
 
     private var scrolled = false
@@ -106,6 +110,60 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     private fun initSimpleModeView() {
         val instances = busToShow.instances.filter { it.isHoliday == isHoliday }
+
+        // Setup tab view
+        val stopNames = busToShow.stopPoints.map { it.name }
+        tabAdapter = SimpleViewTabAdapter(
+            stopNames,
+            stopToHighlightIndex ?: 0
+        ) { position ->
+            rvSimpleViewTab.smoothScrollToPosition(position) // Without this getAdapterPosition() sometimes returns -1. Why?
+            simpleAdapter.stopIndex = position
+            simpleAdapter.notifyDataSetChanged()
+        }
+        val tabScrollOffset = 0
+        rvSimpleViewTab.adapter = tabAdapter
+        val tabSnapHelper = LinearSnapHelper()
+        tabSnapHelper.attachToRecyclerView(rvSimpleViewTab)
+        simpleViewContainer.onViewReady {
+            // Set horizontal padding to put selected item in center
+            val tabHorizontalOffset =
+                (simpleViewContainer.measuredWidth -
+                        resources.getDimension(R.dimen.timetable_simple_mode_column_width)) / 2
+            rvSimpleViewTab.updatePadding(
+                left = tabHorizontalOffset.toInt(),
+                right = tabHorizontalOffset.toInt()
+            )
+            // Scroll to initial stop
+            val highlight = stopToHighlightIndex ?: 0
+            tabAdapter.highlight(highlight)
+            rvSimpleViewTab.scrollToPosition(highlight)
+        }
+
+        val tabScrollingListener = SnapOnScrollListener(tabSnapHelper,
+            SnapOnScrollListener.Behavior.NOTIFY_ON_SCROLL,
+            object : SnapOnScrollListener.OnSnapPositionChangeListener {
+                override fun onSnapPositionChange(position: Int) {
+                    tabAdapter.highlight(position)
+                    if (rvSimpleViewTab.scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                        simpleAdapter.stopIndex = position
+                        simpleAdapter.notifyDataSetChanged()
+                    }
+                }
+            })
+        val tabScrollDoneListener = SnapOnScrollListener(tabSnapHelper,
+            SnapOnScrollListener.Behavior.NOTIFY_ON_SCROLL_DONE,
+            object : SnapOnScrollListener.OnSnapPositionChangeListener {
+                override fun onSnapPositionChange(position: Int) {
+                    tabAdapter.highlight(position)
+                    simpleAdapter.stopIndex = position
+                    simpleAdapter.notifyDataSetChanged()
+                }
+            })
+        rvSimpleViewTab.addOnScrollListener(tabScrollingListener)
+        rvSimpleViewTab.addOnScrollListener(tabScrollDoneListener)
+
+        // Setup timetable view
         val closestIndexes = ArrayList<Int>(busToShow.stopPoints.size)
         for (i in busToShow.stopPoints.indices) {
             val list = instances.map { it.stopTimes[i] }
@@ -122,17 +180,25 @@ class BusTimeTableActivity : AppCompatActivity() {
         )
         rvSimpleTimeTable.adapter = simpleAdapter
         val scrollPosition = closestIndexes[stopToHighlightIndex ?: 0] - 3
-        rvSimpleTimeTable.scrollToPosition(scrollPosition)
+        simpleViewContainer.onViewReady { rvSimpleTimeTable.scrollToPosition(scrollPosition) }
+
+        // Setup before, next button
         btnSimpleBefore.setOnClickListener {
             if (simpleAdapter.stopIndex > 0) {
                 --simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
+                rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
+                tabAdapter.highlight(simpleAdapter.stopIndex)
+                Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
         }
         btnSimpleNext.setOnClickListener {
             if (simpleAdapter.stopIndex < busToShow.stopPoints.size - 1) {
                 ++simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
+                rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
+                tabAdapter.highlight(simpleAdapter.stopIndex)
+                Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
         }
     }
@@ -205,6 +271,74 @@ class BusTimeTableActivity : AppCompatActivity() {
         simpleAdapter.currentTime = currentTime
         simpleAdapter.closestIndexes = closestIndexes
         simpleAdapter.notifyDataSetChanged()
+    }
+
+
+    private class SimpleViewTabAdapter(
+        val items: List<String>,
+        var selectedIndex: Int,
+        val clickedCallback: (Int) -> Unit
+    ) : RecyclerView.Adapter<SimpleViewTabAdapter.SimpleViewTabViewHolder>() {
+        private var previousSelectedIndex = selectedIndex
+
+        fun highlight(position: Int) {
+            previousSelectedIndex = selectedIndex
+            selectedIndex = position
+            notifyItemChanged(previousSelectedIndex, false)
+            notifyItemChanged(selectedIndex, true)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleViewTabViewHolder {
+            return SimpleViewTabViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.activity_bus_timetable_simple_mode_tab, parent, false)
+            )
+        }
+
+        override fun onBindViewHolder(holder: SimpleViewTabViewHolder, position: Int) {
+            holder.tvTitle.text = items[position]
+            holder.tvTitle.setTypeface(
+                null,
+                if (position == selectedIndex) Typeface.BOLD else Typeface.NORMAL
+            )
+        }
+
+        override fun onBindViewHolder(
+            holder: SimpleViewTabViewHolder,
+            position: Int,
+            payloads: MutableList<Any>
+        ) {
+            if (payloads.isEmpty()) {
+                super.onBindViewHolder(holder, position, payloads)
+            } else {
+                payloads.forEach {
+                    if (it is Boolean) {
+                        holder.tvTitle.setTypeface(
+                            null,
+                            if (it) Typeface.BOLD else Typeface.NORMAL
+                        )
+                    }
+                }
+            }
+        }
+
+        override fun getItemCount(): Int {
+            return items.size
+        }
+
+        private inner class SimpleViewTabViewHolder(itemView: View) :
+            RecyclerView.ViewHolder(itemView) {
+            val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
+
+            init {
+                itemView.setOnClickListener {
+                    Log.e("TMP", "$adapterPosition")
+                    highlight(adapterPosition)
+                    clickedCallback(adapterPosition)
+//                    notifyDataSetChanged()
+                }
+            }
+        }
     }
 
     private class SimpleViewAdapter(
@@ -481,10 +615,22 @@ class BusTimeTableActivity : AppCompatActivity() {
         }
     }
 
+    /*
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-//        pickerDialog?.configChanged()
+        simpleViewContainer.onViewReady {
+            val tabHorizontalOffset =
+                (simpleViewContainer.measuredWidth -
+                        resources.getDimension(R.dimen.timetable_simple_mode_tab_width)) / 2
+            Log.e("TMP", simpleViewContainer.measuredWidth.toString())
+            rvSimpleViewTab.updatePadding(
+                left = tabHorizontalOffset.toInt(),
+                right = tabHorizontalOffset.toInt()
+            )
+            rvSimpleViewTab.scrollToPosition(tabAdapter.selectedIndex)
+        }
     }
+    */
 
     private fun updateDateTime() {
         cbHoliday.isChecked = isHoliday

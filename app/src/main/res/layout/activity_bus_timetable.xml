@@ -35,6 +35,38 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <CheckBox
+            android:buttonTint="@color/near_black"
+            android:id="@+id/cbHoliday"
+            style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="?selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:padding="4dp"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:text="Holiday"
+            android:textColor="@color/near_black"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:drawableTint="@color/near_black"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="end|center_vertical"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableStart="@drawable/ic_alarm"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:textColor="@color/near_black"
+            android:textSize="16sp"
+            tools:text="12:00" />
+
         <ImageView
             android:id="@+id/ivSwitchView"
             android:layout_width="36dp"
@@ -42,37 +74,8 @@
             android:layout_gravity="center_vertical"
             android:background="?selectableItemBackgroundBorderless"
             android:padding="6dp"
-            android:src="@drawable/ic_view_array" />
-
-        <CheckBox
-            android:id="@+id/cbHoliday"
-            style="@style/Widget.AppCompat.CompoundButton.CheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="start|center_vertical"
-            android:background="?android:attr/selectableItemBackground"
-            android:gravity="center"
-            android:padding="4dp"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:text="Holiday"
-            android:textColor="#777"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/tvCurrentTime"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="end|center_vertical"
-            android:background="?android:attr/selectableItemBackground"
-            android:drawableStart="@drawable/ic_alarm"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:textColor="#777"
-            android:textSize="16sp"
-            tools:text="12:00" />
+            android:src="@drawable/ic_view_array"
+            app:tint="@color/near_black" />
     </LinearLayout>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -99,35 +102,74 @@
         app:layout_constraintTop_toBottomOf="@id/progressBar"
         tools:visibility="visible">
 
-        <include
-            android:id="@+id/simpleViewTab"
-            layout="@layout/activity_bus_timetable_simple_mode_tab"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSimpleViewTab"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/activity_bus_timetable_simple_mode_tab" />
+
+        <View
+            android:layout_width="0dp"
+            android:background="@drawable/drop_shadow"
+            android:layout_height="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvSimpleTimeTable"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:paddingHorizontal="16dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="1dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/simpleViewTab"
+            app:layout_constraintTop_toBottomOf="@id/rvSimpleViewTab"
             tools:listitem="@layout/activity_bus_timetable_simple_mode_item" />
+
+        <kyklab.humphreysbus.ui.UntouchableView
+            android:layout_width="64dp"
+            android:background="@drawable/spinner_fade_edge"
+            android:backgroundTint="?colorSurface"
+            android:layout_marginTop="2dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="@id/rvSimpleViewTab"
+            app:layout_constraintBottom_toBottomOf="@id/rvSimpleViewTab"
+            app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
+
+        <kyklab.humphreysbus.ui.UntouchableView
+            android:layout_width="64dp"
+            android:background="@drawable/spinner_fade_edge"
+            android:backgroundTint="?colorSurface"
+            android:layout_marginTop="2dp"
+            android:layout_height="0dp"
+            android:scaleX="-1"
+            app:layout_constraintEnd_toEndOf="@id/rvSimpleViewTab"
+            app:layout_constraintBottom_toBottomOf="@id/rvSimpleViewTab"
+            app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
+
+        <View
+            android:layout_width="0dp"
+            android:background="@drawable/drop_shadow"
+            android:layout_height="2dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/rvSimpleViewTab" />
 
         <LinearLayout
             android:id="@+id/btnSimpleBefore"
             android:layout_width="42dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintBottom_toBottomOf="@id/rvSimpleTimeTable"
+            app:layout_constraintStart_toStartOf="@id/rvSimpleTimeTable"
+            app:layout_constraintTop_toTopOf="@id/rvSimpleTimeTable">
 
             <ImageView
                 android:layout_width="36dp"
@@ -143,9 +185,9 @@
             android:id="@+id/btnSimpleNext"
             android:layout_width="42dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintBottom_toBottomOf="@id/rvSimpleTimeTable"
+            app:layout_constraintEnd_toEndOf="@id/rvSimpleTimeTable"
+            app:layout_constraintTop_toTopOf="@id/rvSimpleTimeTable">
 
             <ImageView
                 android:layout_width="36dp"
