@@ -64,7 +64,7 @@ class DateTimePickerFragment(
             setButton(BUTTON_NEGATIVE, context.getString(android.R.string.cancel), this)
             setButton(BUTTON_NEUTRAL, "Current", this)
 
-            setTime()
+            setTime(calendar)
 
             setOnShowListener {
                 getButton(BUTTON_POSITIVE)?.setOnClickListener {
@@ -92,12 +92,12 @@ class DateTimePickerFragment(
 
         override fun onClick(dialog: DialogInterface?, which: Int) {}
 
-        private fun setTime() {
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
-            val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
-            val minute = calendar.get(Calendar.MINUTE)
+        private fun setTime(cal: Calendar = Calendar.getInstance()) {
+            val year = cal.get(Calendar.YEAR)
+            val month = cal.get(Calendar.MONTH)
+            val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+            val hourOfDay = cal.get(Calendar.HOUR_OF_DAY)
+            val minute = cal.get(Calendar.MINUTE)
 
             datePicker.updateDate(year, month, dayOfMonth)
             timePicker.hour = hourOfDay
