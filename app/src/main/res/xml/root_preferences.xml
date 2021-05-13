@@ -23,4 +23,18 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        app:iconSpaceReserved="true"
+        app:title="Application">
+
+        <SwitchPreferenceCompat
+            app:defaultValue="@bool/pref_enable_statistics_default"
+            app:icon="@drawable/ic_assessment"
+            app:iconSpaceReserved="true"
+            app:key="@string/pref_enable_statistics"
+            app:title="Send statistics"
+            app:summary="Automatically report usage stats and crash logs to developer." />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

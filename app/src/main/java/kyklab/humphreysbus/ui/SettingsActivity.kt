@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.android.synthetic.main.activity_settings.*
 import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.R
@@ -44,17 +46,25 @@ class SettingsActivity : AppCompatActivity() {
         SharedPreferences.OnSharedPreferenceChangeListener {
         val appUpdateChecker by lazy { AppUpdateChecker(requireActivity()) }
 
-        val prefAutoCheckUpdateOnStartup by lazy {
+        val prefAutoCheckUpdateOnStartup =
             findPreference<SwitchPreferenceCompat>(Prefs.Key.AUTO_CHECK_UPDATE_ON_STARTUP)
-        }
-        val prefForceCheckUupdate by lazy {
+        val prefForceCheckUupdate =
             findPreference<Preference>(Prefs.Key.FORCE_CHECK_UPDATE)
-        }
+        val prefEnableStatistics =
+            findPreference<Preference>(Prefs.Key.ENABLE_STATISTICS)
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             prefForceCheckUupdate?.setOnPreferenceClickListener {
                 appUpdateChecker.checkAppUpdate(true)
+                true
+            }
+            prefEnableStatistics?.setOnPreferenceChangeListener { preference, newValue ->
+                if (newValue is Boolean) {
+                    FirebaseAnalytics.getInstance(requireContext())
+                        .setAnalyticsCollectionEnabled(newValue)
+                    FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(newValue)
+                }
                 true
             }
 

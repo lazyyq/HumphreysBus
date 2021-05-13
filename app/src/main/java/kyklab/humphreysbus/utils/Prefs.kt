@@ -5,6 +5,7 @@ import androidx.preference.PreferenceManager
 import kyklab.humphreysbus.App
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.utils.Prefs.Key.AUTO_CHECK_UPDATE_ON_STARTUP_DEFAULT
+import kyklab.humphreysbus.utils.Prefs.Key.ENABLE_STATISTICS_DFEAULT
 import kyklab.humphreysbus.utils.Prefs.Key.IGNORE_UPDATE_VERSION_CODE_DEFAULT
 import kyklab.humphreysbus.utils.Prefs.Key.LAST_UPDATE_CHECKED_DEFAULT
 
@@ -34,6 +35,12 @@ object Prefs {
         )
         set(value) = editor.putInt(Key.IGNORE_UPDATE_VERSION_CODE, value).apply()
 
+    var enableStatistics: Boolean
+        get() = pref.getBoolean(
+            Key.ENABLE_STATISTICS, ENABLE_STATISTICS_DFEAULT
+        )
+        set(value) = editor.putBoolean(Key.ENABLE_STATISTICS, value).apply()
+
 
     fun registerPrefChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         pref.registerOnSharedPreferenceChangeListener(listener)
@@ -61,5 +68,10 @@ object Prefs {
             App.context.resources.getString(R.string.pref_ignore_update_version_code)
         val IGNORE_UPDATE_VERSION_CODE_DEFAULT =
             App.context.resources.getInteger(R.integer.pref_ignore_update_version_code_default)
+
+        val ENABLE_STATISTICS =
+            App.context.resources.getString(R.string.pref_enable_statistics)
+        val ENABLE_STATISTICS_DFEAULT =
+            App.context.resources.getBoolean(R.bool.pref_enable_statistics_default)
     }
 }
