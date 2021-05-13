@@ -13,4 +13,7 @@
 
     <string name="pref_enable_statistics">enable_statistics</string>
     <bool name="pref_enable_statistics_default">true</bool>
+
+    <string name="pref_show_ad">show_ad</string>
+    <bool name="pref_show_ad_default">false</bool>
 </resources>

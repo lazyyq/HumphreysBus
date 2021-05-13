@@ -35,6 +35,14 @@
             app:title="Send statistics"
             app:summary="Automatically report usage stats and crash logs to developer." />
 
+        <SwitchPreferenceCompat
+            app:defaultValue="@bool/pref_show_ad_default"
+            app:icon="@drawable/ic_ad_units"
+            app:iconSpaceReserved="true"
+            app:key="@string/pref_show_ad"
+            app:title="Show ad"
+            app:summary="Show a small ad banner in main screen to support developer. Switching this option requires the app to restart." />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

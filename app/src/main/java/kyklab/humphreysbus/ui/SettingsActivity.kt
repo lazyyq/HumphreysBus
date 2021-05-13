@@ -15,6 +15,7 @@ import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.utils.AppUpdateChecker
 import kyklab.humphreysbus.utils.Prefs
+import kyklab.humphreysbus.utils.toast
 import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
@@ -46,12 +47,18 @@ class SettingsActivity : AppCompatActivity() {
         SharedPreferences.OnSharedPreferenceChangeListener {
         val appUpdateChecker by lazy { AppUpdateChecker(requireActivity()) }
 
-        val prefAutoCheckUpdateOnStartup =
+        val prefAutoCheckUpdateOnStartup by lazy {
             findPreference<SwitchPreferenceCompat>(Prefs.Key.AUTO_CHECK_UPDATE_ON_STARTUP)
-        val prefForceCheckUupdate =
+        }
+        val prefForceCheckUupdate by lazy {
             findPreference<Preference>(Prefs.Key.FORCE_CHECK_UPDATE)
-        val prefEnableStatistics =
+        }
+        val prefEnableStatistics by lazy {
             findPreference<Preference>(Prefs.Key.ENABLE_STATISTICS)
+        }
+        val prefShowAd by lazy {
+            findPreference<Preference>(Prefs.Key.SHOW_AD)
+        }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -64,6 +71,12 @@ class SettingsActivity : AppCompatActivity() {
                     FirebaseAnalytics.getInstance(requireContext())
                         .setAnalyticsCollectionEnabled(newValue)
                     FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(newValue)
+                }
+                true
+            }
+            prefShowAd?.setOnPreferenceChangeListener { preference, newValue ->
+                if (newValue is Boolean && newValue) {
+                    context?.toast("♡")
                 }
                 true
             }

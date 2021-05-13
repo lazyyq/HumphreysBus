@@ -18,13 +18,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HumphreysBus.NoActionBar">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-1561709750622418~6437116265" />
+
         <activity
             android:name=".ui.SettingsActivity"
             android:label="@string/activity_settings_title" />
         <activity
             android:name=".ui.MainActivity"
-            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,8 +42,8 @@
         <activity android:name=".ui.BusTrackActivity" />
 
         <provider
-            android:authorities="${applicationId}.fileprovider"
             android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

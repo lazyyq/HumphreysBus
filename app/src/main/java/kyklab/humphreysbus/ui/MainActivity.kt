@@ -22,6 +22,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -32,6 +36,7 @@ import kotlinx.android.synthetic.main.bus_directions_chooser.*
 import kotlinx.android.synthetic.main.bus_directions_chooser_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
@@ -87,6 +92,8 @@ class MainActivity : AppCompatActivity() {
     private var currentStopInfoDialog: StopInfoDialog? = null
 
     private val appUpdateChecker by lazy { AppUpdateChecker(this) }
+
+    private var adView: AdView? = null
 
     companion object {
         private const val TAG = "MainActivity"
@@ -169,6 +176,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         lbm.registerReceiver(receiver, intentFilter)
+
+        if (Prefs.showAd) {
+            loadAd()
+        }
     }
 
     override fun onResume() {
@@ -335,6 +346,25 @@ class MainActivity : AppCompatActivity() {
                     attachViewOnLeft(quickCard, cardBusDirectionChooser)
                 }
             })
+    }
+
+    private fun loadAd() {
+        adView = AdView(this).apply {
+            visibility = View.VISIBLE
+            adSize = AdSize.BANNER
+            adUnitId = getString(
+                if (BuildConfig.DEBUG) R.string.banner_ad_unit_debug_id
+                else R.string.banner_ad_unit_id
+            )
+        }
+        adContainer.addView(adView)
+        MobileAds.initialize(this)
+        val adRequest = AdRequest.Builder().build()
+        adView!!.loadAd(adRequest)
+    }
+
+    private fun hideAd() {
+        adView?.visibility = View.GONE
     }
 
     private class BusDirectionChooserAdapter(

@@ -8,6 +8,7 @@ import kyklab.humphreysbus.utils.Prefs.Key.AUTO_CHECK_UPDATE_ON_STARTUP_DEFAULT
 import kyklab.humphreysbus.utils.Prefs.Key.ENABLE_STATISTICS_DFEAULT
 import kyklab.humphreysbus.utils.Prefs.Key.IGNORE_UPDATE_VERSION_CODE_DEFAULT
 import kyklab.humphreysbus.utils.Prefs.Key.LAST_UPDATE_CHECKED_DEFAULT
+import kyklab.humphreysbus.utils.Prefs.Key.SHOW_AD_DEFAULT
 
 object Prefs {
     private val pref = PreferenceManager.getDefaultSharedPreferences(App.context)
@@ -41,6 +42,12 @@ object Prefs {
         )
         set(value) = editor.putBoolean(Key.ENABLE_STATISTICS, value).apply()
 
+    var showAd: Boolean
+        get() = pref.getBoolean(
+            Key.SHOW_AD, SHOW_AD_DEFAULT
+        )
+        set(value) = editor.putBoolean(Key.SHOW_AD, value).apply()
+
 
     fun registerPrefChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         pref.registerOnSharedPreferenceChangeListener(listener)
@@ -73,5 +80,10 @@ object Prefs {
             App.context.resources.getString(R.string.pref_enable_statistics)
         val ENABLE_STATISTICS_DFEAULT =
             App.context.resources.getBoolean(R.bool.pref_enable_statistics_default)
+
+        val SHOW_AD =
+            App.context.resources.getString(R.string.pref_show_ad)
+        val SHOW_AD_DEFAULT =
+            App.context.resources.getBoolean(R.bool.pref_show_ad_default)
     }
 }

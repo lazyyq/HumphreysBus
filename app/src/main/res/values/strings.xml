@@ -2,4 +2,7 @@
     <string name="app_name">HumphyBus</string>
 
     <string name="activity_settings_title">Settings</string>
+
+    <string name="banner_ad_unit_id">ca-app-pub-1561709750622418/5862401199</string>
+    <string name="banner_ad_unit_debug_id">ca-app-pub-3940256099942544/6300978111</string>
 </resources>
