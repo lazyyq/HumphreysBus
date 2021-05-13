@@ -59,8 +59,15 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             // Debug
-            findPreference<Preference>("cause_crash")?.setOnPreferenceClickListener {
-                throw RuntimeException("CRASH TEST")
+            if (BuildConfig.DEBUG) {
+                val crash = Preference(context).apply {
+                    title = "Crash!"
+                    isIconSpaceReserved = true
+                    setOnPreferenceClickListener {
+                        throw RuntimeException("CRASH TEST")
+                    }
+                }
+                preferenceScreen.addPreference(crash)
             }
         }
 

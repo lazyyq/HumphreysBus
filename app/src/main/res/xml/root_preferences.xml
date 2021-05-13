@@ -23,14 +23,4 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        app:iconSpaceReserved="true"
-        app:title="Application">
-
-        <Preference
-            app:iconSpaceReserved="true"
-            app:title="Crash!"
-            app:key="cause_crash" />
-    </PreferenceCategory>
-
 </PreferenceScreen>
