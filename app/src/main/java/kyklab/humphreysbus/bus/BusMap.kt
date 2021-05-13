@@ -50,7 +50,7 @@ class BusMap(
         }
     }
 
-    private var selectionPin: Int? = null // Pin for current selection on bus map
+    private var selectionPin: MultiplePinView.Pin? = null // Pin for current selection on bus map
     private val busRouteListHashMap = HashMap<Bus, List<MultiplePinView.Pin>>()
     private val busRouteJobHashMap = HashMap<Bus, Job>()
 
@@ -181,18 +181,16 @@ class BusMap(
 
     private fun setStopSelectionPin(coord: PointF) {
         resetStopSelectionPin()
-        selectionPin =
-            mapView.addPin(
-                MultiplePinView.Pin(
-                    context = activity, pinCoord = coord, resId = R.drawable.pushpin_blue,
-                ) { c, pinWidth, pinHeight ->
-                    val x = c.x - pinWidth / 2
-                    val y = c.y - pinHeight
-                    PointF(x, y)
-                }.apply {
-                    setPinSize(36.dpToPx(), 44.dpToPx())
-                }
-            )
+        selectionPin = MultiplePinView.Pin(
+            context = activity, pinCoord = coord, resId = R.drawable.pushpin_blue,
+        ) { c, pinWidth, pinHeight ->
+            val x = c.x - pinWidth / 2
+            val y = c.y - pinHeight
+            PointF(x, y)
+        }.apply {
+            setPinSize(36.dpToPx(), 44.dpToPx())
+        }
+        mapView.addPin(selectionPin!!)
     }
 
     private fun resetStopSelectionPin() {
