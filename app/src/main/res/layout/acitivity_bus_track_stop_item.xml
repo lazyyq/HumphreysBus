@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/itemBackground"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/waypoint"
+        android:layout_width="32dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="64dp"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginVertical="16dp"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/stopname"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="Stop name"
+            tools:ignore="NestedWeights" />
+
+        <TextView
+            android:id="@+id/arrivetime"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:textColor="@android:color/tertiary_text_dark"
+            android:gravity="center_vertical"
+            android:text="Arriving time" />
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:padding="12dp"
+        android:src="@drawable/ic_table_chart"
+        app:tint="#333333"
+        android:layout_gravity="center_vertical"
+        android:id="@+id/ivShowOnTimeTable"
+        android:layout_marginEnd="12dp" />
+
+</LinearLayout>

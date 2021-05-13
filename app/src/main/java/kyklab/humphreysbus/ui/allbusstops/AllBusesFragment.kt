@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.fragment_all_buses.view.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
-import kyklab.humphreysbus.ui.BusDetailsActivity
+import kyklab.humphreysbus.ui.BusTrackActivity
 
 class AllBusesFragment : Fragment() {
     override fun onCreateView(
@@ -42,7 +42,7 @@ class AllBusesFragment : Fragment() {
 
             init {
                 itemView.setOnClickListener {
-                    val intent = Intent(activity, BusDetailsActivity::class.java).apply {
+                    val intent = Intent(activity, BusTrackActivity::class.java).apply {
                         putExtra("busname", items[adapterPosition].name)
                     }
                     activity?.startActivity(intent)

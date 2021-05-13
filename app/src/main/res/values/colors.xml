@@ -14,7 +14,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="lighter_gray">#ddd</color>
+
     <color name="details_column_lighter_gray">#FFF2F2F2</color>
     <color name="details_column_highlighted_bg">#26C2185B</color>
     <color name="details_column_highlighted_text">#FFC2185B</color>
+
+    <color name="near_black">#333</color>
 </resources>

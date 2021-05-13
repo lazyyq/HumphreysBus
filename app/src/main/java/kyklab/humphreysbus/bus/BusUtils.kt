@@ -1,13 +1,16 @@
 package kyklab.humphreysbus.bus
 
 import android.graphics.Color
+import android.graphics.PointF
 import android.util.Log
 import androidx.core.database.getIntOrNull
+import androidx.core.database.getStringOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.forEachCursor
 import kyklab.humphreysbus.utils.kQuery
 import java.util.concurrent.locks.ReentrantLock
@@ -112,7 +115,13 @@ object BusUtils {
             BusDBHelper.db.use { db ->
                 val cursor = db.kQuery(
                     table = DB_TABLE_BUSES,
-                    columns = arrayOf("name", "stop_points", "color"),
+                    columns = arrayOf(
+                        "name",
+                        "stop_points",
+                        "color",
+                        "route_image_coords",
+                        "route_image_filenames"
+                    ),
                     orderBy = "buses._id ASC"
                 )
                 buses = ArrayList(cursor.count)
@@ -127,6 +136,21 @@ object BusUtils {
                     }
                     val instances = ArrayList<Bus.BusInstance>(100)
                     val busColorInt = Color.parseColor(c.getString(2))
+                    val busRouteImageCoordsRaw = c.getStringOrNull(3)?.split(';')
+                    val busRouteImageCoords = ArrayList<PointF>(0)
+                    busRouteImageCoordsRaw?.let {
+                        busRouteImageCoords.ensureCapacity(it.size + 1)
+                        for (i in 1 until it.size step 2) {
+                            val point = PointF(it[i - 1].toFloat(), it[i].toFloat())
+                            busRouteImageCoords.add(point)
+                        }
+                    }
+                    val busRouteImageFilenamesRaw = c.getStringOrNull(4)?.split(';')
+                    val busRouteImageFilenames = ArrayList<String>(0)
+                    busRouteImageFilenamesRaw?.let {
+                        busRouteImageFilenames.ensureCapacity(it.size + 1)
+                        it.forEach { s -> busRouteImageFilenames.add(s) }
+                    }
 
                     val cursor2 = db.kQuery(
                         table = "bus_details",
@@ -135,7 +159,8 @@ object BusUtils {
                         orderBy = "bus_details._id ASC"
                     )
                     cursor2.forEachCursor { c1 ->
-                        val stopTimes = ArrayList(c1.getString(0).split(';'))
+                        val split = c1.getString(0).split(';')
+                        val stopTimes = ArrayList(split.map { MinDateTime().apply { hm = it } })
                         if (stopTimes.size == busStops.size) {
                             val isHoliday =
                                 when (c1.getIntOrNull(1)) {
@@ -152,7 +177,9 @@ object BusUtils {
                             busName,
                             busColorInt,
                             busStops,
-                            instances
+                            instances,
+                            busRouteImageCoords,
+                            busRouteImageFilenames
                         )
                     )
                 }
@@ -160,7 +187,4 @@ object BusUtils {
             }
         }
     }
-
 }
-
-

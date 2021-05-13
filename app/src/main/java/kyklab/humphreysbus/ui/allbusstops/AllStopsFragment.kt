@@ -11,10 +11,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_stops.view.*
+import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
-import kyklab.humphreysbus.ui.MainActivity
+import kyklab.humphreysbus.utils.lbm
+import kyklab.humphreysbus.utils.sendBroadcast
 
 class AllStopsFragment : Fragment() {
     override fun onCreateView(
@@ -41,13 +43,16 @@ class AllStopsFragment : Fragment() {
             init {
                 itemView.setOnClickListener {
                     val stop = items[adapterPosition]
-                    val intent = Intent().apply {
-                        putExtra("xCor", stop.xCenter.toFloat())
-                        putExtra("yCor", stop.yCenter.toFloat())
-                        putExtra("stopId", stop.id)
-                    }
+                    val intents = arrayOf(
+                        Intent(Const.Intent.ACTION_SHOW_ON_MAP).apply {
+                            putExtra(Const.Intent.EXTRA_STOP_ID, stop.id)
+                            putExtra(Const.Intent.EXTRA_X_COR, stop.xCenter)
+                            putExtra(Const.Intent.EXTRA_Y_COR, stop.yCenter.toFloat())
+                        },
+                        Intent(Const.Intent.ACTION_BACK_TO_MAP)
+                    )
                     activity?.run {
-                        setResult(MainActivity.RESULT_STOP_SELECTED, intent)
+                        lbm.sendBroadcast(*intents)
                         finish()
                     }
                 }

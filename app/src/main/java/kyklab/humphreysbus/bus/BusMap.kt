@@ -13,7 +13,9 @@ import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kyklab.humphreysbus.App
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.data.Spot
@@ -29,7 +31,7 @@ class BusMap(
 ) {
     companion object {
         private val TAG = BusMap::class.simpleName
-        private const val MAP_ASSET_FILENAME = "subway.png"
+        private const val MAP_ASSET_FILENAME = "subway.webp"
 
         private const val xBase = 126.974512
         private const val yBase = 36.945053
@@ -49,13 +51,16 @@ class BusMap(
     }
 
     private var selectionPin: Int? = null // Pin for current selection on bus map
+    private val busRouteListHashMap = HashMap<Bus, List<MultiplePinView.Pin>>()
+    private val busRouteJobHashMap = HashMap<Bus, Job>()
 
     @SuppressLint("ClickableViewAccessibility")
     fun init() {
         mapView.setImage(ImageSource.asset(MAP_ASSET_FILENAME))
         mapView.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
-        val gestureDetector = GestureDetector(activity,
+        val gestureDetector = GestureDetector(
+            activity,
             object : GestureDetector.SimpleOnGestureListener() {
                 override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
                     if (e != null && mapView.isReady) {
@@ -85,9 +90,9 @@ class BusMap(
             BusUtils.onLoadDone {
                 BusUtils.stops.forEach { stop ->
                     val pin = MultiplePinView.Pin(
-                        PointF(stop.xCenter.toFloat(), stop.yCenter.toFloat()),
-                        createBusBitmap(stop),
-                        createBusBitmapSimple(stop),
+                        pinCoord = PointF(stop.xCenter.toFloat(), stop.yCenter.toFloat()),
+                        bitmap = createBusBitmap(stop),
+                        bitmapSimple = createBusBitmapSimple(stop)
                     ) { coord, pinWidth, pinHeight ->
                         val x = coord.x - pinWidth / 2
                         val y = coord.y - pinHeight / 2
@@ -127,13 +132,59 @@ class BusMap(
         }
     }
 
+    fun showBusRoute(bus: Bus, onFinished: (() -> Unit)? = null) {
+        if (bus.busRouteImageCoords.size != bus.busRouteImageFilenames.size) return
+
+        val list = ArrayList<MultiplePinView.Pin>(bus.busRouteImageCoords.size)
+        busRouteListHashMap[bus] = list
+        val assetMgr = App.context.assets
+        val job = scope.launch(Dispatchers.Default) {
+            for (i in bus.busRouteImageCoords.indices) {
+                var bitmap: Bitmap
+                assetMgr.open(bus.busRouteImageFilenames[i]).use {
+                    bitmap = BitmapFactory.decodeStream(it)
+                }
+                val pin = MultiplePinView.Pin(
+                    pinCoord = bus.busRouteImageCoords[i],
+                    name = getBusRoutePinName(bus),
+                    bitmap = bitmap,
+                    autoScale = true,
+                    priority = 0
+                )
+
+                list.add(pin)
+                launch(Dispatchers.Main) {
+                    mapView.addPin(pin)
+                }
+            }
+
+            if (onFinished != null) {
+                onFinished()
+            }
+        }
+        busRouteJobHashMap[bus] = job
+    }
+
+    fun hideBusRoute(bus: Bus, onFinished: (() -> Unit)? = null) {
+        val job = busRouteJobHashMap[bus]
+        job?.cancel()
+
+        val list = busRouteListHashMap[bus]
+        list?.forEach { mapView.removePin(it) }
+        busRouteListHashMap.remove(bus)
+        if (onFinished != null) {
+            onFinished()
+        }
+    }
+
+    private fun getBusRoutePinName(bus: Bus) = bus.name + "_route"
 
     private fun setStopSelectionPin(coord: PointF) {
         resetStopSelectionPin()
         selectionPin =
             mapView.addPin(
                 MultiplePinView.Pin(
-                    activity, coord, R.drawable.pushpin_blue, null
+                    context = activity, pinCoord = coord, resId = R.drawable.pushpin_blue,
                 ) { c, pinWidth, pinHeight ->
                     val x = c.x - pinWidth / 2
                     val y = c.y - pinHeight

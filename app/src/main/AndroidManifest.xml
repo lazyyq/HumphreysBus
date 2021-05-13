@@ -31,12 +31,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ui.BusDetailsActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+        <activity android:name=".ui.BusTimeTableActivity" />
         <activity
             android:name=".ui.allbusstops.AllBusAndStopActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+        <activity android:name=".ui.BusTrackActivity" />
 
         <provider
             android:authorities="${applicationId}.fileprovider"

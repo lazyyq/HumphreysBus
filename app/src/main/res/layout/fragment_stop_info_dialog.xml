@@ -1,246 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bottomSheetContents"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
         style="@style/Widget.MaterialComponents.LinearProgressIndicator"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:indeterminate="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:indeterminate="true" />
 
     <View
         android:id="@+id/handle"
         android:layout_width="64dp"
         android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp"
         android:background="@drawable/rounded_corner_bar"
-        android:backgroundTint="@android:color/darker_gray"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar" />
+        android:backgroundTint="@android:color/darker_gray" />
 
-
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/tvStopInfoContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
+        android:gravity="center"
+        android:orientation="horizontal"
         android:background="@drawable/stop_info_dialog_stop_name_background"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/handle">
 
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:foregroundGravity="center"
+            android:src="@drawable/ic_place"
+            app:tint="@android:color/black" />
+
         <TextView
+            android:layout_marginStart="4dp"
             android:id="@+id/tvStopInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:drawableStart="@drawable/ic_place"
-            android:drawablePadding="8dp"
-            android:drawableTint="@android:color/black"
             android:text="Stop Info"
-            android:textAlignment="center"
-            android:textSize="20sp" />
-    </FrameLayout>
-
-    <LinearLayout
-        android:id="@+id/busesAndTimesContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvStopInfoContainer">
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="0dp"
-            app:strokeColor="?attr/colorPrimary"
-            app:strokeWidth="1dp">
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/busTabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:tabGravity="fill"
-                app:tabIndicatorColor="?attr/colorPrimary"
-                app:tabIndicatorGravity="stretch"
-                app:tabMaxWidth="0dp"
-                app:tabMode="fixed"
-                app:tabSelectedTextColor="@android:color/white"
-                app:tabTextColor="?attr/colorPrimary" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/vpTimeTable"
-            android:layout_width="match_parent"
-            android:layout_height="360dp"
-            android:clipChildren="false"
-            android:clipToPadding="false" />
+            android:textSize="16sp" />
     </LinearLayout>
 
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvClosestBuses"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/stop_info_dialog_bus_list_height"
+        android:layout_marginTop="16dp"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/fragment_stop_info_bus_item" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/timeContainer"
-        android:layout_width="0dp"
-        android:layout_height="42dp"
+        android:layout_width="match_parent"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/stop_info_dialog_stop_name_background"
-        android:gravity="center"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/busesAndTimesContainer">
+        android:layout_height="42dp">
 
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchHoliday"
-            android:layout_width="0dp"
+        <CheckBox
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            android:id="@+id/cbHoliday"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tvCurrentTime"
+            android:layout_gravity="start|bottom"
+            android:background="?selectableItemBackgroundBorderless"
             android:gravity="center"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:text="Holiday" />
-
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="@android:color/darker_gray" />
+            android:buttonTint="@color/near_black"
+            android:padding="4dp"
+            android:text="Holiday"
+            android:textColor="@color/near_black"
+            android:textSize="16sp" />
 
         <TextView
+            android:scaleX="0.8"
+            android:scaleY="0.8"
             android:id="@+id/tvCurrentTime"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
-            android:drawableEnd="@drawable/ic_alarm"
+            android:layout_gravity="end|bottom"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableStart="@drawable/ic_alarm"
+            android:drawablePadding="8dp"
             android:gravity="center"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            tools:text="As of 12:00" />
-    </LinearLayout>
-
-    <!--
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tvStationInfo"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:id="@+id/ivRedBus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:src="@drawable/bus"
-                app:layout_constraintEnd_toEndOf="@id/tvRedBus"
-                app:layout_constraintStart_toStartOf="@id/tvRedBus"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@android:color/holo_red_dark" />
-
-            <ImageView
-                android:id="@+id/ivBlueBus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:src="@drawable/bus"
-                app:layout_constraintEnd_toEndOf="@id/tvBlueBus"
-                app:layout_constraintStart_toStartOf="@id/tvBlueBus"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@android:color/holo_blue_dark" />
-
-            <ImageView
-                android:id="@+id/ivGreenBus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:src="@drawable/bus"
-                app:layout_constraintEnd_toEndOf="@id/tvGreenBus"
-                app:layout_constraintStart_toStartOf="@id/tvGreenBus"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@android:color/holo_green_dark" />
-
-            <TextView
-                android:id="@+id/tvRedBus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="?selectableItemBackground"
-                android:bufferType="spannable"
-                android:clickable="true"
-                android:minHeight="360dp"
-                android:text="Red"
-                android:gravity="center_horizontal|top"
-                android:textColor="@android:color/holo_red_dark"
-                app:layout_constraintEnd_toStartOf="@id/tvBlueBus"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ivRedBus" />
-
-            <TextView
-                android:id="@+id/tvBlueBus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="?selectableItemBackground"
-                android:bufferType="spannable"
-                android:clickable="true"
-                android:minHeight="360dp"
-                android:text="Blue"
-                android:gravity="center_horizontal|top"
-                android:textColor="@android:color/holo_blue_dark"
-                app:layout_constraintEnd_toStartOf="@id/tvGreenBus"
-                app:layout_constraintStart_toEndOf="@id/tvRedBus"
-                app:layout_constraintTop_toBottomOf="@+id/ivBlueBus" />
-
-            <TextView
-                android:id="@+id/tvGreenBus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="?selectableItemBackground"
-                android:bufferType="spannable"
-                android:clickable="true"
-                android:minHeight="360dp"
-                android:text="Green"
-                android:gravity="center_horizontal|top"
-                android:textColor="@android:color/holo_green_dark"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvBlueBus"
-                app:layout_constraintTop_toBottomOf="@id/ivGreenBus" />
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
-    -->
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+            android:drawableTint="@color/near_black"
+            android:textColor="@color/near_black"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="12:00" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

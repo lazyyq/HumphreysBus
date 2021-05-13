@@ -18,4 +18,40 @@
     <style name="FloatingActionBarStyleStacked" parent="FloatingActionBarStyleBottom">
         <item name="android:layout_marginBottom">0dp</item>
     </style>
+
+    <style name="QuickButtonCardStyle">
+        <item name="cardElevation">4dp</item>
+    </style>
+
+    <style name="QuickButtonStyle">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">?selectableItemBackground</item>
+    </style>
+
+    <style name="QuickButtonDragHandleStyle">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="QuickButtonDividerStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+
+    <style name="QuickButtonProgressStyle" parent="Widget.AppCompat.ProgressBar">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">4dp</item>
+    </style>
+
+    <style name="TimePickerStyle" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="android:timePickerMode">spinner</item>
+    </style>
 </resources>

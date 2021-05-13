@@ -16,6 +16,7 @@
         <item name="actionBarStyle">@style/ActionBarStyle</item>
 
         <item name="android:textColor">@android:color/black</item>
+        <item name="materialTimePickerTheme">@style/TimePickerStyle</item>
     </style>
 
     <style name="Theme.HumphreysBus.TranslucentActionBar">
@@ -23,6 +24,7 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
     <style name="Theme.HumphreysBus.NoActionBar">
