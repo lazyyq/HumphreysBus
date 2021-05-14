@@ -498,7 +498,7 @@ class BusTrackActivity : AppCompatActivity() {
             return MyViewHolder(
                 activity,
                 LayoutInflater.from(parent.context)
-                    .inflate(R.layout.acitivity_bus_track_stop_item, parent, false),
+                    .inflate(R.layout.activity_bus_track_stop_item, parent, false),
                 bus.name,
                 bus.colorInt
             )
