@@ -1,5 +1,6 @@
 package kyklab.humphreysbus.ui
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.icu.text.DateFormat
 import android.os.Bundle
@@ -8,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.android.synthetic.main.activity_settings.*
@@ -54,6 +56,9 @@ class SettingsActivity : AppCompatActivity() {
         val prefShowAd by lazy {
             findPreference<Preference>(Prefs.Key.SHOW_AD)
         }
+        val prefOssLicense by lazy {
+            findPreference<Preference>(Prefs.Key.OSS_LICENSE)
+        }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -73,6 +78,10 @@ class SettingsActivity : AppCompatActivity() {
                 if (newValue is Boolean && newValue) {
                     context?.toast("♡")
                 }
+                true
+            }
+            prefOssLicense?.setOnPreferenceClickListener {
+                context?.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
                 true
             }
 

@@ -31,4 +31,11 @@
         app:summary="Show a small ad banner in main screen to support developer. Switching this option requires the app to restart."
         app:title="Show ad" />
 
+    <PreferenceCategory app:allowDividerAbove="false" />
+
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_oss_license"
+        app:title="Open source licenses" />
+
 </PreferenceScreen>

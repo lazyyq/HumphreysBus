@@ -16,4 +16,6 @@
 
     <string name="pref_show_ad">show_ad</string>
     <bool name="pref_show_ad_default">false</bool>
+
+    <string name="pref_oss_license">oss_license</string>
 </resources>
