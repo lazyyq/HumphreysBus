@@ -1,48 +1,34 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <PreferenceCategory
-        app:iconSpaceReserved="true"
-        app:title="Auto update">
+    <SwitchPreferenceCompat
+        app:defaultValue="@bool/pref_auto_check_update_on_startup_default"
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_auto_check_update_on_startup"
+        app:singleLineTitle="false"
+        app:title="Check app update on startup" />
 
-        <SwitchPreferenceCompat
-            app:defaultValue="@bool/pref_auto_check_update_on_startup_default"
-            app:icon="@drawable/ic_check_circle_outline"
-            app:iconSpaceReserved="true"
-            app:key="@string/pref_auto_check_update_on_startup"
-            app:singleLineTitle="false"
-            app:title="Check app update on startup" />
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_force_check_update"
+        app:singleLineTitle="false"
+        app:title="Check app update now"
+        tools:summary="Last checked at 12:00" />
 
-        <Preference
-            app:icon="@drawable/ic_cached"
-            app:iconSpaceReserved="true"
-            app:key="@string/pref_force_check_update"
-            app:singleLineTitle="false"
-            app:title="Check app update now"
-            tools:summary="Last checked at 12:00" />
+    <PreferenceCategory app:allowDividerAbove="false" />
 
-    </PreferenceCategory>
+    <SwitchPreferenceCompat
+        app:defaultValue="@bool/pref_enable_statistics_default"
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_enable_statistics"
+        app:summary="Automatically report usage stats and crash logs to developer."
+        app:title="Send statistics" />
 
-    <PreferenceCategory
-        app:iconSpaceReserved="true"
-        app:title="Application">
-
-        <SwitchPreferenceCompat
-            app:defaultValue="@bool/pref_enable_statistics_default"
-            app:icon="@drawable/ic_assessment"
-            app:iconSpaceReserved="true"
-            app:key="@string/pref_enable_statistics"
-            app:title="Send statistics"
-            app:summary="Automatically report usage stats and crash logs to developer." />
-
-        <SwitchPreferenceCompat
-            app:defaultValue="@bool/pref_show_ad_default"
-            app:icon="@drawable/ic_ad_units"
-            app:iconSpaceReserved="true"
-            app:key="@string/pref_show_ad"
-            app:title="Show ad"
-            app:summary="Show a small ad banner in main screen to support developer. Switching this option requires the app to restart." />
-
-    </PreferenceCategory>
+    <SwitchPreferenceCompat
+        app:defaultValue="@bool/pref_show_ad_default"
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_show_ad"
+        app:summary="Show a small ad banner in main screen to support developer. Switching this option requires the app to restart."
+        app:title="Show ad" />
 
 </PreferenceScreen>

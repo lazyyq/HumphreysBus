@@ -30,11 +30,6 @@ class SettingsActivity : AppCompatActivity() {
                 .replace(R.id.settings, SettingsFragment())
                 .commit()
         }
-        supportActionBar?.apply {
-            setDisplayShowHomeEnabled(true)
-            setLogo(R.drawable.ic_settings)
-            setDisplayUseLogoEnabled(true)
-        }
 
         tvVersion.apply {
             visibility = View.VISIBLE
@@ -85,7 +80,7 @@ class SettingsActivity : AppCompatActivity() {
             if (BuildConfig.DEBUG) {
                 val crash = Preference(context).apply {
                     title = "Crash!"
-                    isIconSpaceReserved = true
+                    isIconSpaceReserved = false
                     setOnPreferenceClickListener {
                         throw RuntimeException("CRASH TEST")
                     }
