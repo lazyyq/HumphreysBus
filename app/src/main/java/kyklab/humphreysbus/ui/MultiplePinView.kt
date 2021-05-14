@@ -34,6 +34,20 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
         return pins.size - 1
     }
 
+    fun addPins(pins: List<Pin>): Boolean {
+        var result = false
+        for (pin in pins) {
+            if (pin.pinCoord.x < 0 || pin.pinCoord.y < 0) continue
+            this.pins.add(pin)
+            result = true
+        }
+        if (result) {
+            this.pins.sortBy { it.priority }
+            invalidate()
+        }
+        return result
+    }
+
     fun removePin(pinIndex: Int): Boolean {
         return if (pinIndex < 0 || pinIndex > pins.lastIndex) {
             false
@@ -44,15 +58,54 @@ class MultiplePinView @JvmOverloads constructor(context: Context?, attr: Attribu
         }
     }
 
+    @JvmName("removePinsWithIndex")
+    fun removePins(indexes: List<Int>): Boolean {
+        var result = false
+        for (index in indexes) {
+            if (index < 0 || index > pins.lastIndex) {
+                continue
+            }
+            pins.removeAt(index)
+            result = true
+        }
+        if (result) {
+            invalidate()
+        }
+        return result
+    }
+
     fun removePin(point: PointF): Boolean {
         val result = pins.removeIf { p -> point == p.pinCoord }
         invalidate()
         return result
     }
 
+    @JvmName("removePinsWithCoords")
+    fun removePins(points: List<PointF>): Boolean {
+        var result = false
+        for (point in points) {
+            result = pins.removeIf { p -> point == p.pinCoord }
+        }
+        if (result) {
+            invalidate()
+        }
+        return result
+    }
+
     fun removePin(pin: Pin): Boolean {
         val result = pins.remove(pin)
         invalidate()
+        return result
+    }
+
+    fun removePins(pins: List<Pin>): Boolean {
+        var result = false
+        for (pin in pins) {
+            result = this.pins.remove(pin)
+        }
+        if (result) {
+            invalidate()
+        }
         return result
     }
 

@@ -88,8 +88,8 @@ class BusMap(
         // Add stop pins to map
         scope.launch(Dispatchers.Default) {
             BusUtils.onLoadDone {
-                BusUtils.stops.forEach { stop ->
-                    val pin = MultiplePinView.Pin(
+                val pins = BusUtils.stops.map { stop ->
+                    MultiplePinView.Pin(
                         pinCoord = PointF(stop.xCenter.toFloat(), stop.yCenter.toFloat()),
                         bitmap = createBusBitmap(stop),
                         bitmapSimple = createBusBitmapSimple(stop)
@@ -98,8 +98,8 @@ class BusMap(
                         val y = coord.y - pinHeight / 2
                         PointF(x, y)
                     }
-                    mapView.addPin(pin)
                 }
+                mapView.addPins(pins)
             }
         }
     }
@@ -153,9 +153,9 @@ class BusMap(
                 )
 
                 list.add(pin)
-                launch(Dispatchers.Main) {
-                    mapView.addPin(pin)
-                }
+            }
+            launch(Dispatchers.Main) {
+                mapView.addPins(list)
             }
 
             if (onFinished != null) {
@@ -170,7 +170,7 @@ class BusMap(
         job?.cancel()
 
         val list = busRouteListHashMap[bus]
-        list?.forEach { mapView.removePin(it) }
+        list?.let { mapView.removePins(it) }
         busRouteListHashMap.remove(bus)
         if (onFinished != null) {
             onFinished()
