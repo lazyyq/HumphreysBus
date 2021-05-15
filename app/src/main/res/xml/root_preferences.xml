@@ -35,6 +35,11 @@
 
     <Preference
         app:iconSpaceReserved="false"
+        app:key="@string/pref_send_feedback"
+        app:title="Report bugs or request features" />
+
+    <Preference
+        app:iconSpaceReserved="false"
         app:key="@string/pref_oss_license"
         app:title="Open source licenses" />
 

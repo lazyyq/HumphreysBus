@@ -3,6 +3,7 @@ package kyklab.humphreysbus.ui
 import android.content.Intent
 import android.content.SharedPreferences
 import android.icu.text.DateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -42,6 +43,10 @@ class SettingsActivity : AppCompatActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat(),
         SharedPreferences.OnSharedPreferenceChangeListener {
+        companion object {
+            private const val FEEDBACK_URL = "https://forms.gle/ZsFS66dLMHkhdUow9"
+        }
+
         val appUpdateChecker by lazy { AppUpdateChecker(requireActivity()) }
 
         val prefAutoCheckUpdateOnStartup by lazy {
@@ -55,6 +60,9 @@ class SettingsActivity : AppCompatActivity() {
         }
         val prefShowAd by lazy {
             findPreference<Preference>(Prefs.Key.SHOW_AD)
+        }
+        val prefSendFeedback by lazy {
+            findPreference<Preference>(Prefs.Key.SEND_FEEDBACK)
         }
         val prefOssLicense by lazy {
             findPreference<Preference>(Prefs.Key.OSS_LICENSE)
@@ -78,6 +86,12 @@ class SettingsActivity : AppCompatActivity() {
                 if (newValue is Boolean && newValue) {
                     context?.toast("♡")
                 }
+                true
+            }
+            prefSendFeedback?.setOnPreferenceClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(FEEDBACK_URL)
+                startActivity(intent)
                 true
             }
             prefOssLicense?.setOnPreferenceClickListener {
