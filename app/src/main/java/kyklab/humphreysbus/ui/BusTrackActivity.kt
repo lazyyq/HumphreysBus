@@ -216,7 +216,7 @@ class BusTrackActivity : AppCompatActivity() {
             // Add bus icons
             cleanup()
             curTime = getCurDateTime()
-            instances = bus.instances.filter { it.isHoliday == isHoliday() }
+            instances = bus.instances.filter { it.isHoliday == BusUtils.isHoliday() }
             addInitialBuses()
             scheduleNextBus()
 

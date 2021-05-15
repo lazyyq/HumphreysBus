@@ -59,7 +59,7 @@ class BusTimeTableActivity : AppCompatActivity() {
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime.getCurDateTime().apply { s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
-    private var isHoliday = isHoliday()
+    private var isHoliday = BusUtils.isHoliday()
 
     private var loadScheduleJob: Job? = null
 
@@ -608,7 +608,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                 calendar.set(Calendar.SECOND, 0)
                 currentTime.setCalendar(calendar)
-                isHoliday = calendar.time.isHoliday()
+                isHoliday = BusUtils.isHoliday(calendar)
                 updateDateTime()
                 updateSelectedTimeTable()
             }.show(supportFragmentManager, "dateTimePicker")

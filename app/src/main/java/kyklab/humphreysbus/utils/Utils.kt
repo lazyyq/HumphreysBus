@@ -11,7 +11,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.icu.util.Calendar
 import android.provider.Settings
 import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
@@ -290,15 +289,6 @@ inline fun <T : Cursor> T.forEachCursor(block: (T) -> Unit): T {
         }
     }
     return this
-}
-
-fun isHoliday() = Date().isHoliday()
-
-fun Date.isHoliday(): Boolean {
-    val cal = Calendar.getInstance()
-    cal.time = this
-    return ((cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-            || (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY))
 }
 
 /**

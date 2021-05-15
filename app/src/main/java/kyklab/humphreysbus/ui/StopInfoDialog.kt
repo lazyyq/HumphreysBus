@@ -32,7 +32,6 @@ import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import kyklab.humphreysbus.utils.getWithWrappedIndex
-import kyklab.humphreysbus.utils.isHoliday
 import kyklab.humphreysbus.utils.lbm
 import java.util.*
 
@@ -41,7 +40,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime().apply { setCalendar(calendar);s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
-    private var isHoliday = isHoliday()
+    private var isHoliday = BusUtils.isHoliday()
     private var stopId = -1
     private lateinit var stop: BusStop
 
@@ -247,7 +246,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
                 currentTime.setCalendar(calendar)
                 currentTime.s = "00"
                 rvAdapter.currentTime = currentTime
-                isHoliday = calendar.time.isHoliday()
+                isHoliday = BusUtils.isHoliday(calendar)
                 updateDateTime()
                 newUpdateBuses()
             }.show(parentFragmentManager, "dateTimePicker")

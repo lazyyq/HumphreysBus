@@ -2,6 +2,8 @@ package kyklab.humphreysbus.bus
 
 import android.graphics.Color
 import android.graphics.PointF
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.util.Log
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
@@ -9,11 +11,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
+import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_HOLIDAYS
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.forEachCursor
 import kyklab.humphreysbus.utils.kQuery
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.collections.ArrayList
 import kotlin.concurrent.withLock
 
 object BusUtils {
@@ -21,6 +26,9 @@ object BusUtils {
 
     var stops: List<BusStop> = emptyList()
     var buses: List<Bus> = emptyList()
+    var holidays: List<String> = emptyList()
+
+    private val dateFormat = SimpleDateFormat("yyyyMMdd")
 
     // Whether load from db is done. This should be true even when nothing is fetched from db.
     @set:Synchronized
@@ -39,6 +47,7 @@ object BusUtils {
                 Log.e(TAG, "Start loading data")
                 loadBusStops()
                 loadBuses()
+                loadHolidays()
                 isLoadDone = true
                 cond.signalAll()
                 Log.e(TAG, "Done loading data")
@@ -86,6 +95,22 @@ object BusUtils {
             while (!isLoadDone) cond.await()
             return stops.find { stop -> stop.no == stopNo }
         }
+    }
+
+    fun isHoliday() = isHoliday(Date())
+
+    fun isHoliday(date: Date): Boolean {
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return isHoliday(calendar)
+    }
+
+    fun isHoliday(calendar: Calendar): Boolean {
+        val isWeekend =
+            (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) ||
+                    (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+        val isUsHoliday = holidays.contains(dateFormat.format(calendar))
+        return isWeekend || isUsHoliday
     }
 
     private fun loadBusStops() {
@@ -182,6 +207,24 @@ object BusUtils {
                             busRouteImageFilenames
                         )
                     )
+                }
+                cursor.close()
+            }
+        }
+    }
+
+    private fun loadHolidays() {
+        lock.withLock {
+            BusDBHelper.db.use { db ->
+                val cursor = db.kQuery(
+                    table = DB_TABLE_HOLIDAYS,
+                    columns = arrayOf("date"),
+                    orderBy = "$DB_TABLE_HOLIDAYS.date ASC"
+                )
+                holidays = ArrayList(cursor.count)
+                cursor.forEachCursor {
+                    val date = it.getString(0)
+                    (holidays as ArrayList<String>).add(date)
                 }
                 cursor.close()
             }

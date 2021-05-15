@@ -29,6 +29,7 @@ object BusDBHelper :
 
     const val DB_TABLE_STOPS = "stations"
     const val DB_TABLE_BUSES = "buses"
+    const val DB_TABLE_HOLIDAYS = "holidays"
 
     val db: SQLiteDatabase
         get() = readableDatabase
