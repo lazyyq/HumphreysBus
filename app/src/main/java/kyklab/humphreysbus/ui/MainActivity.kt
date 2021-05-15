@@ -349,22 +349,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadAd() {
-        adView = AdView(this).apply {
-            visibility = View.VISIBLE
-            adSize = AdSize.BANNER
-            adUnitId = getString(
-                if (BuildConfig.DEBUG) R.string.banner_ad_unit_debug_id
-                else R.string.banner_ad_unit_id
-            )
+        lifecycleScope.launch(Dispatchers.Default) {
+            adView = AdView(this@MainActivity).apply {
+                adSize = AdSize.BANNER
+                adUnitId = getString(
+                    if (BuildConfig.DEBUG) R.string.banner_ad_unit_debug_id
+                    else R.string.banner_ad_unit_id
+                )
+            }
+            MobileAds.initialize(this@MainActivity)
+            val adRequest = AdRequest.Builder().build()
+            launch(Dispatchers.Main) {
+                adContainer.addView(adView)
+                adContainer.visibility = View.VISIBLE
+                adView!!.loadAd(adRequest)
+            }
         }
-        adContainer.addView(adView)
-        MobileAds.initialize(this)
-        val adRequest = AdRequest.Builder().build()
-        adView!!.loadAd(adRequest)
     }
 
     private fun hideAd() {
-        adView?.visibility = View.GONE
+        adContainer.visibility = View.GONE
     }
 
     private class BusDirectionChooserAdapter(
