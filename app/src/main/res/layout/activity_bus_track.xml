@@ -36,9 +36,9 @@
 
         <ImageView
             android:id="@+id/ivTimeTable"
-            android:background="?selectableItemBackgroundBorderless"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:background="?selectableItemBackgroundBorderless"
             android:paddingVertical="12dp"
             android:src="@drawable/ic_table_chart" />
     </LinearLayout>
@@ -49,7 +49,7 @@
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvInfo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivBus"
@@ -61,7 +61,7 @@
         android:layout_height="0dp"
         android:layout_marginStart="64dp"
         android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvInfo"
         app:layout_constraintStart_toStartOf="@id/rv"
         app:layout_constraintTop_toTopOf="@id/rv">
 
@@ -72,4 +72,41 @@
 
         </RelativeLayout>
     </kyklab.humphreysbus.ui.UntouchableScrollView>
+
+    <TextView
+        android:id="@+id/tvInfo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:drawablePadding="8dp"
+        android:gravity="start|center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="2dp"
+        android:text="Bus locations are simulated based on bus timetables provided by USFK. Real locations may vary depending on traffic conditions."
+        android:textColor="@android:color/darker_gray"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:drawableStartCompat="@drawable/ic_info_18dp" />
+
+    <!--
+    <View
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        android:background="@drawable/spinner_fade_edge_vertical"
+        app:layout_constraintTop_toTopOf="@id/rv"
+        android:backgroundTint="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        android:background="@drawable/spinner_fade_edge_vertical"
+        android:backgroundTint="@color/white"
+        android:scaleY="-1"
+        app:layout_constraintBottom_toTopOf="@id/tvInfo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+    -->
 </androidx.constraintlayout.widget.ConstraintLayout>
