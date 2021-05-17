@@ -48,7 +48,7 @@ class BusTrackActivity : AppCompatActivity() {
     private lateinit var curTime: MinDateTime
     private lateinit var busStatusUpdater: BusStatusUpdater
     private lateinit var recyclerView: RecyclerView
-    private lateinit var bus: Bus
+    private var bus: Bus? = null
     private var stopToHighlightIndex: Int? = null
     private val rvOnScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -79,16 +79,16 @@ class BusTrackActivity : AppCompatActivity() {
             }
             else -> bus = found
         }
-        if (bus.instances.isEmpty()) {
+        if (bus!!.instances.isEmpty()) {
             toast("No schedule for bus $busName available")
             finish()
         }
 
-        ivBus.imageTintList = ColorStateList.valueOf(bus.colorInt)
+        ivBus.imageTintList = ColorStateList.valueOf(bus!!.colorInt)
         tvBus.text = busName
-        tvBus.setTextColor(bus.colorInt)
+        tvBus.setTextColor(bus!!.colorInt)
 
-        ivTimeTable.imageTintList = ColorStateList.valueOf(bus.colorInt)
+        ivTimeTable.imageTintList = ColorStateList.valueOf(bus!!.colorInt)
         ivTimeTable.setOnClickListener {
             val intent = Intent(this, BusTimeTableActivity::class.java)
             intent.putExtra("busname", busName)
@@ -106,6 +106,7 @@ class BusTrackActivity : AppCompatActivity() {
     override fun onResume() {
         Log.e(TAG, "onResume() called")
         super.onResume()
+        if (bus == null) finish()
         busStatusUpdater.start()
     }
 
@@ -142,8 +143,8 @@ class BusTrackActivity : AppCompatActivity() {
             rv.addOnScrollListener(rvOnScrollListener)
 
             val emptyTime = MinDateTime()
-            adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
-            adapter = MyAdapter(this@BusTrackActivity, bus, adapterItems)
+            adapterItems = bus!!.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
+            adapter = MyAdapter(this@BusTrackActivity, bus!!, adapterItems)
             rv.adapter = adapter
 
             val rvheight = itemheight * adapter.itemCount
@@ -216,7 +217,7 @@ class BusTrackActivity : AppCompatActivity() {
             // Add bus icons
             cleanup()
             curTime = getCurDateTime()
-            instances = bus.instances.filter { it.isHoliday == BusUtils.isHoliday() }
+            instances = bus!!.instances.filter { it.isHoliday == BusUtils.isHoliday() }
             addInitialBuses()
             scheduleNextBus()
 
