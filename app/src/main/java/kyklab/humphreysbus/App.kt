@@ -15,8 +15,10 @@ class App : Application() {
         super.onCreate()
 
         application = this
-        defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler())
+        if (BuildConfig.DEBUG) {
+            defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler())
+        }
 
         val isStatisticsEnabled = Prefs.enableStatistics
         FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(isStatisticsEnabled)
