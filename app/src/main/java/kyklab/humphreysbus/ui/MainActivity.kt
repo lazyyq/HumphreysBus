@@ -91,8 +91,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var busMap: BusMap
     private var currentStopInfoDialog: StopInfoDialog? = null
 
-    private val appUpdateChecker by lazy { AppUpdateChecker(this) }
-
     private var adView: AdView? = null
 
     companion object {
@@ -108,7 +106,6 @@ class MainActivity : AppCompatActivity() {
 
         initBusMap()
         BusUtils.loadData()
-        checkAppUpdate()
 
         setupViews()
 
@@ -211,7 +208,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         BusDBHelper.close()
-        appUpdateChecker.unregisterDownloadReceiver()
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
     }
@@ -257,12 +253,6 @@ class MainActivity : AppCompatActivity() {
             bundle.putInt(StopInfoDialog.ARGUMENT_STOP_ID, stopId)
             arguments = bundle
             show(supportFragmentManager, this.tag)
-        }
-    }
-
-    private fun checkAppUpdate() {
-        if (Prefs.autoCheckUpdateOnStartup) {
-            appUpdateChecker.checkAppUpdate()
         }
     }
 

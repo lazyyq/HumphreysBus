@@ -2,24 +2,20 @@ package kyklab.humphreysbus.ui
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.icu.text.DateFormat
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlinx.android.synthetic.main.activity_settings.*
 import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.R
-import kyklab.humphreysbus.utils.AppUpdateChecker
 import kyklab.humphreysbus.utils.Prefs
 import kyklab.humphreysbus.utils.toast
-import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -47,14 +43,6 @@ class SettingsActivity : AppCompatActivity() {
             private const val FEEDBACK_URL = "https://forms.gle/ZsFS66dLMHkhdUow9"
         }
 
-        val appUpdateChecker by lazy { AppUpdateChecker(requireActivity()) }
-
-        val prefAutoCheckUpdateOnStartup by lazy {
-            findPreference<SwitchPreferenceCompat>(Prefs.Key.AUTO_CHECK_UPDATE_ON_STARTUP)
-        }
-        val prefForceCheckUupdate by lazy {
-            findPreference<Preference>(Prefs.Key.FORCE_CHECK_UPDATE)
-        }
         val prefEnableStatistics by lazy {
             findPreference<Preference>(Prefs.Key.ENABLE_STATISTICS)
         }
@@ -70,10 +58,6 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
-            prefForceCheckUupdate?.setOnPreferenceClickListener {
-                appUpdateChecker.checkAppUpdate(true)
-                true
-            }
             prefEnableStatistics?.setOnPreferenceChangeListener { preference, newValue ->
                 if (newValue is Boolean) {
                     FirebaseAnalytics.getInstance(requireContext())
@@ -114,7 +98,6 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onResume() {
             super.onResume()
-            updateLastUpdateCheckedTimeSummary()
             Prefs.registerPrefChangeListener(this)
         }
 
@@ -124,7 +107,6 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         override fun onDestroy() {
-            appUpdateChecker.unregisterDownloadReceiver()
             super.onDestroy()
         }
 
@@ -132,18 +114,6 @@ class SettingsActivity : AppCompatActivity() {
             sharedPreferences: SharedPreferences?,
             key: String?
         ) {
-            if (key == Prefs.Key.LAST_UPDATE_CHECKED) {
-                updateLastUpdateCheckedTimeSummary()
-            }
-        }
-
-        private fun updateLastUpdateCheckedTimeSummary() {
-            val cal = Calendar.getInstance()
-            cal.time = Date(Prefs.lastUpdateChecked)
-            val df = DateFormat.getDateTimeInstance()
-            val date = Date(Prefs.lastUpdateChecked)
-            val time = df.format(date)
-            prefForceCheckUupdate?.summary = "Last checked at $time"
         }
     }
 }

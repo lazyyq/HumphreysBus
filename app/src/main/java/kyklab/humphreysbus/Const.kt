@@ -1,8 +1,6 @@
 package kyklab.humphreysbus
 
 object Const {
-    const val APP_UPDATE_JSON = "https://master.dl.sourceforge.net/project/hbstorage/hb-update.json"
-
     object Intent {
         const val ACTION_SHOW_ON_MAP = "kyklab.humphreysbus.ACTION_SHOW_ON_MAP"
         const val ACTION_BACK_TO_MAP = "kyklab.humphreysbus.ACTION_BACK_TO_MAP"
