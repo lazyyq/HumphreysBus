@@ -9,8 +9,6 @@ import android.util.Log
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
 import kotlinx.coroutines.*
-import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
-import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_HOLIDAYS
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.forEachCursor
@@ -46,32 +44,40 @@ object BusUtils {
     private val lock = ReentrantLock()
     private val cond = lock.newCondition()
 
-    fun loadData() {
+    fun loadData(requester: Any) {
         loadJob = CoroutineScope(Dispatchers.IO).launch {
             lock.withLock {
                 isLoadDone = false
-                openDatabase()
+                openDatabase(requester)
                 val job = coroutineContext[Job] ?: return@launch
 
                 if (!job.isActive) return@launch
+                Log.e("LOADER", "launching loadbusstops")
                 loadBusStops()
+//                Thread.sleep(2000L)
                 if (!job.isActive) return@launch
+                Log.e("LOADER", "launching loadbuses")
                 loadBuses()
+//                Thread.sleep(2000L)
                 if (!job.isActive) return@launch
+                Log.e("LOADER", "launching loadholidays")
                 loadHolidays()
+                Log.e("LOADER", "isLoadDone set $isLoadDone => true")
                 cond.signalAll()
                 Log.e(TAG, "Done loading data")
-                closeDatabase()
+                closeDatabase(requester)
                 loadJob = null
                 isLoadDone = true
             }
         }
     }
 
-    fun cancelLoad() {
+    fun cancelLoad(requester: Any) {
+        Log.e("cancelLoad()", "called coroutine cancel")
         CoroutineScope(Dispatchers.Default).launch {
             loadJob?.cancelAndJoin()
-            closeDatabase()
+            closeDatabase(requester)
+            Log.e("cancelLoad()", "successfully closed db after canceled")
         }
     }
 
@@ -82,12 +88,12 @@ object BusUtils {
         }
     }
 
-    private fun openDatabase() {
-        db = BusDBHelper.db
+    private fun openDatabase(requester: Any) {
+        db = BusDBHelper.getDatabase(requester)
     }
 
-    private fun closeDatabase() {
-        BusDBHelper.close()
+    private fun closeDatabase(requester: Any) {
+        BusDBHelper.closeDatabase(requester)
         db = null
     }
 
@@ -167,7 +173,7 @@ object BusUtils {
             if (db == null) return@withLock
 
             val cursor = db!!.kQuery(
-                table = DB_TABLE_BUSES,
+                table = BusDBHelper.DB_TABLE_BUSES,
                 columns = arrayOf(
                     "name",
                     "stop_points",
@@ -177,6 +183,7 @@ object BusUtils {
                 ),
                 orderBy = "buses._id ASC"
             )
+
             buses = ArrayList(cursor.count)
             cursor.forEachCursor { c ->
                 // Attributes for a new bus
@@ -242,11 +249,12 @@ object BusUtils {
 
     private fun loadHolidays() {
         lock.withLock {
+            Log.e("loadHolidays()", db?.isOpen.toString())
             db?.use { db ->
                 val cursor = db.kQuery(
-                    table = DB_TABLE_HOLIDAYS,
+                    table = BusDBHelper.DB_TABLE_HOLIDAYS,
                     columns = arrayOf("date"),
-                    orderBy = "$DB_TABLE_HOLIDAYS.date ASC"
+                    orderBy = "${BusDBHelper.DB_TABLE_HOLIDAYS}.date ASC"
                 )
                 holidays = ArrayList(cursor.count)
                 cursor.forEachCursor {

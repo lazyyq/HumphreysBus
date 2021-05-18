@@ -40,7 +40,6 @@ import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
-import kyklab.humphreysbus.bus.BusDBHelper
 import kyklab.humphreysbus.bus.BusMap
 import kyklab.humphreysbus.bus.BusMap.Companion.gMapCoordToLocalMapCoord
 import kyklab.humphreysbus.bus.BusUtils
@@ -106,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
         initBusMap()
         if (!BusUtils.isLoadDone) {
-            BusUtils.loadData()
+            BusUtils.loadData(this)
         }
 
         setupViews()
@@ -210,7 +209,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         if (!BusUtils.isLoadDone) {
-            BusUtils.cancelLoad()
+            BusUtils.cancelLoad(this)
         }
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
