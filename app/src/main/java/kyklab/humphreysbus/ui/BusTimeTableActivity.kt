@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
@@ -13,15 +14,15 @@ import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.util.Log
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.text.bold
+import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.updatePadding
+import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -42,6 +43,7 @@ import kyklab.humphreysbus.utils.*
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import java.util.*
+import kotlin.math.abs
 
 
 class BusTimeTableActivity : AppCompatActivity() {
@@ -82,6 +84,7 @@ class BusTimeTableActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bus_timetable)
+        setSupportActionBar(toolbar)
 
         busName = intent.extras?.get("busname") as? String
         stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
@@ -97,6 +100,8 @@ class BusTimeTableActivity : AppCompatActivity() {
             finish()
         }
 
+        setupToolbar()
+
         lbm.registerReceiver(receiver, intentFilter)
 
         showCurrentTime()
@@ -106,6 +111,44 @@ class BusTimeTableActivity : AppCompatActivity() {
     override fun onDestroy() {
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
+    }
+
+    private fun setupToolbar() {
+        supportActionBar?.apply {
+            title = busName
+        }
+        // Get color for toolbar background and items on it
+        val toolbarColor = busToShow.colorInt.darken(0.25f)
+        val toolbarItemColor =
+            getLegibleColorOnBackground(
+                toolbarColor,
+                getResId(R.attr.colorOnSurface),
+                getResId(R.attr.colorSurface)
+            )
+
+        // Set toolbar background and status bar color
+        toolbar.setBackgroundColor(toolbarColor)
+        window.statusBarColor = toolbarColor
+        // Light icons for status bar if needed
+        if (toolbarColor.isBright) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
+
+        // Apply colors to items in toolbar
+        toolbarItemColor.let {
+            toolbar.setTitleTextColor(it)
+            cbHoliday.apply {
+                buttonTintList = ColorStateList.valueOf(it)
+                setTextColor(it)
+            }
+            tvCurrentTime.apply {
+                TextViewCompat.setCompoundDrawableTintList(
+                    this, ColorStateList.valueOf(it)
+                )
+                setTextColor(it)
+            }
+            ivSwitchView.imageTintList = ColorStateList.valueOf(it)
+        }
     }
 
     private fun initSimpleModeView() {
@@ -182,8 +225,7 @@ class BusTimeTableActivity : AppCompatActivity() {
         val scrollPosition = closestIndexes[stopToHighlightIndex ?: 0] - 3
         simpleViewContainer.onViewReady { rvSimpleTimeTable.scrollToPosition(scrollPosition) }
 
-        // Setup before, next button
-        btnSimpleBefore.setOnClickListener {
+        val callPrevPage = {
             if (simpleAdapter.stopIndex > 0) {
                 --simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
@@ -192,7 +234,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
         }
-        btnSimpleNext.setOnClickListener {
+        val callNextPage = {
             if (simpleAdapter.stopIndex < busToShow.stopPoints.size - 1) {
                 ++simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
@@ -200,6 +242,107 @@ class BusTimeTableActivity : AppCompatActivity() {
                 tabAdapter.highlight(simpleAdapter.stopIndex)
                 Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
+        }
+        // Setup swipe behavior
+        /*rvSimpleTimeTable.setOnTouchListener(object: OnSwipeTouchListenerJava(this){
+            override fun onSwipeRight() {
+                callPrevPage()
+            }
+
+            override fun onSwipeLeft() {
+                callNextPage()
+            }
+        })*/
+        /*// Add filter
+        val newView = object:UntouchableView(this){
+            private val gestureDetector = GestureDetector(context, GestureListener())
+            override fun onTouchEvent(ev: MotionEvent?): Boolean {
+                return gestureDetector.onTouchEvent(ev)
+            }
+
+
+        }.apply {
+            val listener = OnSwipeTouchListener(this@BusTimeTableActivity, object:OnSwipeTouchListener.OnSwipeCallback{
+                override fun onSwipeLeft() {
+
+                }
+
+                override fun onSwipeRight() {
+                }
+            })
+            setOnTouchListener(listener)
+            id = View.generateViewId()
+        }
+        val set = ConstraintSet()
+        set.clone(simpleViewContainer)
+        simpleViewContainer.addView(newView)
+        set.connect(newView.id, ConstraintSet.TOP, rvSimpleTimeTable.id, ConstraintSet.TOP, 0)
+        set.connect(newView.id, ConstraintSet.START, rvSimpleTimeTable.id, ConstraintSet.START, 0)
+        set.connect(newView.id, ConstraintSet.BOTTOM, rvSimpleTimeTable.id, ConstraintSet.BOTTOM, 0)
+        set.connect(newView.id, ConstraintSet.END, rvSimpleTimeTable.id, ConstraintSet.END, 0)
+        set.applyTo(simpleViewContainer)*/
+        rvSimpleTimeTable.setOnTouchListener(
+            OnSwipeTouchListener(this,
+                object : OnSwipeTouchListener.OnSwipeCallback {
+                    override fun onSwipeLeft() {
+                        callNextPage()
+                    }
+                    override fun onSwipeRight() {
+                        callPrevPage()
+                    }
+                })
+        )
+
+        // Setup before, next button
+        btnSimpleBefore.setOnClickListener { callPrevPage() }
+        btnSimpleNext.setOnClickListener {
+            callNextPage()
+        }
+    }
+
+    private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+        private var savedEvent: MotionEvent? = null
+        init{
+            Log.e("GestureDetector", "Registered")
+        }
+        override fun onDown(e: MotionEvent?): Boolean {
+            Log.e("GestureDetector", "onDown()")
+            savedEvent = e
+            return false
+        }
+
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            if (e2 == null) return false
+            val origEvent = e1 ?: savedEvent ?: return false
+
+            var result = false
+            try {
+                val diffY = e2.y - origEvent.y
+                val diffX = e2.x - origEvent.x
+                Log.e("SwipeDetector", "diffX: ${abs(diffX)}, diffY: ${abs(diffY)}, velocityX: $velocityX, velocityY: $velocityY")
+                if (abs(diffX) > abs(diffY)) {
+                    if (abs(diffX) > 100 && abs(velocityX) > 100) {
+                        if (diffX > 0) {
+                        } else {
+                        }
+                    }
+                    result = true
+                }/* else if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0) {
+                        onSwipeCallback.onSwipeBottom()
+                    } else {
+                        onSwipeCallback.onSwipeTop()
+                    }
+                }*/
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return result
         }
     }
 
@@ -224,12 +367,6 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun initBusTimeTable() {
-        busToShow.colorInt.let {
-            ivBus.imageTintList = ColorStateList.valueOf(it)
-            tvBus.text = busName
-            tvBus.setTextColor(it)
-        }
-
         ivSwitchView.setOnClickListener { switchViewMode() }
 
         initSimpleModeView()

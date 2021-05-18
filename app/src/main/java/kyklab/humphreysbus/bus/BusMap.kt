@@ -20,7 +20,10 @@ import kyklab.humphreysbus.R
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.data.Spot
 import kyklab.humphreysbus.ui.MultiplePinView
+import kyklab.humphreysbus.utils.TYPEFACE_SANS_SERIF_CONDENSED
 import kyklab.humphreysbus.utils.dpToPx
+import kyklab.humphreysbus.utils.getDimension
+import kotlin.math.max
 
 
 class BusMap(
@@ -188,7 +191,7 @@ class BusMap(
             val y = c.y - pinHeight
             PointF(x, y)
         }.apply {
-            setPinSize(36.dpToPx(), 44.dpToPx())
+            setPinSize(dpToPx(activity, 36f), dpToPx(activity, 44f))
         }
         mapView.addPin(selectionPin!!)
     }
@@ -198,29 +201,29 @@ class BusMap(
     }
 
     private fun createBusBitmap(stop: BusStop): Bitmap {
-        val resId = R.drawable.ic_bus
+        val iconRes = R.drawable.bus_map_stop_icon
         val text = stop.name
+        val accent = activity.getColor(R.color.map_spot_accent)
 
-        val innerImageWidth = 32.dpToPx()
-        val innerImageHeight = 32.dpToPx()
-        val innerImage = AppCompatResources.getDrawable(this.activity, resId)!!
-            .apply { setTint(Color.DKGRAY) }
-            .toBitmap()
-            .scale(innerImageWidth, innerImageHeight)
+        val iconWidth = activity.getDimension(R.dimen.map_bus_stop_icon_size)
+        val iconHeight = activity.getDimension(R.dimen.map_bus_stop_icon_size)
+        val icon = AppCompatResources.getDrawable(activity, iconRes)!!
+            .toBitmap().scale(iconWidth.toInt(), iconHeight.toInt())
 
-        val innerTextSize = 10.dpToPx().toFloat()
-        val textBorderSize = 4.dpToPx().toFloat()
+        val textSize = activity.getDimension(R.dimen.map_bus_stop_text_size)
+        val textBorderSize = activity.getDimension(R.dimen.map_bus_stop_text_border_size)
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(61, 61, 61)
-            textSize = innerTextSize
-            typeface = Typeface.DEFAULT_BOLD
+            color = accent
+            this.textSize = textSize
+            typeface = Typeface.create(TYPEFACE_SANS_SERIF_CONDENSED, Typeface.BOLD)
         }
         val textStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
-            textSize = innerTextSize
+            this.textSize = textSize
             strokeWidth = textBorderSize
             style = Paint.Style.STROKE
-            typeface = Typeface.DEFAULT_BOLD
+            typeface = Typeface.create(TYPEFACE_SANS_SERIF_CONDENSED, Typeface.BOLD)
+            text
         }
 
         val textBounds = Rect()
@@ -229,20 +232,24 @@ class BusMap(
         val textWidth = textBounds.width()
         val textHeight = textBounds.height()
 
-        val innerImageMargin = 2.dpToPx()
-        val resultImageMargin = 2.dpToPx()
+        val iconMargin = activity.getDimension(R.dimen.map_bus_stop_icon_margin)
+        val resultBitmapMargin = activity.getDimension(R.dimen.map_bus_stop_icon_result_margin)
 
-        val resultImageWidth = Math.max(
-            textBounds.width(),
-            innerImageWidth + innerImageMargin * 2
-        ) + resultImageMargin * 2
-        val resultImageHeight =
-            innerImageHeight + (innerImageMargin + textHeight + resultImageMargin) * 2
-
+        // Get size of result image
+        val resultBitmapWidth = max(
+            textBounds.width().toFloat(), iconWidth + iconMargin * 2
+        ) + resultBitmapMargin * 2
+        val resultBitmapHeight =
+            iconHeight + (iconMargin + textHeight + resultBitmapMargin) * 2
 
         val backgroundBitmap =
-            Bitmap.createBitmap(resultImageWidth, resultImageHeight, Bitmap.Config.ARGB_8888)
+            Bitmap.createBitmap(
+                resultBitmapWidth.toInt(),
+                resultBitmapHeight.toInt(),
+                Bitmap.Config.ARGB_8888
+            )
 
+        // Create blank bitmap with the size of result image first
         val resultBitmap = Bitmap.createBitmap(
             backgroundBitmap.width, backgroundBitmap.height,
             backgroundBitmap.config
@@ -250,12 +257,14 @@ class BusMap(
         val c = Canvas(resultBitmap)
         c.drawBitmap(backgroundBitmap, Matrix(), null)
 
-        val innerImageLeft = (resultImageWidth - innerImageWidth) / 2f
-        val innerImageTop = (resultImageHeight - innerImageHeight) / 2f
-        c.drawBitmap(innerImage, innerImageLeft, innerImageTop, Paint())
+        // Draw icon
+        val iconLeft = (resultBitmapWidth - iconWidth) / 2f
+        val iconTop = (resultBitmapHeight - iconHeight) / 2f
+        c.drawBitmap(icon, iconLeft, iconTop, Paint())
 
-        val textLeft = (resultImageWidth - textWidth) / 2f
-        val textBottom = (resultImageHeight - resultImageMargin).toFloat()
+        // Draw stop name text
+        val textLeft = (resultBitmapWidth - textWidth) / 2f
+        val textBottom = (resultBitmapHeight - resultBitmapMargin).toFloat()
         c.drawText(text, textLeft, textBottom, textStrokePaint)
         c.drawText(text, textLeft, textBottom, textPaint)
 
@@ -263,18 +272,12 @@ class BusMap(
     }
 
     private fun createBusBitmapSimple(stop: BusStop): Bitmap {
-        val resId = R.drawable.ic_bus
+        val iconRes = R.drawable.bus_map_stop_icon
 
-        val width = 32.dpToPx()
-        val height = 32.dpToPx()
+        val width = activity.getDimension(R.dimen.map_bus_stop_icon_size)
+        val height = activity.getDimension(R.dimen.map_bus_stop_icon_size)
 
-        return AppCompatResources.getDrawable(activity, resId)!!
-            .apply { setTint(Color.DKGRAY) }
-            .toBitmap()
-            .scale(width, height)
-    }
-
-    private fun Number.dpToPx(): Int {
-        return dpToPx(activity, this.toFloat())
+        return AppCompatResources.getDrawable(activity, iconRes)!!
+            .toBitmap().scale(width.toInt(), height.toInt())
     }
 }

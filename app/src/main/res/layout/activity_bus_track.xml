@@ -5,54 +5,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/ivBus"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_bus" />
-
-    <TextView
-        android:id="@+id/tvBus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Bus"
-        app:layout_constraintBottom_toBottomOf="@id/ivBus"
-        app:layout_constraintStart_toEndOf="@+id/ivBus"
-        app:layout_constraintTop_toTopOf="@id/ivBus" />
-
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginEnd="12dp"
-        android:orientation="horizontal"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        app:title="Red"
+        tools:titleTextColor="?colorSurface"
+        android:layout_height="?actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/ivTimeTable"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?selectableItemBackgroundBorderless"
-            android:paddingVertical="12dp"
-            android:src="@drawable/ic_table_chart" />
-    </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="12dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/ivTimeTable"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?selectableItemBackgroundBorderless"
+                android:paddingVertical="12dp"
+                tools:tint="?colorSurface"
+                android:src="@drawable/ic_table_chart" />
+        </LinearLayout>
+
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@id/tvInfo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivBus"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         tools:listitem="@layout/activity_bus_track_stop_item" />
 
     <kyklab.humphreysbus.ui.UntouchableScrollView
@@ -67,6 +57,7 @@
 
         <RelativeLayout
             android:id="@+id/container"
+            android:gravity="center_horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -77,17 +68,17 @@
         android:id="@+id/tvInfo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:drawablePadding="8dp"
+        android:drawablePadding="16dp"
         android:gravity="start|center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="2dp"
-        android:text="Bus locations are simulated based on bus timetables provided by USFK. Real locations may vary depending on traffic conditions."
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="4dp"
+        android:text="Bus locations are simulated based on bus timetables provided by USFK. Actual locations may vary depending on traffic conditions."
         android:textColor="@android:color/darker_gray"
         android:textSize="10sp"
+        app:drawableStartCompat="@drawable/ic_info_18dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:drawableStartCompat="@drawable/ic_info_18dp" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!--
     <View

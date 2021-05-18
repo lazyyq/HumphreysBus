@@ -20,18 +20,21 @@
             android:value="ca-app-pub-1561709750622418~6437116265" />
 
         <activity
-            android:name=".ui.SettingsActivity"
-            android:label="@string/activity_settings_title" />
-        <activity
-            android:name=".ui.MainActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar">
+            android:name=".ui.SplashActivity"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.HumphreysBus.TranslucentActionBar" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/activity_settings_title" />
         <activity android:name=".ui.BusTimeTableActivity" />
         <activity
             android:name=".ui.allbusstops.AllBusAndStopActivity"
