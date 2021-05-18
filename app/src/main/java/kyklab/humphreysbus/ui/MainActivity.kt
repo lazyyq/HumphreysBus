@@ -105,7 +105,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initBusMap()
-        BusUtils.loadData()
+        if (!BusUtils.isLoadDone) {
+            BusUtils.loadData()
+        }
 
         setupViews()
 
@@ -207,7 +209,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        BusDBHelper.close()
+        if (!BusUtils.isLoadDone) {
+            BusUtils.cancelLoad()
+        }
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
     }
