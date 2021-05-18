@@ -1,5 +1,6 @@
 package kyklab.humphreysbus.bus
 
+import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.graphics.PointF
 import android.icu.text.SimpleDateFormat
@@ -7,9 +8,7 @@ import android.icu.util.Calendar
 import android.util.Log
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_BUSES
 import kyklab.humphreysbus.bus.BusDBHelper.DB_TABLE_HOLIDAYS
 import kyklab.humphreysbus.data.BusStop
@@ -23,6 +22,12 @@ import kotlin.concurrent.withLock
 
 object BusUtils {
     private const val TAG = "BusUtils"
+
+    @get:Synchronized
+    @set:Synchronized
+    private var loadJob: Job? = null
+
+    private var db: SQLiteDatabase? = null
 
     var stops: List<BusStop> = emptyList()
     var buses: List<Bus> = emptyList()
@@ -42,16 +47,31 @@ object BusUtils {
     private val cond = lock.newCondition()
 
     fun loadData() {
-        GlobalScope.launch(Dispatchers.IO) {
+        loadJob = CoroutineScope(Dispatchers.IO).launch {
             lock.withLock {
-                Log.e(TAG, "Start loading data")
+                isLoadDone = false
+                openDatabase()
+                val job = coroutineContext[Job] ?: return@launch
+
+                if (!job.isActive) return@launch
                 loadBusStops()
+                if (!job.isActive) return@launch
                 loadBuses()
+                if (!job.isActive) return@launch
                 loadHolidays()
-                isLoadDone = true
                 cond.signalAll()
                 Log.e(TAG, "Done loading data")
+                closeDatabase()
+                loadJob = null
+                isLoadDone = true
             }
+        }
+    }
+
+    fun cancelLoad() {
+        CoroutineScope(Dispatchers.Default).launch {
+            loadJob?.cancelAndJoin()
+            closeDatabase()
         }
     }
 
@@ -60,6 +80,15 @@ object BusUtils {
             while (!isLoadDone) cond.await()
             block()
         }
+    }
+
+    private fun openDatabase() {
+        db = BusDBHelper.db
+    }
+
+    private fun closeDatabase() {
+        BusDBHelper.close()
+        db = null
     }
 
     fun getStopFromCoord(x: Float, y: Float): BusStop? {
@@ -115,20 +144,18 @@ object BusUtils {
 
     private fun loadBusStops() {
         lock.withLock {
-            BusDBHelper.db.use { db ->
-                db.kQuery(BusDBHelper.DB_TABLE_STOPS).use { cursor ->
-                    stops = ArrayList(cursor.count)
-                    cursor.forEachCursor {
-                        val id: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_ID)
-                        val no: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_MAPNO)
-                        val name: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_NAME)
-                        val xCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
-                        val yCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
-                        val newStop = BusStop(id, no, name, xCenter, yCenter)
-                        (stops as ArrayList<BusStop>).add(newStop)
-                    }
-                    cursor.close()
+            db?.kQuery(BusDBHelper.DB_TABLE_STOPS)?.use { cursor ->
+                stops = ArrayList(cursor.count)
+                cursor.forEachCursor {
+                    val id: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_ID)
+                    val no: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_MAPNO)
+                    val name: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_NAME)
+                    val xCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
+                    val yCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+                    val newStop = BusStop(id, no, name, xCenter, yCenter)
+                    (stops as ArrayList<BusStop>).add(newStop)
                 }
+                cursor.close()
             }
         }
     }
@@ -137,85 +164,85 @@ object BusUtils {
         lock.withLock {
             if (stops.isEmpty()) loadBusStops()
 
-            BusDBHelper.db.use { db ->
-                val cursor = db.kQuery(
-                    table = DB_TABLE_BUSES,
-                    columns = arrayOf(
-                        "name",
-                        "stop_points",
-                        "color",
-                        "route_image_coords",
-                        "route_image_filenames"
-                    ),
-                    orderBy = "buses._id ASC"
-                )
-                buses = ArrayList(cursor.count)
-                cursor.forEachCursor { c ->
-                    // Attributes for a new bus
-                    val busName = c.getString(0)
-                    val stopsTemp = c.getString(1).split(';')
-                    val busStops = ArrayList<BusStop>(stopsTemp.size)
-                    stopsTemp.forEach { stopNo ->
-                        // TODO: implement a better searching mechanism
-                        stops.find { stop -> stop.no == stopNo }?.let { busStops.add(it) }
-                    }
-                    val instances = ArrayList<Bus.BusInstance>(100)
-                    val busColorInt = Color.parseColor(c.getString(2))
-                    val busRouteImageCoordsRaw = c.getStringOrNull(3)?.split(';')
-                    val busRouteImageCoords = ArrayList<PointF>(0)
-                    busRouteImageCoordsRaw?.let {
-                        busRouteImageCoords.ensureCapacity(it.size + 1)
-                        for (i in 1 until it.size step 2) {
-                            val point = PointF(it[i - 1].toFloat(), it[i].toFloat())
-                            busRouteImageCoords.add(point)
-                        }
-                    }
-                    val busRouteImageFilenamesRaw = c.getStringOrNull(4)?.split(';')
-                    val busRouteImageFilenames = ArrayList<String>(0)
-                    busRouteImageFilenamesRaw?.let {
-                        busRouteImageFilenames.ensureCapacity(it.size + 1)
-                        it.forEach { s -> busRouteImageFilenames.add(s) }
-                    }
+            if (db == null) return@withLock
 
-                    val cursor2 = db.kQuery(
-                        table = "bus_details",
-                        columns = arrayOf("stop_times", "is_holiday"),
-                        selection = "bus_name=\"$busName\"",
-                        orderBy = "bus_details._id ASC"
-                    )
-                    cursor2.forEachCursor { c1 ->
-                        val split = c1.getString(0).split(';')
-                        val stopTimes = ArrayList(split.map { MinDateTime().apply { hm = it } })
-                        if (stopTimes.size == busStops.size) {
-                            val isHoliday =
-                                when (c1.getIntOrNull(1)) {
-                                    1 -> true
-                                    else -> false
-                                }
-                            instances.add(Bus.BusInstance(stopTimes, isHoliday))
-                        }
-                    }
-                    cursor2.close()
-
-                    (buses as ArrayList<Bus>).add(
-                        Bus(
-                            busName,
-                            busColorInt,
-                            busStops,
-                            instances,
-                            busRouteImageCoords,
-                            busRouteImageFilenames
-                        )
-                    )
+            val cursor = db!!.kQuery(
+                table = DB_TABLE_BUSES,
+                columns = arrayOf(
+                    "name",
+                    "stop_points",
+                    "color",
+                    "route_image_coords",
+                    "route_image_filenames"
+                ),
+                orderBy = "buses._id ASC"
+            )
+            buses = ArrayList(cursor.count)
+            cursor.forEachCursor { c ->
+                // Attributes for a new bus
+                val busName = c.getString(0)
+                val stopsTemp = c.getString(1).split(';')
+                val busStops = ArrayList<BusStop>(stopsTemp.size)
+                stopsTemp.forEach { stopNo ->
+                    // TODO: implement a better searching mechanism
+                    stops.find { stop -> stop.no == stopNo }?.let { busStops.add(it) }
                 }
-                cursor.close()
+                val instances = ArrayList<Bus.BusInstance>(100)
+                val busColorInt = Color.parseColor(c.getString(2))
+                val busRouteImageCoordsRaw = c.getStringOrNull(3)?.split(';')
+                val busRouteImageCoords = ArrayList<PointF>(0)
+                busRouteImageCoordsRaw?.let {
+                    busRouteImageCoords.ensureCapacity(it.size + 1)
+                    for (i in 1 until it.size step 2) {
+                        val point = PointF(it[i - 1].toFloat(), it[i].toFloat())
+                        busRouteImageCoords.add(point)
+                    }
+                }
+                val busRouteImageFilenamesRaw = c.getStringOrNull(4)?.split(';')
+                val busRouteImageFilenames = ArrayList<String>(0)
+                busRouteImageFilenamesRaw?.let {
+                    busRouteImageFilenames.ensureCapacity(it.size + 1)
+                    it.forEach { s -> busRouteImageFilenames.add(s) }
+                }
+
+                val cursor2 = db!!.kQuery(
+                    table = "bus_details",
+                    columns = arrayOf("stop_times", "is_holiday"),
+                    selection = "bus_name=\"$busName\"",
+                    orderBy = "bus_details._id ASC"
+                )
+                cursor2.forEachCursor { c1 ->
+                    val split = c1.getString(0).split(';')
+                    val stopTimes = ArrayList(split.map { MinDateTime().apply { hm = it } })
+                    if (stopTimes.size == busStops.size) {
+                        val isHoliday =
+                            when (c1.getIntOrNull(1)) {
+                                1 -> true
+                                else -> false
+                            }
+                        instances.add(Bus.BusInstance(stopTimes, isHoliday))
+                    }
+                }
+                cursor2.close()
+
+                (buses as ArrayList<Bus>).add(
+                    Bus(
+                        busName,
+                        busColorInt,
+                        busStops,
+                        instances,
+                        busRouteImageCoords,
+                        busRouteImageFilenames
+                    )
+                )
             }
+            cursor.close()
         }
     }
 
     private fun loadHolidays() {
         lock.withLock {
-            BusDBHelper.db.use { db ->
+            db?.use { db ->
                 val cursor = db.kQuery(
                     table = DB_TABLE_HOLIDAYS,
                     columns = arrayOf("date"),
