@@ -52,19 +52,12 @@ object BusUtils {
                 val job = coroutineContext[Job] ?: return@launch
 
                 if (!job.isActive) return@launch
-                Log.e("LOADER", "launching loadbusstops")
                 loadBusStops()
-//                Thread.sleep(2000L)
                 if (!job.isActive) return@launch
-                Log.e("LOADER", "launching loadbuses")
                 loadBuses()
-//                Thread.sleep(2000L)
                 if (!job.isActive) return@launch
-                Log.e("LOADER", "launching loadholidays")
                 loadHolidays()
-                Log.e("LOADER", "isLoadDone set $isLoadDone => true")
                 cond.signalAll()
-                Log.e(TAG, "Done loading data")
                 closeDatabase(requester)
                 loadJob = null
                 isLoadDone = true
@@ -73,11 +66,9 @@ object BusUtils {
     }
 
     fun cancelLoad(requester: Any) {
-        Log.e("cancelLoad()", "called coroutine cancel")
         CoroutineScope(Dispatchers.Default).launch {
             loadJob?.cancelAndJoin()
             closeDatabase(requester)
-            Log.e("cancelLoad()", "successfully closed db after canceled")
         }
     }
 
@@ -183,7 +174,6 @@ object BusUtils {
                 ),
                 orderBy = "buses._id ASC"
             )
-
             buses = ArrayList(cursor.count)
             cursor.forEachCursor { c ->
                 // Attributes for a new bus
@@ -249,7 +239,6 @@ object BusUtils {
 
     private fun loadHolidays() {
         lock.withLock {
-            Log.e("loadHolidays()", db?.isOpen.toString())
             db?.use { db ->
                 val cursor = db.kQuery(
                     table = BusDBHelper.DB_TABLE_HOLIDAYS,

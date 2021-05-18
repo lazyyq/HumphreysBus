@@ -37,19 +37,12 @@ object BusDBHelper :
     fun getDatabase(requester: Any): SQLiteDatabase {
         if (!requesters.contains(requester)) {
             requesters.add(requester)
-            Log.e("BusDBHelper", "getDatabase() request received successfully")
-        } else {
-            Log.e("BusDBHelper", "getDatabase() request received but DUPLICATE")
         }
-
-        Log.e("BusDBHelper", "${requesters.size} requesters remaining")
         return readableDatabase
     }
 
     fun closeDatabase(requester: Any) {
-        Log.e("BusDBHelper", "closeDatabase() close request received successfully")
         requesters.remove(requester)
-        Log.e("BusDBHelper", "${requesters.size} requesters remaining")
         if (requesters.isEmpty()) {
             close()
         }
