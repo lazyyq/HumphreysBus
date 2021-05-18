@@ -8,6 +8,7 @@ import kyklab.humphreysbus.App
 import kyklab.humphreysbus.BuildConfig
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.*
 
 object BusDBHelper :
     SQLiteOpenHelper(App.context, "subway.db", null, 10) {
@@ -31,12 +32,40 @@ object BusDBHelper :
     const val DB_TABLE_BUSES = "buses"
     const val DB_TABLE_HOLIDAYS = "holidays"
 
-    val db: SQLiteDatabase
-        get() = readableDatabase
+    private val requesters = LinkedList<Any>()
+
+    fun getDatabase(requester: Any): SQLiteDatabase {
+        if (!requesters.contains(requester)) {
+            requesters.add(requester)
+            Log.e("BusDBHelper", "getDatabase() request received successfully")
+        } else {
+            Log.e("BusDBHelper", "getDatabase() request received but DUPLICATE")
+        }
+
+        Log.e("BusDBHelper", "${requesters.size} requesters remaining")
+        return readableDatabase
+    }
+
+    fun closeDatabase(requester: Any) {
+        Log.e("BusDBHelper", "closeDatabase() close request received successfully")
+        requesters.remove(requester)
+        Log.e("BusDBHelper", "${requesters.size} requesters remaining")
+        if (requesters.isEmpty()) {
+            close()
+        }
+    }
 
     init {
         Log.e(TAG, "DB Path: $DB_DIR")
         checkDatabase()
+    }
+
+    @Deprecated(
+        "DO NOT USE THIS METHOD DIRECTLY",
+        ReplaceWith("closeDatabase(Any)", "kyklab.humphreysbus.BusDBHelper")
+    )
+    override fun close() {
+        super.close()
     }
 
     private fun checkDatabase(): Boolean {
