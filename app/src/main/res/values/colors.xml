@@ -6,10 +6,12 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
 
-    <color name="color_primary">#FF1976D2</color>
-    <color name="color_primary_variant">#FF004BA0</color>
-    <color name="color_secondary">#FFC2185B</color>
-    <color name="color_secondary_variant">#FF8C0032</color>
+    <color name="color_primary">#FF5D4037</color>
+    <color name="color_primary_variant">#422D27</color>
+    <color name="color_secondary">#FFE89F89</color>
+    <color name="color_secondary_variant">#FFA87363</color>
+
+    <color name="background">#FFFFFFFF</color>
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

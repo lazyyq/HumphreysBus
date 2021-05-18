@@ -10,10 +10,12 @@
         <item name="colorSecondaryVariant">@color/color_secondary_variant</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?colorSurface</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor" tools:targetApi="l">?colorPrimary</item>
         <!-- Customize your theme here. -->
         <item name="actionBarStyle">@style/ActionBarStyle</item>
+        <item name="actionBarSize">@dimen/toolbar_height</item>
+        <item name="toolbarStyle">@style/ToolBarStyle</item>
+        <item name="android:windowBackground">@color/background</item>
 
         <item name="android:textColor">@android:color/black</item>
         <item name="materialTimePickerTheme">@style/TimePickerStyle</item>
@@ -33,12 +35,27 @@
     </style>
 
     <style name="ActionBarStyle" parent="Widget.MaterialComponents.ActionBar.Surface">
-        <item name="background">?colorSurface</item>
+        <item name="background">?colorPrimary</item>
+    </style>
+
+    <style name="ToolBarStyle" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="background">?colorPrimary</item>
+        <item name="titleTextAppearance">@style/ToolbarTextStyle</item>
+    </style>
+
+    <style name="ToolbarTextStyle" parent="@style/TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">@dimen/toolbar_text_size</item>
     </style>
 
     <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
         <item name="buttonBarPositiveButtonStyle">@style/MaterialComponents.Dialog.TextButton</item>
         <item name="buttonBarNeutralButtonStyle">@style/MaterialComponents.Dialog.TextButton</item>
         <item name="buttonBarNegativeButtonStyle">@style/MaterialComponents.Dialog.TextButton</item>
+    </style>
+
+    <style name="SplashTheme" parent="Theme.HumphreysBus.NoActionBar">
+        <item name="android:statusBarColor" tools:targetApi="l">?colorSurface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:background">@drawable/splash_bg</item>
     </style>
 </resources>
