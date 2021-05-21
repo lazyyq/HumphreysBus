@@ -2,12 +2,10 @@ package kyklab.humphreysbus.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -30,6 +28,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main_quick_card.*
 import kotlinx.android.synthetic.main.bus_directions_chooser.*
@@ -177,6 +176,8 @@ class MainActivity : AppCompatActivity() {
         if (Prefs.showAd) {
             loadAd()
         }
+
+        showPlayStorePopup()
     }
 
     override fun onResume() {
@@ -210,6 +211,33 @@ class MainActivity : AppCompatActivity() {
         BusDBHelper.close()
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
+    }
+
+    private fun showPlayStorePopup() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("HumphyBus is now on Play Store!")
+            .setMessage("Please UNINSTALL HumphyBus and INSTALL AGAIN from Play Store. You can still continue to use HumphyBus without reinstalling, but future updates will be provided only through play store. Thank you!")
+            .setPositiveButton("Open Play Store") { _, _ ->
+                try {
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("market://details?id=${BuildConfig.APPLICATION_ID}")
+                        )
+                    )
+                } catch (e: ActivityNotFoundException) {
+                    startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}")
+                        )
+                    )
+                }
+                toast("Please UNINSTALL the app first!")
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> }
+            .setCancelable(false)
+            .show()
     }
 
     private fun stopLocationUpdates() {
