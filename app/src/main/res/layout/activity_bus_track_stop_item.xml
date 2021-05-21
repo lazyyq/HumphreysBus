@@ -9,6 +9,8 @@
 
     <ImageView
         android:id="@+id/waypoint"
+        tools:tint="@android:color/holo_red_dark"
+        tools:src="@drawable/waypoint_mid"
         android:layout_width="32dp"
         android:layout_height="match_parent"
         android:layout_marginStart="64dp"

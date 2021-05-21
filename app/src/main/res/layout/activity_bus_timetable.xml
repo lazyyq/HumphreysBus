@@ -5,90 +5,78 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/ivBus"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_bus" />
-
-    <TextView
-        android:id="@+id/tvBus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Bus"
-        app:layout_constraintBottom_toBottomOf="@id/ivBus"
-        app:layout_constraintStart_toEndOf="@+id/ivBus"
-        app:layout_constraintTop_toTopOf="@id/ivBus" />
-
-    <LinearLayout
-        android:id="@+id/timeContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/progressBar"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        app:title="Red"
+        tools:titleTextColor="?colorSurface"
+        android:layout_height="?actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <CheckBox
-            android:buttonTint="@color/near_black"
-            android:id="@+id/cbHoliday"
-            style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+        <LinearLayout
+            android:id="@+id/toolbarContainer"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="start|center_vertical"
-            android:background="?selectableItemBackgroundBorderless"
-            android:gravity="center"
-            android:padding="4dp"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:text="Holiday"
-            android:textColor="@color/near_black"
-            android:textSize="16sp" />
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvCurrentTime"
-            android:drawableTint="@color/near_black"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="end|center_vertical"
-            android:background="?selectableItemBackgroundBorderless"
-            android:drawableStart="@drawable/ic_alarm"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:textColor="@color/near_black"
-            android:textSize="16sp"
-            tools:text="12:00" />
+            <CheckBox
+                android:id="@+id/cbHoliday"
+                style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="start|center_vertical"
+                android:background="?selectableItemBackgroundBorderless"
+                tools:buttonTint="?colorOnPrimary"
+                android:gravity="center"
+                android:padding="4dp"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:text="Holiday"
+                tools:textColor="?colorOnPrimary"
+                android:textSize="16sp" />
 
-        <ImageView
-            android:id="@+id/ivSwitchView"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_gravity="center_vertical"
-            android:background="?selectableItemBackgroundBorderless"
-            android:padding="6dp"
-            android:src="@drawable/ic_view_array"
-            app:tint="@color/near_black" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvCurrentTime"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="end|center_vertical"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawablePadding="8dp"
+                android:gravity="center"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                tools:textColor="?colorOnPrimary"
+                android:textSize="16sp"
+                app:drawableStartCompat="@drawable/ic_alarm"
+                tools:drawableTint="?colorOnPrimary"
+                tools:text="12:00" />
+
+            <ImageView
+                android:id="@+id/ivSwitchView"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center_vertical"
+                android:background="?selectableItemBackgroundBorderless"
+                android:padding="6dp"
+                android:src="@drawable/ic_view_array"
+                tools:tint="?colorOnPrimary" />
+        </LinearLayout>
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progressBar"
         style="@style/Widget.MaterialComponents.LinearProgressIndicator"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
         android:indeterminate="true"
         android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/toolbar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivBus" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/simpleViewContainer"
@@ -99,7 +87,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         tools:visibility="visible">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -114,51 +102,56 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/activity_bus_timetable_simple_mode_tab" />
 
+        <!--
         <View
             android:layout_width="0dp"
-            android:background="@drawable/drop_shadow"
             android:layout_height="2dp"
+            android:background="@drawable/drop_shadow"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
+            -->
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvSimpleTimeTable"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:layout_marginTop="1dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="1dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/rvSimpleViewTab"
             tools:listitem="@layout/activity_bus_timetable_simple_mode_item" />
 
         <kyklab.humphreysbus.ui.UntouchableView
             android:layout_width="64dp"
+            android:id="@+id/spinnerFadingEdgeStart"
+            android:layout_height="0dp"
+            android:layout_marginTop="2dp"
             android:background="@drawable/spinner_fade_edge"
             android:backgroundTint="?colorSurface"
-            android:layout_marginTop="2dp"
-            android:layout_height="0dp"
-            app:layout_constraintStart_toStartOf="@id/rvSimpleViewTab"
             app:layout_constraintBottom_toBottomOf="@id/rvSimpleViewTab"
+            app:layout_constraintStart_toStartOf="@id/rvSimpleViewTab"
             app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
 
         <kyklab.humphreysbus.ui.UntouchableView
             android:layout_width="64dp"
+            android:id="@+id/spinnerFadingEdgeEnd"
+            android:layout_height="0dp"
+            android:layout_marginTop="2dp"
             android:background="@drawable/spinner_fade_edge"
             android:backgroundTint="?colorSurface"
-            android:layout_marginTop="2dp"
-            android:layout_height="0dp"
             android:scaleX="-1"
-            app:layout_constraintEnd_toEndOf="@id/rvSimpleViewTab"
             app:layout_constraintBottom_toBottomOf="@id/rvSimpleViewTab"
+            app:layout_constraintEnd_toEndOf="@id/rvSimpleViewTab"
             app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
 
         <View
             android:layout_width="0dp"
-            android:background="@drawable/drop_shadow"
             android:layout_height="2dp"
+            android:id="@+id/simpleViewTabShadow"
+            android:background="@drawable/drop_shadow"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/rvSimpleViewTab" />
@@ -175,6 +168,7 @@
                 android:layout_width="36dp"
                 android:layout_height="72dp"
                 android:layout_gravity="center"
+                android:id="@+id/ivSimpleBefore"
                 android:scaleType="fitXY"
                 android:scaleX="-1"
                 android:src="@drawable/arrow_next"
@@ -191,6 +185,7 @@
 
             <ImageView
                 android:layout_width="36dp"
+                android:id="@+id/ivSimpleAfter"
                 android:layout_height="72dp"
                 android:layout_gravity="center"
                 android:scaleType="fitXY"
@@ -209,7 +204,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         tools:visibility="visible">
 
         <com.otaliastudios.zoom.ZoomLayout

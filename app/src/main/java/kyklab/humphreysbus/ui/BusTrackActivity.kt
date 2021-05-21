@@ -21,8 +21,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
+import androidx.core.widget.TextViewCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_bus_track.*
+import kotlinx.android.synthetic.main.activity_bus_track.toolbar
 import kotlinx.android.synthetic.main.activity_bus_track.view.*
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
@@ -69,6 +72,7 @@ class BusTrackActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bus_track)
+        setSupportActionBar(toolbar)
 
         val busName = intent.extras?.get("busname") as? String
         stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
@@ -84,16 +88,7 @@ class BusTrackActivity : AppCompatActivity() {
             finish()
         }
 
-        ivBus.imageTintList = ColorStateList.valueOf(bus!!.colorInt)
-        tvBus.text = busName
-        tvBus.setTextColor(bus!!.colorInt)
-
-        ivTimeTable.imageTintList = ColorStateList.valueOf(bus!!.colorInt)
-        ivTimeTable.setOnClickListener {
-            val intent = Intent(this, BusTimeTableActivity::class.java)
-            intent.putExtra("busname", busName)
-            startActivity(intent)
-        }
+        setupToolbar()
 
         recyclerView = rv
 
@@ -119,6 +114,42 @@ class BusTrackActivity : AppCompatActivity() {
     override fun onDestroy() {
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
+    }
+
+    private fun setupToolbar() {
+        supportActionBar?.apply {
+            title = bus?.name ?: return
+        }
+        // Get color for toolbar background and items on it
+        val toolbarColor = bus!!.colorInt.darken(0.25f)
+        val toolbarItemColor =
+            getLegibleColorOnBackground(
+                toolbarColor,
+                getResId(R.attr.colorOnSurface),
+                getResId(R.attr.colorSurface)
+            )
+
+        // Set toolbar background and status bar color
+        toolbar.setBackgroundColor(toolbarColor)
+        window.statusBarColor = toolbarColor
+        // Light icons for status bar if needed
+        if (toolbarColor.isBright) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
+
+        // Apply colors to items in toolbar
+        toolbarItemColor.let {
+            toolbar.setTitleTextColor(it)
+
+            ivTimeTable.imageTintList = ColorStateList.valueOf(it)
+        }
+
+        // Setup click listeners for items in toolbar
+        ivTimeTable.setOnClickListener {
+            val intent = Intent(this, BusTimeTableActivity::class.java)
+            intent.putExtra("busname", bus!!.name)
+            startActivity(intent)
+        }
     }
 
     val STAYINGTIME = 15

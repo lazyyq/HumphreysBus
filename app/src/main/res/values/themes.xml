@@ -43,7 +43,8 @@
         <item name="titleTextAppearance">@style/ToolbarTextStyle</item>
     </style>
 
-    <style name="ToolbarTextStyle" parent="@style/TextAppearance.MaterialComponents.Headline6">
+    <style name="ToolbarTextStyle" parent="@style/TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">?colorPrimary</item>
         <item name="android:textSize">@dimen/toolbar_text_size</item>
     </style>
 

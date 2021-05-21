@@ -200,18 +200,19 @@ class BusMap(
     private fun createBusBitmap(stop: BusStop): Bitmap {
         val resId = R.drawable.ic_bus
         val text = stop.name
+        val tint = activity.resources.getColor(R.color.color_primary_variant, activity.theme)
 
         val innerImageWidth = 32.dpToPx()
         val innerImageHeight = 32.dpToPx()
         val innerImage = AppCompatResources.getDrawable(this.activity, resId)!!
-            .apply { setTint(Color.DKGRAY) }
+            .apply { setTint(tint) }
             .toBitmap()
             .scale(innerImageWidth, innerImageHeight)
 
         val innerTextSize = 10.dpToPx().toFloat()
         val textBorderSize = 4.dpToPx().toFloat()
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(61, 61, 61)
+            color = tint
             textSize = innerTextSize
             typeface = Typeface.DEFAULT_BOLD
         }

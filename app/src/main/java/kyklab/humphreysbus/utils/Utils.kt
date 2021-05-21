@@ -7,10 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.RectF
+import android.graphics.*
 import android.provider.Settings
 import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
@@ -18,6 +15,8 @@ import android.util.TypedValue
 import android.view.*
 import android.widget.Toast
 import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+import androidx.core.graphics.ColorUtils
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -327,6 +326,22 @@ fun Context.getResId(attrResId: Int): Int {
     theme.resolveAttribute(attrResId, typedValue, true)
     return typedValue.resourceId
 }
+
+@ColorInt
+fun @receiver:ColorInt Int.darken(ratio: Float = 0.2f) =
+    ColorUtils.blendARGB(this, Color.BLACK, ratio)
+
+inline val @receiver:ColorInt Int.isBright: Boolean
+    get() = ColorUtils.calculateLuminance(this) > 0.5
+
+@ColorInt
+fun Context.getLegibleColorOnBackground(
+    @ColorInt background: Int,
+    @ColorRes onBrightBackground: Int,
+    @ColorRes onDarkBackground: Int
+) = resources.getColor(
+    if (background.isBright) onBrightBackground else onDarkBackground, theme
+)
 
 class RoundedBackgroundSpan(
     private val context: Context,
