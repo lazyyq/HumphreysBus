@@ -191,7 +191,7 @@ class BusMap(
             val y = c.y - pinHeight
             PointF(x, y)
         }.apply {
-            setPinSize(dpToPx(activity, 36f), dpToPx(activity, 36f))
+            setPinSize(dpToPx(activity, 36f), dpToPx(activity, 44f))
         }
         mapView.addPin(selectionPin!!)
     }
