@@ -18,15 +18,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.drawable.toBitmap
-import androidx.core.graphics.scale
-import androidx.core.widget.TextViewCompat
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_bus_track.*
-import kotlinx.android.synthetic.main.activity_bus_track.toolbar
 import kotlinx.android.synthetic.main.activity_bus_track.view.*
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
@@ -41,7 +34,6 @@ import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInMillis
 import kyklab.humphreysbus.utils.MinDateTime.Companion.timeInSecs
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.max
 
 class BusTrackActivity : AppCompatActivity() {
     companion object {
@@ -169,7 +161,7 @@ class BusTrackActivity : AppCompatActivity() {
 
         fun init() {
             itemheight = dpToPx(this@BusTrackActivity, 72f)
-            topmargin = itemheight / 2 - dpToPx(this@BusTrackActivity, 28f) / 2
+            topmargin = itemheight / 2 - dpToPx(this@BusTrackActivity, 32f) / 2
 
             // Sync recyclerview scroll with scrollview
             rv.addOnScrollListener(rvOnScrollListener)
@@ -247,7 +239,7 @@ class BusTrackActivity : AppCompatActivity() {
                 val canvas = Canvas(bitmapCopy)
                 val paint = Paint()
                 val mode = PorterDuff.Mode.LIGHTEN
-                paint.colorFilter = PorterDuffColorFilter(bus!!.colorInt, mode)
+                paint.colorFilter = PorterDuffColorFilter(bus!!.colorInt.darken(0.25f), mode)
 
                 val maskPaint = Paint()
                 maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
@@ -264,8 +256,8 @@ class BusTrackActivity : AppCompatActivity() {
         fun getBusIconView(index: Int): ImageView {
             return ImageView(this@BusTrackActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
-                    dpToPx(this@BusTrackActivity, 28f),
-                    dpToPx(this@BusTrackActivity, 28f)
+                    dpToPx(this@BusTrackActivity, 32f),
+                    dpToPx(this@BusTrackActivity, 32f)
                 ).apply {
                     topMargin = index * itemheight + topmargin
                 }
@@ -561,7 +553,7 @@ class BusTrackActivity : AppCompatActivity() {
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.activity_bus_track_stop_item, parent, false),
                 bus.name,
-                ColorUtils.blendARGB(bus.colorInt, Color.BLACK, 0.25f)
+                bus.colorInt
             )
         }
 
@@ -597,74 +589,6 @@ class BusTrackActivity : AppCompatActivity() {
         override fun getItemCount(): Int {
             return items.size
         }
-    }
-
-    private fun Number.dpToPx(): Int {
-        return dpToPx(this@BusTrackActivity, this.toFloat())
-    }
-
-    private fun createBmp(text: String): Bitmap {
-        val resId = R.drawable.ic_bus
-
-        val innerImageWidth = 32.dpToPx()
-        val innerImageHeight = 32.dpToPx()
-        val innerImage = AppCompatResources.getDrawable(this, resId)!!
-            .apply { setTint(Color.DKGRAY) }
-            .toBitmap()
-            .scale(innerImageWidth, innerImageHeight)
-
-        val innerTextSize = 16.dpToPx().toFloat()
-        val textBorderSize = 4.dpToPx().toFloat()
-        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.rgb(61, 61, 61)
-            textSize = innerTextSize
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        val textStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textSize = innerTextSize
-            strokeWidth = textBorderSize
-            style = Paint.Style.STROKE
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        val textBounds = Rect()
-        textPaint.getTextBounds(text, 0, text.length, textBounds)
-
-        val textWidth = textBounds.width()
-        val textHeight = textBounds.height()
-
-        val innerImageMargin = 2.dpToPx()
-        val resultImageMargin = 2.dpToPx()
-
-        val resultImageWidth = max(
-            textBounds.width(),
-            innerImageWidth + innerImageMargin * 2
-        ) + resultImageMargin * 2
-        val resultImageHeight =
-            innerImageHeight + (innerImageMargin + textHeight + resultImageMargin) * 2
-
-
-        val backgroundBitmap =
-            Bitmap.createBitmap(resultImageWidth, resultImageHeight, Bitmap.Config.ARGB_8888)
-
-        val resultBitmap = Bitmap.createBitmap(
-            backgroundBitmap.width, backgroundBitmap.height,
-            backgroundBitmap.config
-        )
-        val c = Canvas(resultBitmap)
-        c.drawBitmap(backgroundBitmap, Matrix(), null)
-
-        val innerImageLeft = (resultImageWidth - innerImageWidth) / 2f
-        val innerImageTop = (resultImageHeight - innerImageHeight) / 2f
-        c.drawBitmap(innerImage, innerImageLeft, innerImageTop, Paint())
-
-        val textLeft = (resultImageWidth - textWidth) / 2f
-        val textBottom = (resultImageHeight - resultImageMargin).toFloat()
-//        c.drawText(text, textLeft, textBottom, textStrokePaint)
-        c.drawText(text, textLeft, textBottom, textPaint)
-
-        return resultBitmap
     }
 
     /**

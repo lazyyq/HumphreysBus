@@ -16,6 +16,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
 import androidx.core.graphics.ColorUtils
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
@@ -83,6 +84,8 @@ val Activity.navigationBarHeight: Int
         }
         return result
     }
+
+fun Activity.getDimension(@DimenRes id: Int) = resources.getDimension(id)
 
 val <T : View> T.parentRelativeCoordinates: Rect
     get() {
@@ -342,6 +345,9 @@ fun Context.getLegibleColorOnBackground(
 ) = resources.getColor(
     if (background.isBright) onBrightBackground else onDarkBackground, theme
 )
+
+val TYPEFACE_SANS_SERIF_CONDENSED: Typeface =
+    Typeface.create("sans-serif-condensed", Typeface.NORMAL)
 
 class RoundedBackgroundSpan(
     private val context: Context,
