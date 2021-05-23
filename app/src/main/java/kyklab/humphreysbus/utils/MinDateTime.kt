@@ -59,29 +59,29 @@ class MinDateTime {
             else throw WrongParameterException()
         }
 
-    constructor() : this(YY_MIN, MM_MIN, DD_MIN, H_MIN, M_MIN, S_MIN)
+    constructor() : this(YY_MIN_S, MM_MIN_S, DD_MIN_S, H_MIN_S, M_MIN_S, S_MIN_S)
 
     constructor(clone: MinDateTime) :
             this(clone.yy, clone.mm, clone.dd, clone.h, clone.m, clone.s)
 
     constructor(
-        h: String = H_MIN.twoDigits(),
-        m: String = M_MIN.twoDigits(),
-        s: String = S_MIN.twoDigits()
+        h: String = H_MIN_S,
+        m: String = M_MIN_S,
+        s: String = S_MIN_S
     ) : this(
-        yy = YY_MIN.fourDigits(),
-        mm = MM_MIN.twoDigits(),
-        dd = DD_MIN.twoDigits(),
+        yy = YY_MIN_S,
+        mm = MM_MIN_S,
+        dd = DD_MIN_S,
         h = h, m = m, s = s
     )
 
     constructor(
-        yy: String = YY_MIN.fourDigits(),
-        mm: String = MM_MIN.twoDigits(),
-        dd: String = DD_MIN.twoDigits(),
-        h: String = H_MIN.twoDigits(),
-        m: String = M_MIN.twoDigits(),
-        s: String = S_MIN.twoDigits()
+        yy: String = YY_MIN_S,
+        mm: String = MM_MIN_S,
+        dd: String = DD_MIN_S,
+        h: String = H_MIN_S,
+        m: String = M_MIN_S,
+        s: String = S_MIN_S
     ) {
         this.yy = yy; this.mm = mm; this.dd = dd
         this.h = h; this.m = m; this.s = s
@@ -387,6 +387,8 @@ class MinDateTime {
     override fun toString() = "$yy/$mm/$dd $h:$m:$s"
 
     companion object {
+        private val TAG = this::class.java.simpleName
+
         const val YY_MIN = 1
         const val MM_MIN = 1
         const val MM_MAX = 12
@@ -399,7 +401,17 @@ class MinDateTime {
         const val S_MIN = 0
         const val S_MAX = 59
 
-        private val TAG = this::class.java.simpleName
+        const val YY_MIN_S = "0001"
+        const val MM_MIN_S = "01"
+        const val MM_MAX_S = "12"
+        const val DD_MIN_S = "01"
+        const val DD_MAX_S = "31"
+        const val H_MIN_S = "00"
+        const val H_MAX_S = "23"
+        const val M_MIN_S = "00"
+        const val M_MAX_S = "59"
+        const val S_MIN_S = "00"
+        const val S_MAX_S = "59"
 
         private fun Int.format(format: String) = String.format(format, this)
         private fun Int.twoDigits() = format("%02d")
