@@ -19,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.core.widget.TextViewCompat
@@ -168,7 +169,7 @@ class BusTrackActivity : AppCompatActivity() {
 
         fun init() {
             itemheight = dpToPx(this@BusTrackActivity, 72f)
-            topmargin = itemheight / 2 - dpToPx(this@BusTrackActivity, 36f) / 2
+            topmargin = itemheight / 2 - dpToPx(this@BusTrackActivity, 28f) / 2
 
             // Sync recyclerview scroll with scrollview
             rv.addOnScrollListener(rvOnScrollListener)
@@ -191,7 +192,7 @@ class BusTrackActivity : AppCompatActivity() {
                     val nextTime = instance.stopTimes[i + 1]
                     if (curTime.isBetween(prevTime, nextTime, true, false)) {
                         lastBusIndex = instanceTmp.index
-                        val busIcon = getBusIcon(i)
+                        val busIcon = getBusIconView(i)
                         val item = InstanceItem(busIcon, instance, i)
                         runningInstances.add(item)
                         container.addView(busIcon)
@@ -224,23 +225,51 @@ class BusTrackActivity : AppCompatActivity() {
                 closestFirstBusIndex
             }
             val nextBus = instances[nextIndex]
-            val icon = getBusIcon(0)/*.apply { visibility = View.INVISIBLE}*/
+            val icon = getBusIconView(0)/*.apply { visibility = View.INVISIBLE}*/
             val nextBusItem =
                 InstanceItem(icon, nextBus, 0).apply { isReady = false }
             runningInstances.add(nextBusItem)
 //                container.addView(icon)
         }
 
-        fun getBusIcon(index: Int): ImageView {
+        // https://stackoverflow.com/a/58384788
+        val busIconBitmap: Bitmap = run {
+            val s=System.currentTimeMillis()
+            val bitmapOrig = BitmapFactory.decodeResource(resources, R.drawable.bus_track_bus_icon)
+            if (bus == null) {
+                bitmapOrig
+            } else {
+                val bitmapCopy = Bitmap.createBitmap(
+                    bitmapOrig.width,
+                    bitmapOrig.height,
+                    Bitmap.Config.ARGB_8888
+                )
+                val canvas = Canvas(bitmapCopy)
+                val paint = Paint()
+                val mode = PorterDuff.Mode.LIGHTEN
+                paint.colorFilter = PorterDuffColorFilter(bus!!.colorInt, mode)
+
+                val maskPaint = Paint()
+                maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
+
+                canvas.drawBitmap(bitmapOrig, 0f, 0f, paint)
+                canvas.drawBitmap(bitmapOrig, 0f, 0f, maskPaint)
+
+                val e=System.currentTimeMillis()
+                Log.e("BusIcon", "took ${e-s}")
+                bitmapCopy
+            }
+        }
+
+        fun getBusIconView(index: Int): ImageView {
             return ImageView(this@BusTrackActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
-                    dpToPx(this@BusTrackActivity, 36f),
-                    dpToPx(this@BusTrackActivity, 36f)
+                    dpToPx(this@BusTrackActivity, 28f),
+                    dpToPx(this@BusTrackActivity, 28f)
                 ).apply {
                     topMargin = index * itemheight + topmargin
                 }
-                setImageResource(R.drawable.ic_bus)
-                imageTintList = getColorStateList(android.R.color.black)
+                setImageBitmap(busIconBitmap)
             }
         }
 
@@ -532,7 +561,7 @@ class BusTrackActivity : AppCompatActivity() {
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.activity_bus_track_stop_item, parent, false),
                 bus.name,
-                bus.colorInt
+                ColorUtils.blendARGB(bus.colorInt, Color.BLACK, 0.25f)
             )
         }
 
