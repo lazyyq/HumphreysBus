@@ -223,7 +223,6 @@ class BusMap(
             strokeWidth = textBorderSize
             style = Paint.Style.STROKE
             typeface = Typeface.create(TYPEFACE_SANS_SERIF_CONDENSED, Typeface.BOLD)
-            text
         }
 
         val textBounds = Rect()
