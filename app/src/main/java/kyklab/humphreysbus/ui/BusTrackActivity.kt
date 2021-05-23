@@ -38,13 +38,16 @@ import java.util.*
 class BusTrackActivity : AppCompatActivity() {
     companion object {
         private val TAG = BusTrackActivity::class.java.simpleName
+
+        private const val STATE_BUS_NAME = "state_bus_name"
+        private const val STATE_HIGHLIGHT_INDEX = "state_highlight_index"
     }
 
     private var itemheight = 0
     private lateinit var curTime: MinDateTime
     private lateinit var busStatusUpdater: BusStatusUpdater
     private lateinit var recyclerView: RecyclerView
-    private var bus: Bus? = null
+    private lateinit var bus: Bus
     private var stopToHighlightIndex: Int? = null
     private val rvOnScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -62,13 +65,40 @@ class BusTrackActivity : AppCompatActivity() {
         }
     }
 
+    // https://stackoverflow.com/a/58384788
+    private val busIconBitmap by lazy {
+        val bitmapOrig = BitmapFactory.decodeResource(resources, R.drawable.bus_track_bus_icon)
+        val bitmapCopy = Bitmap.createBitmap(
+            bitmapOrig.width,
+            bitmapOrig.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmapCopy)
+        val paint = Paint()
+        val mode = PorterDuff.Mode.LIGHTEN
+        paint.colorFilter = PorterDuffColorFilter(bus.colorInt.darken(0.25f), mode)
+
+        val maskPaint = Paint()
+        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
+
+        canvas.drawBitmap(bitmapOrig, 0f, 0f, paint)
+        canvas.drawBitmap(bitmapOrig, 0f, 0f, maskPaint)
+        bitmapCopy
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bus_track)
         setSupportActionBar(toolbar)
 
-        val busName = intent.extras?.get("busname") as? String
-        stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
+        val busName: String
+        if (savedInstanceState != null) {
+            busName = savedInstanceState[STATE_BUS_NAME] as String
+            stopToHighlightIndex = savedInstanceState[STATE_HIGHLIGHT_INDEX] as Int
+        } else {
+            busName = intent.extras?.get("busname") as String
+            stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
+        }
         when (val found = BusUtils.buses.find { b -> b.name == busName }) {
             null -> {
                 toast("Bus not found")
@@ -76,7 +106,7 @@ class BusTrackActivity : AppCompatActivity() {
             }
             else -> bus = found
         }
-        if (bus!!.instances.isEmpty()) {
+        if (bus.instances.isEmpty()) {
             toast("No schedule for bus $busName available")
             finish()
         }
@@ -91,10 +121,16 @@ class BusTrackActivity : AppCompatActivity() {
         lbm.registerReceiver(receiver, intentFilter)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putString(STATE_BUS_NAME, bus.name)
+        stopToHighlightIndex?.let { outState.putInt(STATE_HIGHLIGHT_INDEX, it) }
+    }
+
     override fun onResume() {
         Log.e(TAG, "onResume() called")
         super.onResume()
-        if (bus == null) finish()
         busStatusUpdater.start()
     }
 
@@ -111,10 +147,10 @@ class BusTrackActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         supportActionBar?.apply {
-            title = bus?.name ?: return
+            title = bus.name ?: return
         }
         // Get color for toolbar background and items on it
-        val toolbarColor = bus!!.colorInt.darken(0.25f)
+        val toolbarColor = bus.colorInt.darken(0.25f)
         val toolbarItemColor =
             getLegibleColorOnBackground(
                 toolbarColor,
@@ -140,7 +176,7 @@ class BusTrackActivity : AppCompatActivity() {
         // Setup click listeners for items in toolbar
         ivTimeTable.setOnClickListener {
             val intent = Intent(this, BusTimeTableActivity::class.java)
-            intent.putExtra("busname", bus!!.name)
+            intent.putExtra("busname", bus.name)
             startActivity(intent)
         }
     }
@@ -167,8 +203,8 @@ class BusTrackActivity : AppCompatActivity() {
             rv.addOnScrollListener(rvOnScrollListener)
 
             val emptyTime = MinDateTime()
-            adapterItems = bus!!.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
-            adapter = MyAdapter(this@BusTrackActivity, bus!!, adapterItems)
+            adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
+            adapter = MyAdapter(this@BusTrackActivity, bus, adapterItems)
             rv.adapter = adapter
 
             val rvheight = itemheight * adapter.itemCount
@@ -224,35 +260,6 @@ class BusTrackActivity : AppCompatActivity() {
 //                container.addView(icon)
         }
 
-        // https://stackoverflow.com/a/58384788
-        val busIconBitmap: Bitmap = run {
-            val s=System.currentTimeMillis()
-            val bitmapOrig = BitmapFactory.decodeResource(resources, R.drawable.bus_track_bus_icon)
-            if (bus == null) {
-                bitmapOrig
-            } else {
-                val bitmapCopy = Bitmap.createBitmap(
-                    bitmapOrig.width,
-                    bitmapOrig.height,
-                    Bitmap.Config.ARGB_8888
-                )
-                val canvas = Canvas(bitmapCopy)
-                val paint = Paint()
-                val mode = PorterDuff.Mode.LIGHTEN
-                paint.colorFilter = PorterDuffColorFilter(bus!!.colorInt.darken(0.25f), mode)
-
-                val maskPaint = Paint()
-                maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
-
-                canvas.drawBitmap(bitmapOrig, 0f, 0f, paint)
-                canvas.drawBitmap(bitmapOrig, 0f, 0f, maskPaint)
-
-                val e=System.currentTimeMillis()
-                Log.e("BusIcon", "took ${e-s}")
-                bitmapCopy
-            }
-        }
-
         fun getBusIconView(index: Int): ImageView {
             return ImageView(this@BusTrackActivity).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -269,7 +276,7 @@ class BusTrackActivity : AppCompatActivity() {
             // Add bus icons
             cleanup()
             curTime = getCurDateTime()
-            instances = bus!!.instances.filter { it.isHoliday == BusUtils.isHoliday() }
+            instances = bus.instances.filter { it.isHoliday == BusUtils.isHoliday() }
             addInitialBuses()
             scheduleNextBus()
 
@@ -396,7 +403,7 @@ class BusTrackActivity : AppCompatActivity() {
                     // DEBUG
                     val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
                     val past = bus!!.stopPoints[indexHeadingTo - 1].name
-                    val next = bus!!.stopPoints[indexHeadingTo].name
+                    val next = bus.stopPoints[indexHeadingTo].name
                     debugEta = busInstance.stopTimes[indexHeadingTo]
                     //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
                     Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
@@ -413,7 +420,7 @@ class BusTrackActivity : AppCompatActivity() {
                     val arrived = bus!!.stopPoints[indexHeadingTo].name
                     Log.e("ANIMATION", "Just arrived $arrived")
 
-                    if (indexHeadingTo >= bus!!.stopPoints.size - 1) {
+                    if (indexHeadingTo >= bus.stopPoints.size - 1) {
                         Log.e("ANIMATION", "Just arrived END OF BUS")
                     }
                     // DEBUG
