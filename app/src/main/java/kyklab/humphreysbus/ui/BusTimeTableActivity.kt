@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
@@ -18,9 +17,7 @@ import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.text.bold
-import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.updatePadding
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
@@ -50,13 +47,15 @@ class BusTimeTableActivity : AppCompatActivity() {
     companion object {
         private val TAG = BusTimeTableActivity::class.java.simpleName
 
+        private const val STATE_BUS_NAME = "state_bus_name"
+        private const val STATE_HIGHLIGHT_INDEX = "state_highlight_index"
+
         private const val VIEW_MODE_SIMPLE = 0
         private const val VIEW_MODE_WHOLE = 1
     }
 
-    private var busName: String? = null
     private var stopToHighlightIndex: Int? = null
-    private lateinit var busToShow: Bus
+    private lateinit var bus: Bus
 
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime.getCurDateTime().apply { s = "00" }
@@ -86,16 +85,22 @@ class BusTimeTableActivity : AppCompatActivity() {
         setContentView(R.layout.activity_bus_timetable)
         setSupportActionBar(toolbar)
 
-        busName = intent.extras?.get("busname") as? String
-        stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
+        val busName: String
+        if (savedInstanceState != null) {
+            busName = savedInstanceState[STATE_BUS_NAME] as String
+            stopToHighlightIndex = savedInstanceState[STATE_HIGHLIGHT_INDEX] as Int
+        } else {
+            busName = intent.extras?.get("busname") as String
+            stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
+        }
         when (val found = BusUtils.buses.find { b -> b.name == busName }) {
             null -> {
                 toast("Bus not found")
                 finish()
             }
-            else -> busToShow = found
+            else -> bus = found
         }
-        if (busToShow.instances.isEmpty()) {
+        if (bus.instances.isEmpty()) {
             toast("No schedule for bus $busName available")
             finish()
         }
@@ -108,6 +113,13 @@ class BusTimeTableActivity : AppCompatActivity() {
         initBusTimeTable()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putString(STATE_BUS_NAME, bus.name)
+        stopToHighlightIndex?.let { outState.putInt(STATE_HIGHLIGHT_INDEX, it) }
+    }
+
     override fun onDestroy() {
         lbm.unregisterReceiver(receiver)
         super.onDestroy()
@@ -115,10 +127,10 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         supportActionBar?.apply {
-            title = busName
+            title = bus.name
         }
         // Get color for toolbar background and items on it
-        val toolbarColor = busToShow.colorInt.darken(0.25f)
+        val toolbarColor = bus.colorInt.darken(0.25f)
         val toolbarItemColor =
             getLegibleColorOnBackground(
                 toolbarColor,
@@ -152,10 +164,10 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun initSimpleModeView() {
-        val instances = busToShow.instances.filter { it.isHoliday == isHoliday }
+        val instances = bus.instances.filter { it.isHoliday == isHoliday }
 
         // Setup tab view
-        val stopNames = busToShow.stopPoints.map { it.name }
+        val stopNames = bus.stopPoints.map { it.name }
         tabAdapter = SimpleViewTabAdapter(
             stopNames,
             stopToHighlightIndex ?: 0
@@ -207,15 +219,15 @@ class BusTimeTableActivity : AppCompatActivity() {
         rvSimpleViewTab.addOnScrollListener(tabScrollDoneListener)
 
         // Setup timetable view
-        val closestIndexes = ArrayList<Int>(busToShow.stopPoints.size)
-        for (i in busToShow.stopPoints.indices) {
+        val closestIndexes = ArrayList<Int>(bus.stopPoints.size)
+        for (i in bus.stopPoints.indices) {
             val list = instances.map { it.stopTimes[i] }
             val index = currentTime.getNextClosestTimeIndex(list)
             closestIndexes.add(index)
         }
         simpleAdapter = SimpleViewAdapter(
             this,
-            busToShow,
+            bus,
             instances,
             closestIndexes,
             stopToHighlightIndex ?: 0,
@@ -235,7 +247,7 @@ class BusTimeTableActivity : AppCompatActivity() {
             }
         }
         val callNextPage = {
-            if (simpleAdapter.stopIndex < busToShow.stopPoints.size - 1) {
+            if (simpleAdapter.stopIndex < bus.stopPoints.size - 1) {
                 ++simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
                 rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
@@ -397,9 +409,9 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun updateSimpleBusTimeTable() {
-        val instances = busToShow.instances.filter { it.isHoliday == isHoliday }
-        val closestIndexes = ArrayList<Int>(busToShow.stopPoints.size)
-        for (i in busToShow.stopPoints.indices) {
+        val instances = bus.instances.filter { it.isHoliday == isHoliday }
+        val closestIndexes = ArrayList<Int>(bus.stopPoints.size)
+        for (i in bus.stopPoints.indices) {
             val list = instances.map { it.stopTimes[i] }
             val index = currentTime.getNextClosestTimeIndex(list)
             closestIndexes.add(index)
@@ -591,9 +603,9 @@ class BusTimeTableActivity : AppCompatActivity() {
                 }
                 // TextViews in header that display stop names
                 val stopNameContainerColumnItems =
-                    Array<TextView>(busToShow.stopPoints.size) { i ->
+                    Array<TextView>(bus.stopPoints.size) { i ->
                         MaterialTextView(this@BusTimeTableActivity).apply {
-                            text = busToShow.stopPoints[i].name
+                            text = bus.stopPoints[i].name
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT
@@ -608,7 +620,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 var autoScrollLine = 0
                 val autoScrollOffset = 5
 
-                val instances = busToShow.instances.filter { i -> i.isHoliday == isHoliday }
+                val instances = bus.instances.filter { i -> i.isHoliday == isHoliday }
 
                 // Get next closest bus time in highlighted column
                 var nextClosestTimeIndex = -1
@@ -618,7 +630,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 }
 
                 // Columns, which are LinearLayout, that contain list of stop time and time left
-                val stopColumns = Array(busToShow.stopPoints.size) { column ->
+                val stopColumns = Array(bus.stopPoints.size) { column ->
                     LayoutInflater.from(this@BusTimeTableActivity).inflate(
                         R.layout.activity_bus_timetable_whole_mode_column,
                         wholeTimeTableContainer,
@@ -670,7 +682,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                         tvTimeLeftColumn.text = timeLeftTextBuilder
 
                         setOnClickListener {
-                            val stop = busToShow.stopPoints[column]
+                            val stop = bus.stopPoints[column]
                             val intents = arrayOf(
                                 Intent(Const.Intent.ACTION_SHOW_ON_MAP).apply {
                                     putExtra(Const.Intent.EXTRA_STOP_ID, stop.id)
