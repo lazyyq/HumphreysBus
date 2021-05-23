@@ -235,7 +235,11 @@ class BusTimeTableActivity : AppCompatActivity() {
         )
         rvSimpleTimeTable.adapter = simpleAdapter
         val scrollPosition = closestIndexes[stopToHighlightIndex ?: 0] - 3
-        simpleViewContainer.onViewReady { rvSimpleTimeTable.scrollToPosition(scrollPosition) }
+        // Log.e("ScrollPosition", "$scrollPosition")
+        val scrollBy =
+            scrollPosition * getDimension(R.dimen.timetable_simple_mode_row_height).toInt()
+        // Log.e("ScrollBy", "$scrollBy")
+        rvSimpleTimeTable.onViewReady { rvSimpleTimeTable.post { smoothScrollBy(0, scrollBy) } }
 
         val callPrevPage = {
             if (simpleAdapter.stopIndex > 0) {

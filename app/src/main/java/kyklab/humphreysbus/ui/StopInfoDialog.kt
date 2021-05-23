@@ -349,10 +349,10 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
             val closestLeft = (item.closestBusTime - currentTime).h_m
             val secondClosestLeft = (item.secondClosestBusTime - currentTime).h_m
-            holder.tvNextBus.text =
-                "${item.closestBusTime.h_m} ($closestLeft left)"
-            holder.tvNextNextBus.text =
-                "${item.secondClosestBusTime.h_m} ($secondClosestLeft left)"
+            holder.tvNextBus.text = "(${item.closestBusTime.h_m})"
+            holder.tvNextBusLeft.text = "$closestLeft left"
+            holder.tvNextNextBus.text = "(${item.secondClosestBusTime.h_m})"
+            holder.tvNextNextBusLeft.text = "$secondClosestLeft left"
         }
 
         override fun getItemCount() = items.size
@@ -362,7 +362,9 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
             val tvBusName = itemView.findViewById<TextView>(R.id.tvBusName)
             val tvTowards = itemView.findViewById<TextView>(R.id.tvTowards)
             val tvNextBus = itemView.findViewById<TextView>(R.id.tvNextBus)
+            val tvNextBusLeft = itemView.findViewById<TextView>(R.id.tvNextBusLeft)
             val tvNextNextBus = itemView.findViewById<TextView>(R.id.tvNextNextBus)
+            val tvNextNextBusLeft = itemView.findViewById<TextView>(R.id.tvNextNextBusLeft)
 
             init {
                 itemView.setOnClickListener {

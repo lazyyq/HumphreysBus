@@ -12,8 +12,8 @@
 
     <ImageView
         android:id="@+id/ivBus"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         app:layout_constraintBottom_toTopOf="@id/tvBus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,6 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Bus"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

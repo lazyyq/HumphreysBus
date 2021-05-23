@@ -11,7 +11,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_all_buses.view.*
 import kyklab.humphreysbus.R
@@ -28,7 +28,18 @@ class AllBusesFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_all_buses, container, false)
         view.rvAllBuses.apply {
             adapter = RvAdapter(BusUtils.buses)
-            layoutManager = GridLayoutManager(context, 2)
+            layoutManager = LinearLayoutManager(context)
+            /*
+            layoutManager = GridLayoutManager(context, 2).apply {
+                orientation = GridLayoutManager.VERTICAL
+                spanSizeLookup = object: GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        val adapter = adapter as? RvAdapter ?: return -1
+                        return if (position == adapter.itemCount - 1) 2 else 1
+                    }
+                }
+            }
+            */
         }
         return view
     }

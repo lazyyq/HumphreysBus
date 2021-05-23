@@ -10,7 +10,6 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.*
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -129,13 +128,13 @@ class BusTrackActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        Log.e(TAG, "onResume() called")
+        // Log.e(TAG, "onResume() called")
         super.onResume()
         busStatusUpdater.start()
     }
 
     override fun onPause() {
-        Log.e(TAG, "onPause() called")
+        // Log.e(TAG, "onPause() called")
         super.onPause()
         busStatusUpdater.stop()
     }
