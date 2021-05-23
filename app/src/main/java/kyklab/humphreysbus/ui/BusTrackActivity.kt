@@ -223,7 +223,7 @@ class BusTrackActivity : AppCompatActivity() {
                         val item = InstanceItem(busIcon, instance, i)
                         runningInstances.add(item)
                         container.addView(busIcon)
-                        Log.e(TAG, "container.addView() initial called")
+                        // Log.e(TAG, "container.addView() initial called")
                         continue
                     }
                 }
@@ -280,8 +280,8 @@ class BusTrackActivity : AppCompatActivity() {
             scheduleNextBus()
 
             val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
-            Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
-            Log.e("ANIMATION", "launched init anim")
+            // Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
+            // Log.e("ANIMATION", "launched init anim")
             updateInstanceStatus()
 
             // Scroll to highlighted stop
@@ -315,7 +315,7 @@ class BusTrackActivity : AppCompatActivity() {
             timer!!.schedule(object : TimerTask() {
                 override fun run() {
                     runOnUiThread {
-                        Log.e("ANIMATION", "launching scheduled anim")
+                        // Log.e("ANIMATION", "launching scheduled anim")
 //                        instances.removeIf { it.isDone }
                         updateInstanceStatus()
                     }
@@ -326,7 +326,7 @@ class BusTrackActivity : AppCompatActivity() {
         fun cleanup() {
             runningInstances.clear()
             container.removeAllViews()
-            Log.e(TAG, "container.removeAllViews() called")
+            // Log.e(TAG, "container.removeAllViews() called")
             lastBusIndex = null
             lastScannedLeftTime = null
             closestFirstBusIndex = -1
@@ -347,7 +347,7 @@ class BusTrackActivity : AppCompatActivity() {
                     ) {
                         isReady = true
                         container.addView(icon)
-                        Log.e(TAG, "container.addView() for last called")
+                        // Log.e(TAG, "container.addView() for last called")
 //                        icon.visibility = View.VISIBLE
                         scheduleNextBus()
                     }
@@ -405,7 +405,7 @@ class BusTrackActivity : AppCompatActivity() {
                     val next = bus.stopPoints[indexHeadingTo].name
                     debugEta = busInstance.stopTimes[indexHeadingTo]
                     //icon.setImageBitmap(createBmp(busInstance.stopTimes[indexInStopTimes - 1].m + "~" + busInstance.stopTimes[indexInStopTimes].m + "\nSTART"))
-                    Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
+                    // Log.e("ANIMATION", "Just started past $past, heading $next eta $debugEta")
                     // DEBUG
                 }
 
@@ -417,10 +417,10 @@ class BusTrackActivity : AppCompatActivity() {
                     // DEBUG
                     val bus = BusUtils.buses.find { it.instances.contains(busInstance) }
                     val arrived = bus!!.stopPoints[indexHeadingTo].name
-                    Log.e("ANIMATION", "Just arrived $arrived")
+                    // Log.e("ANIMATION", "Just arrived $arrived")
 
                     if (indexHeadingTo >= bus.stopPoints.size - 1) {
-                        Log.e("ANIMATION", "Just arrived END OF BUS")
+                        // Log.e("ANIMATION", "Just arrived END OF BUS")
                     }
                     // DEBUG
                     /*icon.setImageBitmap(
@@ -461,20 +461,20 @@ class BusTrackActivity : AppCompatActivity() {
                         val animTimeLeftMillis = (nextTime - curTime - STAYINGTIME).timeInMillis
                         val initialOffset =
                             itemheight * (animTimeTotalMillis - animTimeLeftMillis).toFloat() / animTimeTotalMillis
-                        Log.e(
+                        /* Log.e(
                             "sdf",
                             "next: $nextTime, prev: $prevTime, cur: $curTime, initialOffset: $initialOffset"
-                        )
+                        ) */
                         animator.translationYBy(initialOffset).setDuration(0).setListener(null)
                             .start()
 
                         animator.translationYBy(itemheight - initialOffset)
                             .setDuration(getRealAnimDuration(animTimeLeftMillis.toLong()))
                             .setListener(animListener).start()
-                        Log.e(
+                        /* Log.e(
                             "ICONITEM",
                             "first anim, eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} duration ${animTimeLeftMillis / 1000}"
-                        )
+                        ) */
                     } else {
                         // Bus has already arrived, so this has to share some of the codes with
                         // animation done listener!!
@@ -488,10 +488,10 @@ class BusTrackActivity : AppCompatActivity() {
                     animator.translationYBy(itemheight.toFloat())
                         .setDuration(getRealAnimDuration(animTimeTotalMillis.toLong()))
                         .setListener(animListener).start()
-                    Log.e(
+                    /* Log.e(
                         "ICONITEM",
                         "eta $debugEta, prevTimeHHmmss ${prevTime.hms} nextTimeHHmmss ${nextTime.hms} animation duration ${animTimeTotalMillis / 1000}"
-                    )
+                    ) */
                 }
             }
 
