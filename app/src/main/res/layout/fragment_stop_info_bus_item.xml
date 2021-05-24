@@ -33,14 +33,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:singleLine="true"
-        android:ellipsize="end"
         android:layout_marginTop="2dp"
+        android:layout_marginEnd="8dp"
+        android:ellipsize="end"
+        android:singleLine="true"
         android:text="Towards BlahBlah"
         android:textColor="#777"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/ivBus"
-        app:layout_constraintEnd_toStartOf="@+id/tvNextNextBus"
+        app:layout_constraintEnd_toStartOf="@+id/tvNextNextBusLeft"
         app:layout_constraintStart_toEndOf="@id/ivBus"
         app:layout_constraintTop_toBottomOf="@id/tvBusName" />
 
@@ -48,25 +49,48 @@
         android:id="@+id/tvNextBus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/light_gray"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:text="Next bus"
+        android:layout_marginEnd="20dp"
+        android:text="(12:00)"
         app:layout_constraintBottom_toTopOf="@id/tvNextNextBus"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
+        android:id="@+id/tvNextBusLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="00:15 left"
+        app:layout_constraintBottom_toBottomOf="@id/tvNextBus"
+        app:layout_constraintEnd_toStartOf="@id/tvNextBus"
+        app:layout_constraintTop_toTopOf="@id/tvNextBus" />
+
+    <TextView
         android:id="@+id/tvNextNextBus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="20dp"
+        android:textColor="@color/light_gray"
         android:layout_marginBottom="8dp"
-        android:text="Next next bus"
+        android:text="(12:15)"
         app:layout_constraintBottom_toTopOf="@id/divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvNextBus" />
+
+
+    <TextView
+        android:id="@+id/tvNextNextBusLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="00:30 left"
+        app:layout_constraintBottom_toBottomOf="@id/tvNextNextBus"
+        app:layout_constraintEnd_toStartOf="@id/tvNextNextBus"
+        app:layout_constraintTop_toTopOf="@id/tvNextNextBus" />
 
     <View
         android:id="@+id/divider"

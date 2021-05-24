@@ -3,12 +3,12 @@
     android:id="@+id/itemBackground"
     android:gravity="center_horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="@dimen/timetable_simple_mode_row_height"
     android:orientation="horizontal">
 
     <LinearLayout
         android:layout_width="@dimen/timetable_simple_mode_column_width"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <TextView
@@ -35,7 +35,7 @@
 
     <LinearLayout
         android:layout_width="@dimen/timetable_simple_mode_column_width"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <TextView
@@ -63,7 +63,7 @@
 
     <LinearLayout
         android:layout_width="@dimen/timetable_simple_mode_column_width"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <TextView
