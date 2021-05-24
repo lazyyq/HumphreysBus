@@ -23,6 +23,8 @@ class App : Application() {
         val isStatisticsEnabled = Prefs.enableStatistics
         FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(isStatisticsEnabled)
         FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(isStatisticsEnabled)
+
+        Prefs.lastKnownAppVersion = BuildConfig.VERSION_CODE
     }
 
     companion object {
