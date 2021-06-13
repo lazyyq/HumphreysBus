@@ -9,20 +9,22 @@ import android.view.MotionEvent
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kyklab.humphreysbus.App
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.data.Spot
 import kyklab.humphreysbus.ui.MultiplePinView
+import kyklab.humphreysbus.updater.AssetsManager
 import kyklab.humphreysbus.utils.TYPEFACE_SANS_SERIF_CONDENSED
 import kyklab.humphreysbus.utils.dpToPx
 import kyklab.humphreysbus.utils.getDimension
+import java.io.File
 import kotlin.math.max
 
 
@@ -34,7 +36,7 @@ class BusMap(
 ) {
     companion object {
         private val TAG = BusMap::class.simpleName
-        private const val MAP_ASSET_FILENAME = "subway.webp"
+        private const val MAP_ASSET_FILENAME = "map.webp"
 
         private const val xBase = 126.974512
         private const val yBase = 36.945053
@@ -59,7 +61,7 @@ class BusMap(
 
     @SuppressLint("ClickableViewAccessibility")
     fun init() {
-        mapView.setImage(ImageSource.asset(MAP_ASSET_FILENAME))
+        mapView.setImage(ImageSource.uri(File(AssetsManager.ASSETS_DIR + "/" + MAP_ASSET_FILENAME).toUri()))
         mapView.setScaleAndCenter(1f, PointF(2000f, 2000f))
 
         val gestureDetector = GestureDetector(
@@ -140,17 +142,17 @@ class BusMap(
 
         val list = ArrayList<MultiplePinView.Pin>(bus.busRouteImageCoords.size)
         busRouteListHashMap[bus] = list
-        val assetMgr = App.context.assets
         val job = scope.launch(Dispatchers.Default) {
-            for (i in bus.busRouteImageCoords.indices) {
-                var bitmap: Bitmap
-                assetMgr.open(bus.busRouteImageFilenames[i]).use {
-                    bitmap = BitmapFactory.decodeStream(it)
-                }
+            bus.busRouteImageCoords.withIndex().asSequence().map {
+                Pair(
+                    it.value,
+                    File(AssetsManager.ASSETS_DIR + "/" + bus.busRouteImageFilenames[it.index]).inputStream()
+                        .use { `is` -> BitmapFactory.decodeStream(`is`) })
+            }.forEach {
                 val pin = MultiplePinView.Pin(
-                    pinCoord = bus.busRouteImageCoords[i],
+                    pinCoord = it.first,
                     name = getBusRoutePinName(bus),
-                    bitmap = bitmap,
+                    bitmap = it.second,
                     autoScale = true,
                     priority = 0
                 )

@@ -6,16 +6,18 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import kyklab.humphreysbus.App
 import kyklab.humphreysbus.BuildConfig
+import kyklab.humphreysbus.utils.copyTo
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
 
-object BusDBHelper :
-    SQLiteOpenHelper(App.context, "subway.db", null, 10) {
+private const val DB_NAME = "humphreysbus.db"
+
+object BusDBHelper : SQLiteOpenHelper(App.context, DB_NAME, null, 10) {
 
     private val TAG = BusDBHelper::class.simpleName
-    private val DB_DIR: String = App.context.dataDir.toString() + "/databases"
-    private const val DB_NAME = "subway.db"
+    private val DB_PATH = App.context.getDatabasePath(DB_NAME).path
 
     const val DB_STOPS_COL_INDEX_ID = 0
     const val DB_STOPS_COL_INDEX_MAPNO = 1
@@ -49,8 +51,10 @@ object BusDBHelper :
     }
 
     init {
-        Log.e(TAG, "DB Path: $DB_DIR")
-        checkDatabase()
+        // checkDatabase()
+
+        // Always copy for now. TODO: Improve this behavior in the future
+        copyDatabase()
     }
 
     @Deprecated(
@@ -82,9 +86,8 @@ object BusDBHelper :
     private val dbExists: Boolean
         get() {
             var checkDB: SQLiteDatabase? = null
-            val path = "$DB_DIR/$DB_NAME"
             try {
-                checkDB = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY)
+                checkDB = SQLiteDatabase.openDatabase(DB_PATH, null, SQLiteDatabase.OPEN_READONLY)
             } catch (e: SQLiteException) {
                 Log.e(TAG, "checkDatabase(): Failed to open db")
             } finally {
@@ -95,25 +98,8 @@ object BusDBHelper :
 
     @Throws(IOException::class)
     private fun copyDatabase() {
-        val outFilename = "$DB_DIR/$DB_NAME"
-        App.context.assets.open(DB_NAME).use { inputStream ->
-            FileOutputStream(outFilename).use { outputStream ->
-                val buffer = ByteArray(1024)
-                var length: Int
-                try {
-                    while (true) {
-                        length = inputStream.read(buffer)
-                        if (length > 0) {
-                            outputStream.write(buffer, 0, length)
-                        } else {
-                            break
-                        }
-                    }
-                } catch (e: IOException) {
-                    throw e
-                }
-            }
-        }
+        val src = File(App.context.filesDir.path + "/hb_assets/assets/$DB_NAME")
+        src.copyTo(DB_PATH, overwrite = true)
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
