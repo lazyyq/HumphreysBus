@@ -140,7 +140,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         }
 
         stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
-        stop = BusUtils.getBusStop(stopId) ?: return
+        stop = BusUtils.getBusStop(stopId)
         view.tvStopInfo.text = stop.name
 
 //        updateBuses()

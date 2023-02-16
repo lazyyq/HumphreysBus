@@ -121,17 +121,19 @@ object BusUtils {
         }
     }
 
-    fun getBusStop(stopId: Int?): BusStop? {
+    fun getBusStop(stopId: Int?): BusStop {
         lock.withLock {
             while (!isLoadDone) cond.await()
-            return stopId?.let { stops.getOrNull(stopId - 1) }
+            return stops.find { stop -> stop.id == stopId }
+                ?: throw Exception("Stop for stop id $stopId not found")
         }
     }
 
-    fun getBusStop(stopNo: String?): BusStop? {
+    fun getBusStop(stopNo: String?): BusStop {
         lock.withLock {
             while (!isLoadDone) cond.await()
             return stops.find { stop -> stop.no == stopNo }
+                ?: throw Exception("Stop for stopNo $stopNo not found")
         }
     }
 
