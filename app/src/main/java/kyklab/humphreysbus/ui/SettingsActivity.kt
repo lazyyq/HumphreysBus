@@ -49,6 +49,12 @@ class SettingsActivity : AppCompatActivity() {
         val prefShowAd by lazy {
             findPreference<Preference>(Prefs.Key.SHOW_AD)
         }
+        val prefBeta by lazy {
+            findPreference<Preference>(Prefs.Key.BETA)
+        }
+        val prefSpecialThanks by lazy {
+            findPreference<Preference>(Prefs.Key.SPECIAL_THANKS)
+        }
         val prefSendFeedback by lazy {
             findPreference<Preference>(Prefs.Key.SEND_FEEDBACK)
         }
@@ -70,6 +76,18 @@ class SettingsActivity : AppCompatActivity() {
                 if (newValue is Boolean && newValue) {
                     context?.toast("♡")
                 }
+                true
+            }
+            prefBeta?.setOnPreferenceClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse("https://apps.kykint.com/humphybus")
+                startActivity(intent)
+                true
+            }
+            prefSpecialThanks?.setOnPreferenceClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse("https://github.com/OXcarXierra")
+                startActivity(intent)
                 true
             }
             prefSendFeedback?.setOnPreferenceClickListener {

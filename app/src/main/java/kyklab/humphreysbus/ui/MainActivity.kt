@@ -312,6 +312,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        /*
         btnBusDirections.setOnClickListener {
             busDirectionsChooserLayout.apply {
                 if (visibility == View.VISIBLE) {
@@ -321,6 +322,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        */
         // Collapse on click outside of directions chooser
         /*
         busDirectionsChooserLayout.setOnClickListener {

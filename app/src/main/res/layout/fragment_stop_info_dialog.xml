@@ -30,9 +30,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
+        android:background="@drawable/stop_info_dialog_stop_name_background"
         android:gravity="center"
         android:orientation="horizontal"
-        android:background="@drawable/stop_info_dialog_stop_name_background"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -47,11 +47,11 @@
             app:tint="@android:color/black" />
 
         <TextView
-            android:layout_marginStart="4dp"
             android:id="@+id/tvStopInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginStart="4dp"
             android:text="Stop Info"
             android:textSize="16sp" />
     </LinearLayout>
@@ -67,32 +67,21 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/timeContainer"
         android:layout_width="match_parent"
+        android:layout_height="42dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:layout_height="42dp">
+        android:layout_marginBottom="8dp">
 
-        <CheckBox
-            android:scaleX="0.8"
-            android:scaleY="0.8"
-            android:id="@+id/cbHoliday"
+        <Spinner
+            android:id="@+id/spinner"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:gravity="end"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tvCurrentTime"
-            android:layout_gravity="start|bottom"
-            android:background="?selectableItemBackgroundBorderless"
-            android:gravity="center"
-            android:buttonTint="@color/near_black"
-            android:padding="4dp"
-            android:text="Holiday"
-            android:textColor="@color/near_black"
-            android:textSize="16sp" />
+            app:layout_constraintEnd_toStartOf="@id/tvCurrentTime" />
 
         <TextView
-            android:scaleX="0.8"
-            android:scaleY="0.8"
             android:id="@+id/tvCurrentTime"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -100,8 +89,10 @@
             android:background="?selectableItemBackgroundBorderless"
             android:drawableStart="@drawable/ic_alarm"
             android:drawablePadding="8dp"
-            android:gravity="center"
             android:drawableTint="@color/near_black"
+            android:gravity="center"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
             android:textColor="@color/near_black"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"

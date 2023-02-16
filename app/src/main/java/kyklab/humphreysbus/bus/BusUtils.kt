@@ -1,14 +1,25 @@
 package kyklab.humphreysbus.bus
 
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
 import android.graphics.Color
 import android.graphics.PointF
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+import android.provider.CalendarContract.Colors
 import android.util.Log
-import androidx.core.database.getIntOrNull
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
+import android.widget.TextView
 import androidx.core.database.getStringOrNull
+import kotlinx.android.synthetic.main.activity_bus_timetable.*
+import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.coroutines.*
+import kyklab.humphreysbus.R
 import kyklab.humphreysbus.data.BusStop
 import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.forEachCursor
@@ -17,6 +28,7 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 import kotlin.concurrent.withLock
+import kotlin.math.roundToInt
 
 object BusUtils {
     private const val TAG = "BusUtils"
@@ -123,14 +135,81 @@ object BusUtils {
         }
     }
 
+    // Deprecated
+    fun getDay() = getDay(Date())
+
+    // Deprecated
+    fun getDay(date: Date): String {
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return getDay(calendar)
+    }
+
+    // Deprecated
+    fun getDay(calendar: Calendar): String {
+        return when (calendar.get(Calendar.DAY_OF_WEEK)) {
+            Calendar.FRIDAY -> Bus.Day.Fri
+            Calendar.SATURDAY -> Bus.Day.Sat
+            Calendar.SUNDAY -> Bus.Day.Sun
+            else -> Bus.Day.Mon
+        }
+    }
+
+    // Setup spinner for day selection
+    fun setupDaySelectionSpinner(
+        context: Context,
+        spinner: Spinner,
+//        color: Color?,
+        defaultDay: String,
+        onDaySelected: (String) -> Unit
+    ) {
+        assert(
+            defaultDay == Bus.Day.Mon ||
+                    defaultDay == Bus.Day.Fri ||
+                    defaultDay == Bus.Day.Sat ||
+                    defaultDay == Bus.Day.Sun
+        )
+        val items = context.resources.getStringArray(R.array.bus_days)
+        val adapter =
+            ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, items)
+        spinner.adapter = adapter
+        spinner.setSelection(adapter.getPosition(defaultDay)) // Set initial selection to today's day
+        val origListener = spinner.onItemSelectedListener
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                origListener?.onItemSelected(parent, view, position, id)
+                val selected = when (position) {
+                    0 -> Bus.Day.Mon
+                    1 -> Bus.Day.Fri
+                    2 -> Bus.Day.Sat
+                    else -> Bus.Day.Sun
+                }
+                onDaySelected(selected)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                origListener?.onNothingSelected(parent)
+            }
+        }
+    }
+
+    /*
+    // Deprecated
     fun isHoliday() = isHoliday(Date())
 
+    // Deprecated
     fun isHoliday(date: Date): Boolean {
         val calendar = Calendar.getInstance()
         calendar.time = date
         return isHoliday(calendar)
     }
 
+    // Deprecated
     fun isHoliday(calendar: Calendar): Boolean {
         val isWeekend =
             (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) ||
@@ -138,6 +217,7 @@ object BusUtils {
         val isUsHoliday = holidays.contains(dateFormat.format(calendar))
         return isWeekend || isUsHoliday
     }
+    */
 
     private fun loadBusStops() {
         lock.withLock {
@@ -147,8 +227,11 @@ object BusUtils {
                     val id: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_ID)
                     val no: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_MAPNO)
                     val name: String = it.getString(BusDBHelper.DB_STOPS_COL_INDEX_NAME)
-                    val xCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
-                    val yCenter: Int = it.getInt(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+                    val lng: Double = it.getDouble(BusDBHelper.DB_STOPS_COL_INDEX_X_CENTER)
+                    val lat: Double = it.getDouble(BusDBHelper.DB_STOPS_COL_INDEX_Y_CENTER)
+                    val coords = BusMap.gMapCoordToLocalMapCoord(lng, lat)
+                    val xCenter: Int = coords!!.x.roundToInt()
+                    val yCenter: Int = coords!!.y.roundToInt()
                     val newStop = BusStop(id, no, name, xCenter, yCenter)
                     (stops as ArrayList<BusStop>).add(newStop)
                 }
@@ -204,7 +287,7 @@ object BusUtils {
 
                 val cursor2 = db!!.kQuery(
                     table = "bus_details",
-                    columns = arrayOf("stop_times", "is_holiday"),
+                    columns = arrayOf("stop_times", "day"),
                     selection = "bus_name=\"$busName\"",
                     orderBy = "bus_details._id ASC"
                 )
@@ -212,12 +295,8 @@ object BusUtils {
                     val split = c1.getString(0).split(';')
                     val stopTimes = ArrayList(split.map { MinDateTime().apply { hm = it } })
                     if (stopTimes.size == busStops.size) {
-                        val isHoliday =
-                            when (c1.getIntOrNull(1)) {
-                                1 -> true
-                                else -> false
-                            }
-                        instances.add(Bus.BusInstance(stopTimes, isHoliday))
+                        val day = c1.getString(1);
+                        instances.add(Bus.BusInstance(stopTimes, day))
                     }
                 }
                 cursor2.close()

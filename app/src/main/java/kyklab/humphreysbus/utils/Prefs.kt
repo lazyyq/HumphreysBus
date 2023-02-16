@@ -59,6 +59,12 @@ object Prefs {
         val SHOW_AD_DEFAULT =
             App.context.resources.getBoolean(R.bool.pref_show_ad_default)
 
+        val BETA =
+            App.context.resources.getString(R.string.pref_beta)
+
+        val SPECIAL_THANKS =
+            App.context.resources.getString(R.string.pref_special_thanks)
+
         val SEND_FEEDBACK =
             App.context.resources.getString(R.string.pref_send_feedback)
 

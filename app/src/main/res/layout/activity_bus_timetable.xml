@@ -8,12 +8,12 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        app:title="Red"
-        tools:titleTextColor="?colorSurface"
         android:layout_height="?actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="Red"
+        tools:titleTextColor="?colorSurface">
 
         <LinearLayout
             android:id="@+id/toolbarContainer"
@@ -23,21 +23,11 @@
             android:layout_marginEnd="16dp"
             android:orientation="horizontal">
 
-            <CheckBox
-                android:id="@+id/cbHoliday"
-                style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+            <Spinner
+                android:id="@+id/spinner"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_gravity="start|center_vertical"
-                android:background="?selectableItemBackgroundBorderless"
-                tools:buttonTint="?colorOnPrimary"
-                android:gravity="center"
-                android:padding="4dp"
-                android:scaleX="0.8"
-                android:scaleY="0.8"
-                android:text="Holiday"
-                tools:textColor="?colorOnPrimary"
-                android:textSize="16sp" />
+                android:layout_height="match_parent"
+                android:gravity="end" />
 
             <TextView
                 android:id="@+id/tvCurrentTime"
@@ -49,11 +39,11 @@
                 android:gravity="center"
                 android:scaleX="0.8"
                 android:scaleY="0.8"
-                tools:textColor="?colorOnPrimary"
                 android:textSize="16sp"
                 app:drawableStartCompat="@drawable/ic_alarm"
                 tools:drawableTint="?colorOnPrimary"
-                tools:text="12:00" />
+                tools:text="12:00"
+                tools:textColor="?colorOnPrimary" />
 
             <ImageView
                 android:id="@+id/ivSwitchView"
@@ -125,8 +115,8 @@
             tools:listitem="@layout/activity_bus_timetable_simple_mode_item" />
 
         <kyklab.humphreysbus.ui.UntouchableView
-            android:layout_width="64dp"
             android:id="@+id/spinnerFadingEdgeStart"
+            android:layout_width="64dp"
             android:layout_height="0dp"
             android:layout_marginTop="2dp"
             android:background="@drawable/spinner_fade_edge"
@@ -136,8 +126,8 @@
             app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
 
         <kyklab.humphreysbus.ui.UntouchableView
-            android:layout_width="64dp"
             android:id="@+id/spinnerFadingEdgeEnd"
+            android:layout_width="64dp"
             android:layout_height="0dp"
             android:layout_marginTop="2dp"
             android:background="@drawable/spinner_fade_edge"
@@ -148,9 +138,9 @@
             app:layout_constraintTop_toTopOf="@id/rvSimpleViewTab" />
 
         <View
+            android:id="@+id/simpleViewTabShadow"
             android:layout_width="0dp"
             android:layout_height="2dp"
-            android:id="@+id/simpleViewTabShadow"
             android:background="@drawable/drop_shadow"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -165,10 +155,10 @@
             app:layout_constraintTop_toTopOf="@id/rvSimpleTimeTable">
 
             <ImageView
+                android:id="@+id/ivSimpleBefore"
                 android:layout_width="36dp"
                 android:layout_height="72dp"
                 android:layout_gravity="center"
-                android:id="@+id/ivSimpleBefore"
                 android:scaleType="fitXY"
                 android:scaleX="-1"
                 android:src="@drawable/arrow_next"
@@ -184,8 +174,8 @@
             app:layout_constraintTop_toTopOf="@id/rvSimpleTimeTable">
 
             <ImageView
-                android:layout_width="36dp"
                 android:id="@+id/ivSimpleAfter"
+                android:layout_width="36dp"
                 android:layout_height="72dp"
                 android:layout_gravity="center"
                 android:scaleType="fitXY"

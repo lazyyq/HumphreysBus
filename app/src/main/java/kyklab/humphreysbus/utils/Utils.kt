@@ -13,6 +13,9 @@ import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.*
+import android.widget.AdapterView
+import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
@@ -348,6 +351,21 @@ fun Context.getLegibleColorOnBackground(
 
 val TYPEFACE_SANS_SERIF_CONDENSED: Typeface =
     Typeface.create("sans-serif-condensed", Typeface.NORMAL)
+
+// Set text color for spinner which uses android.R.layout.simple_spinner_dropdown_item.. probably.
+fun Spinner.setTextColor(@ColorInt color: Int) {
+    val origListener = this.onItemSelectedListener
+    onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            origListener?.onItemSelected(parent, view, position, id)
+            (parent?.getChildAt(0) as TextView)?.setTextColor(color)
+        }
+
+        override fun onNothingSelected(parent: AdapterView<*>?) {
+            origListener?.onNothingSelected(parent)
+        }
+    }
+}
 
 class RoundedBackgroundSpan(
     private val context: Context,

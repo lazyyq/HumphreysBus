@@ -73,14 +73,7 @@ class AllBusesFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             // TODO: Generify
-            val color = ResourcesCompat.getColor(
-                resources, when (items[position].name) {
-                    "Red" -> android.R.color.holo_red_dark
-                    "Blue" -> android.R.color.holo_blue_dark
-                    "Green" -> android.R.color.holo_green_dark
-                    else -> android.R.color.black
-                }, context?.theme
-            )
+            val color = items[position].colorInt
             holder.ivBus.apply {
 //                setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_bus, context.theme))
 //                setColorFilter(ResourcesCompat.getColor(resources, color, context.theme))

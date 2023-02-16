@@ -12,6 +12,15 @@ data class Bus(
     val busRouteImageCoords: List<PointF>,
     val busRouteImageFilenames: List<String>
 ) {
+    class Day {
+        companion object {
+            const val Mon = "MON"
+            const val Fri = "FRI"
+            const val Sat = "SAT"
+            const val Sun = "SUN"
+        }
+    }
+
     companion object {
         private const val TAG = "Bus"
     }
@@ -56,7 +65,7 @@ data class Bus(
         return name.hashCode()
     }
 
-    data class BusInstance(val stopTimes: List<MinDateTime>, val isHoliday: Boolean)
+    data class BusInstance(val stopTimes: List<MinDateTime>, val day: String)
 
     data class StopDeprecated(val stopNo: String, val stopTime: String)
 }

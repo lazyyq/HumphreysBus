@@ -9,7 +9,8 @@ import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.*
-import android.widget.CompoundButton
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -40,7 +41,9 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime().apply { setCalendar(calendar);s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
-    private var isHoliday = BusUtils.isHoliday()
+
+    //    private var isHoliday = BusUtils.isHoliday()
+    private var day = BusUtils.getDay()
     private var stopId = -1
     private lateinit var stop: BusStop
 
@@ -170,7 +173,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
             val stopIndexes =
                 bus.stopPoints.withIndex().filter { it.value.id == stopId }.map { it.index }
             stopIndexes.forEach { index ->
-                val times = bus.instances.filter { it.isHoliday == isHoliday }
+                val times = bus.instances.filter { it.day == day }
                     .map { it.stopTimes[index] }
                 // Find closest bus time
                 var closestIndex = currentTime.getNextClosestTimeIndex(times, true)
@@ -231,14 +234,14 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     private fun showCurrentTime() {
         updateDateTime()
 
-        cbHoliday.setOnClickListener {
-            if (it is CompoundButton) {
-                isHoliday = it.isChecked
-            }
+        // Setup adapter for day selection
+        BusUtils.setupDaySelectionSpinner(
+            activity, spinner, day
+        ) { selected ->
+            day = selected
             updateDateTime()
             newUpdateBuses()
         }
-
 
         tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
@@ -246,7 +249,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
                 currentTime.setCalendar(calendar)
                 currentTime.s = "00"
                 rvAdapter.currentTime = currentTime
-                isHoliday = BusUtils.isHoliday(calendar)
+                day = BusUtils.getDay(calendar)
                 updateDateTime()
                 newUpdateBuses()
             }.show(parentFragmentManager, "dateTimePicker")
@@ -281,7 +284,6 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     }
 
     private fun updateDateTime() {
-        cbHoliday.isChecked = isHoliday // TODO: Check if this triggers listener
         tvCurrentTime.text = currentTime.h_m
     }
 

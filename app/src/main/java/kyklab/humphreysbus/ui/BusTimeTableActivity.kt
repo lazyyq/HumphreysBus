@@ -5,8 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
-import android.graphics.Matrix
-import android.graphics.Typeface
+import android.graphics.*
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
@@ -25,21 +24,19 @@ import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
-import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
 import kotlinx.android.synthetic.main.activity_bus_timetable.*
-import kotlinx.android.synthetic.main.activity_bus_timetable.cbHoliday
-import kotlinx.android.synthetic.main.activity_bus_timetable.progressBar
-import kotlinx.android.synthetic.main.activity_bus_timetable.tvCurrentTime
 import kotlinx.android.synthetic.main.activity_bus_timetable_whole_mode_column.view.*
-import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
-import kotlinx.coroutines.*
-import kyklab.humphreysbus.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kyklab.humphreysbus.Const
+import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.utils.*
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
-import java.util.*
 import kotlin.math.abs
 
 
@@ -60,7 +57,7 @@ class BusTimeTableActivity : AppCompatActivity() {
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime.getCurDateTime().apply { s = "00" }
     private val sdf by lazy { SimpleDateFormat("HHmm") }
-    private var isHoliday = BusUtils.isHoliday()
+    private var day = BusUtils.getDay()
 
     private var loadScheduleJob: Job? = null
 
@@ -149,10 +146,8 @@ class BusTimeTableActivity : AppCompatActivity() {
         // Apply colors to items in toolbar
         toolbarItemColor.let {
             toolbar.setTitleTextColor(it)
-            cbHoliday.apply {
-                buttonTintList = ColorStateList.valueOf(it)
-                setTextColor(it)
-            }
+            spinner.backgroundTintList = ColorStateList.valueOf(it)
+            spinner.setTextColor(it)
             tvCurrentTime.apply {
                 TextViewCompat.setCompoundDrawableTintList(
                     this, ColorStateList.valueOf(it)
@@ -164,7 +159,7 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun initSimpleModeView() {
-        val instances = bus.instances.filter { it.isHoliday == isHoliday }
+        val instances = bus.instances.filter { it.day == day }
 
         // Setup tab view
         val stopNames = bus.stopPoints.map { it.name }
@@ -303,6 +298,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                     override fun onSwipeLeft() {
                         callNextPage()
                     }
+
                     override fun onSwipeRight() {
                         callPrevPage()
                     }
@@ -318,9 +314,11 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
         private var savedEvent: MotionEvent? = null
-        init{
+
+        init {
             Log.e("GestureDetector", "Registered")
         }
+
         override fun onDown(e: MotionEvent?): Boolean {
             Log.e("GestureDetector", "onDown()")
             savedEvent = e
@@ -340,7 +338,10 @@ class BusTimeTableActivity : AppCompatActivity() {
             try {
                 val diffY = e2.y - origEvent.y
                 val diffX = e2.x - origEvent.x
-                Log.e("SwipeDetector", "diffX: ${abs(diffX)}, diffY: ${abs(diffY)}, velocityX: $velocityX, velocityY: $velocityY")
+                Log.e(
+                    "SwipeDetector",
+                    "diffX: ${abs(diffX)}, diffY: ${abs(diffY)}, velocityX: $velocityX, velocityY: $velocityY"
+                )
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > 100 && abs(velocityX) > 100) {
                         if (diffX > 0) {
@@ -413,7 +414,7 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun updateSimpleBusTimeTable() {
-        val instances = bus.instances.filter { it.isHoliday == isHoliday }
+        val instances = bus.instances.filter { it.day == day }
         val closestIndexes = ArrayList<Int>(bus.stopPoints.size)
         for (i in bus.stopPoints.indices) {
             val list = instances.map { it.stopTimes[i] }
@@ -624,7 +625,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 var autoScrollLine = 0
                 val autoScrollOffset = 5
 
-                val instances = bus.instances.filter { i -> i.isHoliday == isHoliday }
+                val instances = bus.instances.filter { i -> i.day == day }
 
                 // Get next closest bus time in highlighted column
                 var nextClosestTimeIndex = -1
@@ -749,9 +750,8 @@ class BusTimeTableActivity : AppCompatActivity() {
     private fun showCurrentTime() {
         updateDateTime()
 
-        cbHoliday.setOnClickListener {
-            isHoliday = !isHoliday
-
+        BusUtils.setupDaySelectionSpinner(this, spinner, day) { selected ->
+            day = selected
             updateDateTime()
             updateSelectedTimeTable()
         }
@@ -761,7 +761,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                 calendar.set(Calendar.SECOND, 0)
                 currentTime.setCalendar(calendar)
-                isHoliday = BusUtils.isHoliday(calendar)
+                day = BusUtils.getDay(calendar)
                 updateDateTime()
                 updateSelectedTimeTable()
             }.show(supportFragmentManager, "dateTimePicker")
@@ -786,7 +786,6 @@ class BusTimeTableActivity : AppCompatActivity() {
     */
 
     private fun updateDateTime() {
-        cbHoliday.isChecked = isHoliday
         tvCurrentTime.text = currentTime.h_m
     }
 }

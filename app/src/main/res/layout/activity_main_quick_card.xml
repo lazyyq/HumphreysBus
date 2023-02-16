@@ -43,12 +43,14 @@
             android:padding="4dp"
             android:visibility="gone" />
 
+        <!--
         <View style="@style/QuickButtonDividerStyle" />
 
         <ImageView
             android:id="@+id/btnBusDirections"
             style="@style/QuickButtonStyle"
             android:src="@drawable/ic_moving" />
+        -->
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

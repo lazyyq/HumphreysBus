@@ -23,6 +23,20 @@
 
     <Preference
         app:iconSpaceReserved="false"
+        app:key="@string/pref_beta"
+        app:title="(WIP) Early access to beta version" />
+
+    <PreferenceCategory app:allowDividerAbove="false" />
+
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="@string/pref_special_thanks"
+        app:title="Credits: Oh Seungseok (OXcarXierra)"
+        app:summary="This app has been made possible thanks to the latest bus stop locations and timetables provided by Oh Seungseok. Big kudos to his help! He also makes great apps himself so make sure to visit his GitHub profile or take a look at his own bus app for Humphreys called 'USFK Bus', which should be available soon on the Play Store (if not already)."/>
+
+
+    <Preference
+        app:iconSpaceReserved="false"
         app:key="@string/pref_oss_license"
         app:title="Open source licenses" />
 
