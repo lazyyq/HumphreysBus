@@ -77,6 +77,10 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize RecyclerView adapter
+        rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
+
         showCurrentTime()
         showBuses()
 
@@ -148,7 +152,6 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     }
 
     private fun initBusList() {
-        rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
         binding.rvClosestBuses.adapter = rvAdapter
         val layoutManager: RecyclerView.LayoutManager
 
