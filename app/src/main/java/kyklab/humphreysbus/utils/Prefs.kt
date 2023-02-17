@@ -5,6 +5,7 @@ import androidx.preference.PreferenceManager
 import kyklab.humphreysbus.App
 import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.R
+import kyklab.humphreysbus.utils.Prefs.Key.DB_VERSION_DEFAULT
 import kyklab.humphreysbus.utils.Prefs.Key.ENABLE_STATISTICS_DFEAULT
 import kyklab.humphreysbus.utils.Prefs.Key.LAST_KNOWN_APP_VERSION_DEFAULT
 import kyklab.humphreysbus.utils.Prefs.Key.SHOW_AD_DEFAULT
@@ -22,6 +23,12 @@ object Prefs {
             Key.LAST_KNOWN_APP_VERSION, LAST_KNOWN_APP_VERSION_DEFAULT
         )
         set(value) = editor.putInt(Key.LAST_KNOWN_APP_VERSION, value).apply()
+
+    var dbVersion: Int
+        get() = pref.getInt(
+            Key.DB_VERSION, DB_VERSION_DEFAULT
+        )
+        set(value) = editor.putInt(Key.DB_VERSION, value).apply()
 
     var enableStatistics: Boolean
         get() = pref.getBoolean(
@@ -48,6 +55,12 @@ object Prefs {
         val LAST_KNOWN_APP_VERSION =
             App.context.resources.getString(R.string.pref_last_known_app_version)
         val LAST_KNOWN_APP_VERSION_DEFAULT = BuildConfig.VERSION_CODE
+
+        val DB_VERSION =
+            App.context.resources.getString(R.string.pref_db_version)
+        val DB_VERSION_DEFAULT =
+            App.context.resources.getInteger(R.integer.pref_db_version_default)
+
 
         val ENABLE_STATISTICS =
             App.context.resources.getString(R.string.pref_enable_statistics)

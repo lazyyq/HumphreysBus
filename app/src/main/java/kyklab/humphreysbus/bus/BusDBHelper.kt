@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import kyklab.humphreysbus.App
-import kyklab.humphreysbus.BuildConfig
+import kyklab.humphreysbus.utils.Prefs
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
@@ -16,6 +16,7 @@ object BusDBHelper :
     private val TAG = BusDBHelper::class.simpleName
     private val DB_DIR: String = App.context.dataDir.toString() + "/databases"
     private const val DB_NAME = "subway.db"
+    private const val DB_VERSION = 10
 
     const val DB_STOPS_COL_INDEX_ID = 0
     const val DB_STOPS_COL_INDEX_MAPNO = 1
@@ -62,13 +63,15 @@ object BusDBHelper :
     }
 
     private fun checkDatabase(): Boolean {
-        if (!dbExists || BuildConfig.DEBUG) {
-            Log.e(TAG, "DB does not exist, trying to copy")
+        Log.e("DB", "OLD DB VERSION: ${Prefs.dbVersion}, NEW DB VERSION: ${DB_VERSION}")
+        if (!dbExists || Prefs.dbVersion < DB_VERSION) {
+            Log.e(TAG, "DB not found or old, trying to copy")
             try {
                 // Create an empty db file before copying
                 readableDatabase
                 close()
                 copyDatabase()
+                Prefs.dbVersion = DB_VERSION
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to copy database")
                 return false
@@ -121,6 +124,7 @@ object BusDBHelper :
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        /*
         if (newVersion > oldVersion) {
             try {
                 copyDatabase()
@@ -128,5 +132,6 @@ object BusDBHelper :
                 e.printStackTrace()
             }
         }
+        */
     }
 }
