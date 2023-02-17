@@ -18,13 +18,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_bus_track.*
-import kotlinx.android.synthetic.main.activity_bus_track.view.*
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.databinding.ActivityBusTrackBinding
 import kyklab.humphreysbus.utils.*
 import kyklab.humphreysbus.utils.MinDateTime.Companion.compare
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getCurDateTime
@@ -42,6 +41,8 @@ class BusTrackActivity : AppCompatActivity() {
         private const val STATE_HIGHLIGHT_INDEX = "state_highlight_index"
     }
 
+    private lateinit var binding: ActivityBusTrackBinding
+
     private var itemheight = 0
     private lateinit var curTime: MinDateTime
     private lateinit var busStatusUpdater: BusStatusUpdater
@@ -51,7 +52,7 @@ class BusTrackActivity : AppCompatActivity() {
     private val rvOnScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            sv.scrollBy(dx, dy)
+            binding.sv.scrollBy(dx, dy)
         }
     }
 
@@ -87,8 +88,12 @@ class BusTrackActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bus_track)
-        setSupportActionBar(toolbar)
+
+        binding = ActivityBusTrackBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        setSupportActionBar(binding.toolbar)
 
         val busName: String
         if (savedInstanceState != null) {
@@ -112,7 +117,7 @@ class BusTrackActivity : AppCompatActivity() {
 
         setupToolbar()
 
-        recyclerView = rv
+        recyclerView = binding.rv
 
         busStatusUpdater = BusStatusUpdater()
         busStatusUpdater.init()
@@ -158,7 +163,7 @@ class BusTrackActivity : AppCompatActivity() {
             )
 
         // Set toolbar background and status bar color
-        toolbar.setBackgroundColor(toolbarColor)
+        binding.toolbar.setBackgroundColor(toolbarColor)
         window.statusBarColor = toolbarColor
         // Light icons for status bar if needed
         if (toolbarColor.isBright) {
@@ -167,13 +172,13 @@ class BusTrackActivity : AppCompatActivity() {
 
         // Apply colors to items in toolbar
         toolbarItemColor.let {
-            toolbar.setTitleTextColor(it)
+            binding.toolbar.setTitleTextColor(it)
 
-            ivTimeTable.imageTintList = ColorStateList.valueOf(it)
+            binding.ivTimeTable.imageTintList = ColorStateList.valueOf(it)
         }
 
         // Setup click listeners for items in toolbar
-        ivTimeTable.setOnClickListener {
+        binding.ivTimeTable.setOnClickListener {
             val intent = Intent(this, BusTimeTableActivity::class.java)
             intent.putExtra("busname", bus.name)
             startActivity(intent)
@@ -199,15 +204,15 @@ class BusTrackActivity : AppCompatActivity() {
             topmargin = itemheight / 2 - dpToPx(this@BusTrackActivity, 32f) / 2
 
             // Sync recyclerview scroll with scrollview
-            rv.addOnScrollListener(rvOnScrollListener)
+            binding.rv.addOnScrollListener(rvOnScrollListener)
 
             val emptyTime = MinDateTime()
             adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
             adapter = MyAdapter(this@BusTrackActivity, bus, adapterItems)
-            rv.adapter = adapter
+            binding.rv.adapter = adapter
 
             val rvheight = itemheight * adapter.itemCount
-            container.layoutParams.height = rvheight
+            binding.container.layoutParams.height = rvheight
         }
 
         fun addInitialBuses() {
@@ -222,7 +227,7 @@ class BusTrackActivity : AppCompatActivity() {
                         val busIcon = getBusIconView(i)
                         val item = InstanceItem(busIcon, instance, i)
                         runningInstances.add(item)
-                        container.addView(busIcon)
+                        binding.container.addView(busIcon)
                         // Log.e(TAG, "container.addView() initial called")
                         continue
                     }
@@ -297,7 +302,7 @@ class BusTrackActivity : AppCompatActivity() {
                     scrollBy(0, scrollOffsetPx)
                     addOnScrollListener(rvOnScrollListener)
                 }
-                sv.onViewReady { scrollBy(0, scrollOffsetPx) }
+                binding.sv.onViewReady { scrollBy(0, scrollOffsetPx) }
                 /*
                 val lm = recyclerView.layoutManager
                 if (lm is LinearLayoutManager) {
@@ -325,7 +330,7 @@ class BusTrackActivity : AppCompatActivity() {
 
         fun cleanup() {
             runningInstances.clear()
-            container.removeAllViews()
+            binding.container.removeAllViews()
             // Log.e(TAG, "container.removeAllViews() called")
             lastBusIndex = null
             lastScannedLeftTime = null
@@ -337,7 +342,7 @@ class BusTrackActivity : AppCompatActivity() {
 
             if (runningInstances.first.isDone) {
                 runningInstances.removeAt(0)
-                container.removeViewAt(0)
+                binding.container.removeViewAt(0)
             }
             // Check if it is time for the scheduled bus to run
             runningInstances.last.apply {
@@ -346,7 +351,7 @@ class BusTrackActivity : AppCompatActivity() {
                             .compare(MinDateTime.getCurDateTime(), false) == 0
                     ) {
                         isReady = true
-                        container.addView(icon)
+                        binding.container.addView(icon)
                         // Log.e(TAG, "container.addView() for last called")
 //                        icon.visibility = View.VISIBLE
                         scheduleNextBus()
@@ -396,7 +401,7 @@ class BusTrackActivity : AppCompatActivity() {
             private var isRunning = false
 
             private val animListener = object : Animator.AnimatorListener {
-                override fun onAnimationStart(animation: Animator?) {
+                override fun onAnimationStart(animation: Animator) {
                     isRunning = true
 
                     // DEBUG
@@ -409,7 +414,7 @@ class BusTrackActivity : AppCompatActivity() {
                     // DEBUG
                 }
 
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     isRunning = false
                     // Check if bus reached the end
                     isDone = busInstance.stopTimes.size - 1 <= indexHeadingTo
@@ -432,11 +437,11 @@ class BusTrackActivity : AppCompatActivity() {
                     )*/
                 }
 
-                override fun onAnimationCancel(animation: Animator?) {
+                override fun onAnimationCancel(animation: Animator) {
                     animation?.removeAllListeners()
                 }
 
-                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationRepeat(animation: Animator) {}
             }
 
             fun depart() {

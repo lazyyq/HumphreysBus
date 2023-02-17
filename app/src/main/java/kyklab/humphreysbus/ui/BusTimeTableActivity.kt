@@ -5,7 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
-import android.graphics.*
+import android.graphics.Matrix
+import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
@@ -24,8 +25,6 @@ import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
 import com.otaliastudios.zoom.ZoomEngine
-import kotlinx.android.synthetic.main.activity_bus_timetable.*
-import kotlinx.android.synthetic.main.activity_bus_timetable_whole_mode_column.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -34,6 +33,7 @@ import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.databinding.ActivityBusTimetableBinding
 import kyklab.humphreysbus.utils.*
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
@@ -50,6 +50,8 @@ class BusTimeTableActivity : AppCompatActivity() {
         private const val VIEW_MODE_SIMPLE = 0
         private const val VIEW_MODE_WHOLE = 1
     }
+
+    private lateinit var binding: ActivityBusTimetableBinding
 
     private var stopToHighlightIndex: Int? = null
     private lateinit var bus: Bus
@@ -79,8 +81,12 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bus_timetable)
-        setSupportActionBar(toolbar)
+
+        binding = ActivityBusTimetableBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        setSupportActionBar(binding.toolbar)
 
         val busName: String
         if (savedInstanceState != null) {
@@ -136,7 +142,7 @@ class BusTimeTableActivity : AppCompatActivity() {
             )
 
         // Set toolbar background and status bar color
-        toolbar.setBackgroundColor(toolbarColor)
+        binding.toolbar.setBackgroundColor(toolbarColor)
         window.statusBarColor = toolbarColor
         // Light icons for status bar if needed
         if (toolbarColor.isBright) {
@@ -145,16 +151,16 @@ class BusTimeTableActivity : AppCompatActivity() {
 
         // Apply colors to items in toolbar
         toolbarItemColor.let {
-            toolbar.setTitleTextColor(it)
-            spinner.backgroundTintList = ColorStateList.valueOf(it)
-            spinner.setTextColor(it)
-            tvCurrentTime.apply {
+            binding.toolbar.setTitleTextColor(it)
+            binding.spinner.backgroundTintList = ColorStateList.valueOf(it)
+            binding.spinner.setTextColor(it)
+            binding.tvCurrentTime.apply {
                 TextViewCompat.setCompoundDrawableTintList(
                     this, ColorStateList.valueOf(it)
                 )
                 setTextColor(it)
             }
-            ivSwitchView.imageTintList = ColorStateList.valueOf(it)
+            binding.ivSwitchView.imageTintList = ColorStateList.valueOf(it)
         }
     }
 
@@ -167,27 +173,27 @@ class BusTimeTableActivity : AppCompatActivity() {
             stopNames,
             stopToHighlightIndex ?: 0
         ) { position ->
-            rvSimpleViewTab.smoothScrollToPosition(position) // Without this getAdapterPosition() sometimes returns -1. Why?
+            binding.rvSimpleViewTab.smoothScrollToPosition(position) // Without this getAdapterPosition() sometimes returns -1. Why?
             simpleAdapter.stopIndex = position
             simpleAdapter.notifyDataSetChanged()
         }
         val tabScrollOffset = 0
-        rvSimpleViewTab.adapter = tabAdapter
+        binding.rvSimpleViewTab.adapter = tabAdapter
         val tabSnapHelper = LinearSnapHelper()
-        tabSnapHelper.attachToRecyclerView(rvSimpleViewTab)
-        simpleViewContainer.onViewReady {
+        tabSnapHelper.attachToRecyclerView(binding.rvSimpleViewTab)
+        binding.simpleViewContainer.onViewReady {
             // Set horizontal padding to put selected item in center
             val tabHorizontalOffset =
-                (simpleViewContainer.measuredWidth -
+                (binding.simpleViewContainer.measuredWidth -
                         resources.getDimension(R.dimen.timetable_simple_mode_column_width)) / 2
-            rvSimpleViewTab.updatePadding(
+            binding.rvSimpleViewTab.updatePadding(
                 left = tabHorizontalOffset.toInt(),
                 right = tabHorizontalOffset.toInt()
             )
             // Scroll to initial stop
             val highlight = stopToHighlightIndex ?: 0
             tabAdapter.highlight(highlight)
-            rvSimpleViewTab.scrollToPosition(highlight)
+            binding.rvSimpleViewTab.scrollToPosition(highlight)
         }
 
         val tabScrollingListener = SnapOnScrollListener(tabSnapHelper,
@@ -195,7 +201,7 @@ class BusTimeTableActivity : AppCompatActivity() {
             object : SnapOnScrollListener.OnSnapPositionChangeListener {
                 override fun onSnapPositionChange(position: Int) {
                     tabAdapter.highlight(position)
-                    if (rvSimpleViewTab.scrollState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (binding.rvSimpleViewTab.scrollState == RecyclerView.SCROLL_STATE_IDLE) {
                         simpleAdapter.stopIndex = position
                         simpleAdapter.notifyDataSetChanged()
                     }
@@ -210,8 +216,8 @@ class BusTimeTableActivity : AppCompatActivity() {
                     simpleAdapter.notifyDataSetChanged()
                 }
             })
-        rvSimpleViewTab.addOnScrollListener(tabScrollingListener)
-        rvSimpleViewTab.addOnScrollListener(tabScrollDoneListener)
+        binding.rvSimpleViewTab.addOnScrollListener(tabScrollingListener)
+        binding.rvSimpleViewTab.addOnScrollListener(tabScrollDoneListener)
 
         // Setup timetable view
         val closestIndexes = ArrayList<Int>(bus.stopPoints.size)
@@ -228,19 +234,26 @@ class BusTimeTableActivity : AppCompatActivity() {
             stopToHighlightIndex ?: 0,
             currentTime
         )
-        rvSimpleTimeTable.adapter = simpleAdapter
+        binding.rvSimpleTimeTable.adapter = simpleAdapter
         val scrollPosition = closestIndexes[stopToHighlightIndex ?: 0] - 3
         // Log.e("ScrollPosition", "$scrollPosition")
         val scrollBy =
             scrollPosition * getDimension(R.dimen.timetable_simple_mode_row_height).toInt()
         // Log.e("ScrollBy", "$scrollBy")
-        rvSimpleTimeTable.onViewReady { rvSimpleTimeTable.post { smoothScrollBy(0, scrollBy) } }
+        binding.rvSimpleTimeTable.onViewReady {
+            binding.rvSimpleTimeTable.post {
+                smoothScrollBy(
+                    0,
+                    scrollBy
+                )
+            }
+        }
 
         val callPrevPage = {
             if (simpleAdapter.stopIndex > 0) {
                 --simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
-                rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
+                binding.rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
                 tabAdapter.highlight(simpleAdapter.stopIndex)
                 Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
@@ -249,7 +262,7 @@ class BusTimeTableActivity : AppCompatActivity() {
             if (simpleAdapter.stopIndex < bus.stopPoints.size - 1) {
                 ++simpleAdapter.stopIndex
                 simpleAdapter.notifyDataSetChanged()
-                rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
+                binding.rvSimpleViewTab.scrollToPosition(simpleAdapter.stopIndex)
                 tabAdapter.highlight(simpleAdapter.stopIndex)
                 Log.e("SCROLL", simpleAdapter.stopIndex.toString())
             }
@@ -292,7 +305,12 @@ class BusTimeTableActivity : AppCompatActivity() {
         set.connect(newView.id, ConstraintSet.BOTTOM, rvSimpleTimeTable.id, ConstraintSet.BOTTOM, 0)
         set.connect(newView.id, ConstraintSet.END, rvSimpleTimeTable.id, ConstraintSet.END, 0)
         set.applyTo(simpleViewContainer)*/
-        rvSimpleTimeTable.setOnTouchListener(
+
+        // TODO: Uncomment once we find a fix
+        // This got broken for some reason,
+        // MotionEvent params are null even if they're marked as not.
+        /*
+        binding.rvSimpleTimeTable.setOnTouchListener(
             OnSwipeTouchListener(this,
                 object : OnSwipeTouchListener.OnSwipeCallback {
                     override fun onSwipeLeft() {
@@ -304,10 +322,11 @@ class BusTimeTableActivity : AppCompatActivity() {
                     }
                 })
         )
+        */
 
         // Setup before, next button
-        btnSimpleBefore.setOnClickListener { callPrevPage() }
-        btnSimpleNext.setOnClickListener {
+        binding.btnSimpleBefore.setOnClickListener { callPrevPage() }
+        binding.btnSimpleNext.setOnClickListener {
             callNextPage()
         }
     }
@@ -319,15 +338,15 @@ class BusTimeTableActivity : AppCompatActivity() {
             Log.e("GestureDetector", "Registered")
         }
 
-        override fun onDown(e: MotionEvent?): Boolean {
+        override fun onDown(e: MotionEvent): Boolean {
             Log.e("GestureDetector", "onDown()")
             savedEvent = e
             return false
         }
 
         override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
@@ -364,27 +383,27 @@ class BusTimeTableActivity : AppCompatActivity() {
     }
 
     private fun initWholeModeView() {
-        zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
+        binding.zoomLayoutTimeTable.engine.addListener(object : ZoomEngine.Listener {
             override fun onIdle(engine: ZoomEngine) {}
             override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
+                binding.zoomLayoutStopName.moveTo(engine.zoom, engine.panX, 0f, false)
             }
         })
         // Automatically resize header ZoomLayout height based on actual displayed layout height
-        zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
+        binding.zoomLayoutStopName.engine.addListener(object : ZoomEngine.Listener {
             override fun onIdle(engine: ZoomEngine) {}
             override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                val lp = zoomLayoutStopName.layoutParams
-                lp.height = (wholeStopNameContainer.height * engine.zoom).toInt()
-                zoomLayoutStopName.layoutParams = lp
+                val lp = binding.zoomLayoutStopName.layoutParams
+                lp.height = (binding.wholeStopNameContainer.height * engine.zoom).toInt()
+                binding.zoomLayoutStopName.layoutParams = lp
             }
         })
         // Block touch for stop names to prevent scrolling
-        zoomLayoutStopName.setOnTouchListener { _, _ -> true }
+        binding.zoomLayoutStopName.setOnTouchListener { _, _ -> true }
     }
 
     private fun initBusTimeTable() {
-        ivSwitchView.setOnClickListener { switchViewMode() }
+        binding.ivSwitchView.setOnClickListener { switchViewMode() }
 
         initSimpleModeView()
         initWholeModeView()
@@ -403,12 +422,12 @@ class BusTimeTableActivity : AppCompatActivity() {
 
     private fun updateSelectedTimeTable() {
         if (viewMode == VIEW_MODE_SIMPLE) {
-            simpleViewContainer.visibility = View.VISIBLE
-            wholeViewContainer.visibility = View.GONE
+            binding.simpleViewContainer.visibility = View.VISIBLE
+            binding.wholeViewContainer.visibility = View.GONE
             updateSimpleBusTimeTable()
         } else if (viewMode == VIEW_MODE_WHOLE) {
-            simpleViewContainer.visibility = View.GONE
-            wholeViewContainer.visibility = View.VISIBLE
+            binding.simpleViewContainer.visibility = View.GONE
+            binding.wholeViewContainer.visibility = View.VISIBLE
             updateWholeBusTimeTable()
         }
     }
@@ -602,9 +621,9 @@ class BusTimeTableActivity : AppCompatActivity() {
             loadScheduleJob?.let { if (it.isActive) it.cancelAndJoin() }
             loadScheduleJob = launch {
                 launch(Dispatchers.Main) {
-                    progressBar.visibility = View.VISIBLE
-                    wholeStopNameContainer.removeAllViews()
-                    wholeTimeTableContainer.removeAllViews()
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.wholeStopNameContainer.removeAllViews()
+                    binding.wholeTimeTableContainer.removeAllViews()
                 }
                 // TextViews in header that display stop names
                 val stopNameContainerColumnItems =
@@ -638,7 +657,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                 val stopColumns = Array(bus.stopPoints.size) { column ->
                     LayoutInflater.from(this@BusTimeTableActivity).inflate(
                         R.layout.activity_bus_timetable_whole_mode_column,
-                        wholeTimeTableContainer,
+                        binding.wholeTimeTableContainer,
                         false
                     ).apply {
                         val timeTextBuilder = SpannableStringBuilder()
@@ -683,8 +702,8 @@ class BusTimeTableActivity : AppCompatActivity() {
                                 )
                             }
                         }
-                        tvStopTimeColumn.text = timeTextBuilder
-                        tvTimeLeftColumn.text = timeLeftTextBuilder
+                        findViewById<TextView>(R.id.tvStopTimeColumn).text = timeTextBuilder
+                        findViewById<TextView>(R.id.tvTimeLeftColumn).text = timeLeftTextBuilder
 
                         setOnClickListener {
                             val stop = bus.stopPoints[column]
@@ -705,7 +724,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                     listOf(android.R.color.white, R.color.details_column_lighter_gray)
                 launch(Dispatchers.Main) {
                     for ((i, stopColumn) in stopColumns.withIndex()) {
-                        wholeTimeTableContainer.addView(stopColumn)
+                        binding.wholeTimeTableContainer.addView(stopColumn)
 
                         val bg =
                             if (i == stopToHighlightIndex) R.color.details_column_highlighted_bg
@@ -716,7 +735,7 @@ class BusTimeTableActivity : AppCompatActivity() {
                             // Match column header width with column width
                             stopNameContainerColumnItems[i].layoutParams.width =
                                 stopColumn.width
-                            wholeStopNameContainer.addView(stopNameContainerColumnItems[i])
+                            binding.wholeStopNameContainer.addView(stopNameContainerColumnItems[i])
 
                             // Auto scroll to highlighted stop
                             if (i == stopToHighlightIndex) {
@@ -728,20 +747,20 @@ class BusTimeTableActivity : AppCompatActivity() {
                                     (stopColumn.height) *
                                             (autoScrollLine - autoScrollOffset) / autoScrollTotalLines
 
-                                zoomLayoutTimeTable.moveTo(
-                                    zoomLayoutTimeTable.zoom,
+                                binding.zoomLayoutTimeTable.moveTo(
+                                    binding.zoomLayoutTimeTable.zoom,
                                     -scrollX.toFloat(), -scrollY.toFloat(), false
                                 )
                                 stopNameContainerColumnItems[i].onViewReady {
-                                    zoomLayoutStopName.moveTo(
-                                        zoomLayoutStopName.zoom,
+                                    binding.zoomLayoutStopName.moveTo(
+                                        binding.zoomLayoutStopName.zoom,
                                         -scrollX.toFloat(), 0f, false
                                     )
                                 }
                             }
                         }
                     }
-                    progressBar.visibility = View.INVISIBLE
+                    binding.progressBar.visibility = View.INVISIBLE
                 }
             }
         }
@@ -750,13 +769,13 @@ class BusTimeTableActivity : AppCompatActivity() {
     private fun showCurrentTime() {
         updateDateTime()
 
-        BusUtils.setupDaySelectionSpinner(this, spinner, day) { selected ->
+        BusUtils.setupDaySelectionSpinner(this, binding.spinner, day) { selected ->
             day = selected
             updateDateTime()
             updateSelectedTimeTable()
         }
 
-        tvCurrentTime.setOnClickListener {
+        binding.tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                 calendar.set(Calendar.SECOND, 0)
@@ -786,6 +805,6 @@ class BusTimeTableActivity : AppCompatActivity() {
     */
 
     private fun updateDateTime() {
-        tvCurrentTime.text = currentTime.h_m
+        binding.tvCurrentTime.text = currentTime.h_m
     }
 }

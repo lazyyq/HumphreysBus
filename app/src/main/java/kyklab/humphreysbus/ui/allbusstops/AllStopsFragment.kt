@@ -10,22 +10,25 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_all_stops.view.*
 import kyklab.humphreysbus.Const
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.databinding.FragmentAllStopsBinding
 import kyklab.humphreysbus.utils.lbm
 import kyklab.humphreysbus.utils.sendBroadcast
 
 class AllStopsFragment : Fragment() {
+    private lateinit var binding: FragmentAllStopsBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_all_stops, container, false)
-        view.rvAllStops.apply {
+        binding = FragmentAllStopsBinding.inflate(inflater)
+        val view = binding.root
+        binding.rvAllStops.apply {
             adapter = RvAdapter(BusUtils.stops)
             layoutManager = LinearLayoutManager(context)
             addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))

@@ -11,18 +11,24 @@ import androidx.preference.PreferenceFragmentCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import kotlinx.android.synthetic.main.activity_settings.*
 import kyklab.humphreysbus.BuildConfig
 import kyklab.humphreysbus.R
+import kyklab.humphreysbus.databinding.ActivitySettingsBinding
 import kyklab.humphreysbus.utils.Prefs
 import kyklab.humphreysbus.utils.toast
 
 class SettingsActivity : AppCompatActivity() {
+    private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings)
-        setSupportActionBar(toolbar)
+
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        setSupportActionBar(binding.toolbar)
+
         if (savedInstanceState == null) {
             supportFragmentManager
                 .beginTransaction()
@@ -30,7 +36,7 @@ class SettingsActivity : AppCompatActivity() {
                 .commit()
         }
 
-        tvVersion.apply {
+        binding.tvVersion.apply {
             visibility = View.VISIBLE
             text =
                 "${getString(R.string.app_name)} ${BuildConfig.BUILD_TYPE} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
@@ -103,7 +109,7 @@ class SettingsActivity : AppCompatActivity() {
 
             // Debug
             if (BuildConfig.DEBUG) {
-                val crash = Preference(context).apply {
+                val crash = Preference(requireContext()).apply {
                     title = "Crash!"
                     isIconSpaceReserved = false
                     setOnPreferenceClickListener {

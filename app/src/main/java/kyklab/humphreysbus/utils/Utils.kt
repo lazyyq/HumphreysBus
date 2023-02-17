@@ -188,15 +188,15 @@ fun <T : Activity, S : View> T.attachViewOnLeft(
     updateLocation()
 
     target.animate().setListener(object : Animator.AnimatorListener {
-        override fun onAnimationStart(animation: Animator?) {}
+        override fun onAnimationStart(animation: Animator) {}
 
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
             updateLocation()
         }
 
-        override fun onAnimationCancel(animation: Animator?) {}
+        override fun onAnimationCancel(animation: Animator) {}
 
-        override fun onAnimationRepeat(animation: Animator?) {}
+        override fun onAnimationRepeat(animation: Animator) {}
     })
 }
 

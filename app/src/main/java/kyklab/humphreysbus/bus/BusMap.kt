@@ -65,7 +65,7 @@ class BusMap(
         val gestureDetector = GestureDetector(
             activity,
             object : GestureDetector.SimpleOnGestureListener() {
-                override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                     if (e != null && mapView.isReady) {
                         val sCoord = mapView.viewToSourceCoord(e.x, e.y)
                         val xCor = sCoord!!.x

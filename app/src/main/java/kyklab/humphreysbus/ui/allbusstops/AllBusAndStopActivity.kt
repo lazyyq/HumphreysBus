@@ -9,13 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.android.synthetic.main.activity_all_bus_stop_view.*
 import kyklab.humphreysbus.Const
-import kyklab.humphreysbus.R
+import kyklab.humphreysbus.databinding.ActivityAllBusStopViewBinding
 import kyklab.humphreysbus.utils.lbm
 import kyklab.humphreysbus.utils.reduceDragSensitivity
 
 class AllBusAndStopActivity : FragmentActivity() {
+    private lateinit var binding: ActivityAllBusStopViewBinding
+
     private val intentFilter = IntentFilter(Const.Intent.ACTION_BACK_TO_MAP)
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -27,11 +28,14 @@ class AllBusAndStopActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_all_bus_stop_view)
 
-        vp.adapter = ScreenSlidePagerAdapter(this)
-        vp.reduceDragSensitivity()
-        TabLayoutMediator(tab, vp) { tab, position ->
+        binding = ActivityAllBusStopViewBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        binding.vp.adapter = ScreenSlidePagerAdapter(this)
+        binding.vp.reduceDragSensitivity()
+        TabLayoutMediator(binding.tab, binding.vp) { tab, position ->
             tab.text = when (position) {
                 0 -> "Bus"
                 1 -> "Stop"

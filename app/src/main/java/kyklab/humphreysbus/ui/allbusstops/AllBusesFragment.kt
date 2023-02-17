@@ -8,25 +8,27 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.ImageViewCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_all_buses.view.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
+import kyklab.humphreysbus.databinding.FragmentAllBusesBinding
 import kyklab.humphreysbus.ui.BusTrackActivity
 
 class AllBusesFragment : Fragment() {
+    private lateinit var binding: FragmentAllBusesBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_all_buses, container, false)
-        view.rvAllBuses.apply {
+        binding = FragmentAllBusesBinding.inflate(inflater)
+        val view = binding.root
+        binding.rvAllBuses.apply {
             adapter = RvAdapter(BusUtils.buses)
             layoutManager = LinearLayoutManager(context)
             /*

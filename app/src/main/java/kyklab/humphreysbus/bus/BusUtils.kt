@@ -2,22 +2,16 @@ package kyklab.humphreysbus.bus
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.graphics.BlendMode
-import android.graphics.BlendModeColorFilter
 import android.graphics.Color
 import android.graphics.PointF
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
-import android.provider.CalendarContract.Colors
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.TextView
 import androidx.core.database.getStringOrNull
-import kotlinx.android.synthetic.main.activity_bus_timetable.*
-import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
 import kotlinx.coroutines.*
 import kyklab.humphreysbus.R
 import kyklab.humphreysbus.data.BusStop
@@ -26,7 +20,6 @@ import kyklab.humphreysbus.utils.forEachCursor
 import kyklab.humphreysbus.utils.kQuery
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.collections.ArrayList
 import kotlin.concurrent.withLock
 import kotlin.math.roundToInt
 

@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.ads.AdRequest
@@ -30,10 +29,6 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main_quick_card.*
-import kotlinx.android.synthetic.main.bus_directions_chooser.*
-import kotlinx.android.synthetic.main.bus_directions_chooser_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kyklab.humphreysbus.BuildConfig
@@ -44,16 +39,20 @@ import kyklab.humphreysbus.bus.BusMap
 import kyklab.humphreysbus.bus.BusMap.Companion.gMapCoordToLocalMapCoord
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.databinding.ActivityMainBinding
+import kyklab.humphreysbus.databinding.BusDirectionsChooserItemBinding
 import kyklab.humphreysbus.ui.allbusstops.AllBusAndStopActivity
 import kyklab.humphreysbus.utils.*
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
     private val fusedLocationClient by lazy {
         LocationServices.getFusedLocationProviderClient(this)
     }
     private val locationCallback by lazy {
         object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult?) {
+            override fun onLocationResult(p0: LocationResult) {
                 p0 ?: return
                 for (location in p0.locations)
                     Log.e(
@@ -101,7 +100,10 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         initBusMap()
         if (!BusUtils.isLoadDone) {
@@ -110,7 +112,7 @@ class MainActivity : AppCompatActivity() {
 
         setupViews()
 
-        val locationRequest = LocationRequest.create()?.apply {
+        val locationRequest = LocationRequest.create().apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             interval = 10000
             fastestInterval = 5000
@@ -123,7 +125,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-        btnLocation.setOnClickListener { v ->
+        binding.quickCard.btnLocation.setOnClickListener { v ->
             if (isLoadingLocation) return@setOnClickListener
             // Permission
 
@@ -220,17 +222,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLocationProgressBar() {
-        btnLocation.visibility = View.GONE
-        pbLocation.visibility = View.VISIBLE
+        binding.quickCard.btnLocation.visibility = View.GONE
+        binding.quickCard.pbLocation.visibility = View.VISIBLE
     }
 
     private fun hideLocationProgressBar() {
-        btnLocation.visibility = View.VISIBLE
-        pbLocation.visibility = View.GONE
+        binding.quickCard.btnLocation.visibility = View.VISIBLE
+        binding.quickCard.pbLocation.visibility = View.GONE
     }
 
     private fun initBusMap() {
-        busMap = BusMap(this, lifecycleScope, ivMap) { spot ->
+        busMap = BusMap(this, lifecycleScope, binding.ivMap) { spot ->
             if (spot is BusStop) {
                 busMap.highlight(
                     spot.xCenter.toFloat(), spot.yCenter.toFloat(),
@@ -284,18 +286,18 @@ class MainActivity : AppCompatActivity() {
                         View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
 
-        btnAllBuses.setOnClickListener {
+        binding.quickCard.btnAllBuses.setOnClickListener {
             startActivityForResult(
                 Intent(this, AllBusAndStopActivity::class.java),
                 REQ_CODE_SELECT_STOP
             )
         }
-        btnSettings.setOnClickListener {
+        binding.quickCard.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         // Add status bar height to quick button card top margin
-        quickCard.apply {
+        binding.quickCard.cardLayout.apply {
             val lp = layoutParams
             if (lp is ViewGroup.MarginLayoutParams) {
                 lp.topMargin += statusBarHeight
@@ -303,16 +305,18 @@ class MainActivity : AppCompatActivity() {
             layoutParams = lp
         }
 
-        moveViewOnDrag(btnHandle, quickCard)
+        moveViewOnDrag(binding.quickCard.btnHandle, binding.quickCard.cardLayout)
+        // TODO: Uncomment and fix this once direction chooser is back
+        /*
         lifecycleScope.launch(Dispatchers.Default) {
             BusUtils.onLoadDone {
                 launch(Dispatchers.Main) {
-                    rvBusDirectionChooser.adapter = busDirectionsChooserAdapter
-                    rvBusDirectionChooser.layoutManager = LinearLayoutManager(this@MainActivity)
+                    binding.quickCard.rvBusDirectionChooser.adapter = busDirectionsChooserAdapter
+                    binding.quickCard.rvBusDirectionChooser.layoutManager = LinearLayoutManager(this@MainActivity)
                 }
             }
         }
-        /*
+
         btnBusDirections.setOnClickListener {
             busDirectionsChooserLayout.apply {
                 if (visibility == View.VISIBLE) {
@@ -322,31 +326,30 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        */
+
         // Collapse on click outside of directions chooser
-        /*
         busDirectionsChooserLayout.setOnClickListener {
             busDirectionsChooserLayout.visibility = View.GONE
         }
-        */
 
-        btnCloseDirectionChooser.setOnClickListener {
-            busDirectionsChooserLayout.visibility = View.GONE
+        binding.btnCloseDirectionChooser.setOnClickListener {
+            binding.busDirectionsChooserLayout.visibility = View.GONE
         }
 
-        busDirectionsChooserLayout.viewTreeObserver.addOnGlobalLayoutListener(
+        binding.busDirectionsChooserLayout.viewTreeObserver.addOnGlobalLayoutListener(
             object : ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
-                    busDirectionsChooserLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    attachViewOnLeft(quickCard, cardBusDirectionChooser)
+                    binding.busDirectionsChooserLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    binding.attachViewOnLeft(quickCard, cardBusDirectionChooser)
                 }
             })
+        */
     }
 
     private fun loadAd() {
         lifecycleScope.launch(Dispatchers.Default) {
             adView = AdView(this@MainActivity).apply {
-                adSize = AdSize.BANNER
+                setAdSize(AdSize.BANNER)
                 adUnitId = getString(
                     if (BuildConfig.DEBUG) R.string.banner_ad_unit_debug_id
                     else R.string.banner_ad_unit_id
@@ -355,17 +358,18 @@ class MainActivity : AppCompatActivity() {
             MobileAds.initialize(this@MainActivity)
             val adRequest = AdRequest.Builder().build()
             launch(Dispatchers.Main) {
-                adContainer.addView(adView)
-                adContainer.visibility = View.VISIBLE
+                binding.adContainer.addView(adView)
+                binding.adContainer.visibility = View.VISIBLE
                 adView!!.loadAd(adRequest)
             }
         }
     }
 
     private fun hideAd() {
-        adContainer.visibility = View.GONE
+        binding.adContainer.visibility = View.GONE
     }
 
+    // TODO: Test ViewHolder migration once bus direction chooser is back
     private class BusDirectionChooserAdapter(
         val items: List<AdapterItem>,
         val onBusChosen: (Bus, Boolean, AdapterItem) -> Unit
@@ -373,35 +377,40 @@ class MainActivity : AppCompatActivity() {
         RecyclerView.Adapter<BusDirectionChooserAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            return ViewHolder(
-                LayoutInflater.from(parent.context).inflate(
-                    R.layout.bus_directions_chooser_item,
-                    parent, false
-                )
+            val binding = BusDirectionsChooserItemBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
             )
+            return ViewHolder(binding)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = items[position]
-            holder.itemView.cbBus.apply {
-                isChecked = item.checked
-                TextViewCompat.setCompoundDrawableTintList(
-                    this, ColorStateList.valueOf(item.bus.colorInt)
-                )
-                text = item.bus.name
-                setTextColor(item.bus.colorInt)
-            }
+            holder.bind(item)
         }
 
         override fun getItemCount() = items.size
 
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        inner class ViewHolder(private val itemBinding: BusDirectionsChooserItemBinding) :
+            RecyclerView.ViewHolder(itemBinding.root) {
             init {
-                itemView.cbBus.setOnClickListener {
-                    val checked = itemView.cbBus.isChecked
+                itemBinding.cbBus.setOnClickListener {
+                    val checked = itemBinding.cbBus.isChecked
                     val item = items[adapterPosition]
                     item.checked = checked
                     onBusChosen(item.bus, checked, item)
+                }
+            }
+
+            fun bind(item: BusDirectionChooserAdapter.AdapterItem) {
+                itemBinding.cbBus.apply {
+                    isChecked = item.checked
+                    TextViewCompat.setCompoundDrawableTintList(
+                        this, ColorStateList.valueOf(item.bus.colorInt)
+                    )
+                    text = item.bus.name
+                    setTextColor(item.bus.colorInt)
                 }
             }
         }

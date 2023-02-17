@@ -31,15 +31,22 @@
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false"
             android:theme="@style/Theme.HumphreysBus.TranslucentActionBar" />
         <activity
             android:name=".ui.SettingsActivity"
+            android:exported="false"
             android:label="@string/activity_settings_title" />
-        <activity android:name=".ui.BusTimeTableActivity" />
+        <activity
+            android:name=".ui.BusTimeTableActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.allbusstops.AllBusAndStopActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
-        <activity android:name=".ui.BusTrackActivity" />
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
+        <activity
+            android:name=".ui.BusTrackActivity"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -28,7 +28,7 @@ class OnSwipeTouchListener(context: Context, private val onSwipeCallback: OnSwip
     // Used to identify if this touch event is the first ACTION_DOWN event among those with the same action.
     private var startOfFling = true
 
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
         if (!registered) {
             val mask = event?.actionMasked
             if (startOfFling && mask == MotionEvent.ACTION_DOWN) {
@@ -50,30 +50,28 @@ class OnSwipeTouchListener(context: Context, private val onSwipeCallback: OnSwip
 
         return gestureDetector.onTouchEvent(event)
     }
-
     private inner class GestureListener : SimpleOnGestureListener() {
-        override fun onDown(e: MotionEvent?): Boolean {
+        override fun onDown(e: MotionEvent): Boolean {
             //Log.e("GestureDetector", "onDown()")
             //savedEvent = e
-            return false
+            return true
         }
 
         override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {
-            if (e2 == null) return false
-            if (e1 != null) {
-                // For some reason this listener doesn't seem to get attached to
-                // some views immediately, including RecyclerView.
-                // Consider this listener as registered if
-                // start coordinates are successfully received.
-                // In the meanwhile, use origX and origY instead of e1.
-                Log.e("SwipeDetector", "registered")
-                registered = true
-            }
+            if (e1 == null || e2 == null) return false
+
+            // For some reason this listener doesn't seem to get attached to
+            // some views immediately, including RecyclerView.
+            // Consider this listener as registered if
+            // start coordinates are successfully received.
+            // In the meanwhile, use origX and origY instead of e1.
+            Log.e("SwipeDetector", "registered")
+            registered = true
 
             var result = false
             try {

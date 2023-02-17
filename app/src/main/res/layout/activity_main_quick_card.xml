@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="wrap_content"
+    android:id="@+id/cardLayout"
     style="@style/QuickButtonCardStyle"
-    android:layout_width="wrap_content">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -39,9 +40,9 @@
         <ProgressBar
             android:id="@+id/pbLocation"
             style="@style/QuickButtonProgressStyle"
-            tools:visibility="visible"
             android:padding="4dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            tools:visibility="visible" />
 
         <!--
         <View style="@style/QuickButtonDividerStyle" />

@@ -9,8 +9,6 @@ import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.*
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -20,8 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.android.synthetic.main.fragment_stop_info_dialog.*
-import kotlinx.android.synthetic.main.fragment_stop_info_dialog.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kyklab.humphreysbus.Const
@@ -29,14 +25,16 @@ import kyklab.humphreysbus.R
 import kyklab.humphreysbus.bus.Bus
 import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.data.BusStop
+import kyklab.humphreysbus.databinding.FragmentStopInfoDialogBinding
 import kyklab.humphreysbus.utils.MinDateTime
 import kyklab.humphreysbus.utils.MinDateTime.Companion.getNextClosestTimeIndex
 import kyklab.humphreysbus.utils.MinDateTime.Companion.setCalendar
 import kyklab.humphreysbus.utils.getWithWrappedIndex
 import kyklab.humphreysbus.utils.lbm
-import java.util.*
 
 class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetDialogFragment() {
+    private lateinit var binding: FragmentStopInfoDialogBinding
+
     private lateinit var activity: Activity
     private val calendar = Calendar.getInstance()
     private var currentTime = MinDateTime().apply { setCalendar(calendar);s = "00" }
@@ -65,12 +63,13 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        binding = FragmentStopInfoDialogBinding.inflate(inflater)
+        val view = binding.root
         try {
             activity = requireActivity()
         } catch (e: IllegalStateException) {
             dismiss()
         }
-        val view = inflater.inflate(R.layout.fragment_stop_info_dialog, container, false)
         arguments ?: dismiss()
 
         return view
@@ -82,16 +81,16 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         showBuses()
 
         // Adjust peek (default expanded) height to match that of its contents size
-        view.bottomSheetContents.viewTreeObserver.addOnGlobalLayoutListener(
+        binding.bottomSheetContents.viewTreeObserver.addOnGlobalLayoutListener(
             object : ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
                     val bottomSheetDialog =
                         dialog?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
                     bottomSheetDialog?.let {
                         val behavior = BottomSheetBehavior.from(it)
-                        behavior.peekHeight = view.bottomSheetContents.measuredHeight
+                        behavior.peekHeight = binding.bottomSheetContents.measuredHeight
                     }
-                    view.bottomSheetContents.viewTreeObserver
+                    binding.bottomSheetContents.viewTreeObserver
                         .removeOnGlobalLayoutListener(this)
                 }
             }
@@ -141,7 +140,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
         stopId = requireArguments().getInt(ARGUMENT_STOP_ID, -1)
         stop = BusUtils.getBusStop(stopId)
-        view.tvStopInfo.text = stop.name
+        binding.tvStopInfo.text = stop.name
 
 //        updateBuses()
         initBusList()
@@ -150,7 +149,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
     private fun initBusList() {
         rvAdapter = NewAdapter(activity, lifecycleScope, rvAdapterItems, currentTime)
-        rvClosestBuses.adapter = rvAdapter
+        binding.rvClosestBuses.adapter = rvAdapter
         val layoutManager: RecyclerView.LayoutManager
 
         val rotation = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -162,11 +161,11 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
             Surface.ROTATION_0, Surface.ROTATION_180 -> LinearLayoutManager(activity)
             else -> GridLayoutManager(activity, 2)
         }
-        rvClosestBuses.layoutManager = layoutManager
+        binding.rvClosestBuses.layoutManager = layoutManager
     }
 
     private fun newUpdateBuses() {
-        progressBar.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
         rvAdapterItems.clear()
 
         BusUtils.buses.forEach { bus ->
@@ -190,7 +189,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
         rvAdapterItems.sortBy { (it.closestBusTime - currentTime).h_m }
         rvAdapter.notifyDataSetChanged()
 
-        progressBar.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
     }
 
     /*private fun updateBuses() {
@@ -236,14 +235,14 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
 
         // Setup adapter for day selection
         BusUtils.setupDaySelectionSpinner(
-            activity, spinner, day
+            activity, binding.spinner, day
         ) { selected ->
             day = selected
             updateDateTime()
             newUpdateBuses()
         }
 
-        tvCurrentTime.setOnClickListener {
+        binding.tvCurrentTime.setOnClickListener {
             DateTimePickerFragment(calendar) { year, month, dayOfMonth, hourOfDay, minute ->
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                 currentTime.setCalendar(calendar)
@@ -284,7 +283,7 @@ class StopInfoDialog(private val onDismiss: (() -> Unit)? = null) : BottomSheetD
     }
 
     private fun updateDateTime() {
-        tvCurrentTime.text = currentTime.h_m
+        binding.tvCurrentTime.text = currentTime.h_m
     }
 
     override fun onDismiss(dialog: DialogInterface) {
