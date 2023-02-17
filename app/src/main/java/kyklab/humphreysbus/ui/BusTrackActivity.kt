@@ -247,6 +247,20 @@ class BusTrackActivity : AppCompatActivity() {
                         }
                     }
                 }
+
+                // TODO: REMOVEME after debugging is done
+                if (closestFirstBusIndex == -1) {
+                    val map = mapOf(
+                        "lastBusIndex" to lastBusIndex,
+                        "lastScannedLeftTime" to lastScannedLeftTime.toString(),
+                        "instance.stopTimes[0]" to instance.stopTimes[0].toString(),
+                        "curTime" to curTime.toString(),
+                        "instanceTmp.index" to instanceTmp.index,
+                    )
+                    logEvent(
+                        "addInitialBuses()",
+                        Bundle().apply { putString("params", map.encode()) })
+                }
             }
         }
 
@@ -255,6 +269,17 @@ class BusTrackActivity : AppCompatActivity() {
                 (lastBusIndex!! + 1) % instances.size
             } else {
                 closestFirstBusIndex
+            }
+            if (nextIndex == -1) {
+                val map = mapOf(
+                    "lastBusIndex" to lastBusIndex,
+                    "instances.size" to instances.size,
+                    "closestFirstBusIndex" to closestFirstBusIndex,
+                )
+                logEvent(
+                    "scheduleNextBus()",
+                    Bundle().apply { putString("params", map.encode()) })
+                return
             }
             val nextBus = instances[nextIndex]
             val icon = getBusIconView(0)/*.apply { visibility = View.INVISIBLE}*/

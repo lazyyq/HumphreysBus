@@ -8,6 +8,7 @@ import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.*
+import android.os.Bundle
 import android.provider.Settings
 import android.text.style.ReplacementSpan
 import android.util.DisplayMetrics
@@ -24,6 +25,8 @@ import androidx.core.graphics.ColorUtils
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.gson.GsonBuilder
 import kyklab.humphreysbus.App
 import java.util.*
 import kotlin.math.max
@@ -366,6 +369,27 @@ fun Spinner.setTextColor(@ColorInt color: Int) {
         }
     }
 }
+
+fun <T> Array<T>.encode(): String {
+    return joinToString(
+        prefix = "[",
+        separator = " ; ",
+        postfix = "]",
+    )
+}
+
+fun <T> Collection<T>.encode(): String {
+    return joinToString(
+        prefix = "[ ",
+        separator = " ; ",
+        postfix = " ]",
+    )
+}
+
+fun <K, V> Map<K, V>.encode(): String = GsonBuilder().create().toJson(this)
+
+fun Context.logEvent(name: String, bundle: Bundle? = null) =
+    FirebaseAnalytics.getInstance(this).logEvent(name, bundle)
 
 class RoundedBackgroundSpan(
     private val context: Context,
