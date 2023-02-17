@@ -18,11 +18,11 @@ class App : Application() {
         if (BuildConfig.DEBUG) {
             defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler(ExceptionHandler())
+        } else {
+            val isStatisticsEnabled = Prefs.enableStatistics
+            FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(isStatisticsEnabled)
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(isStatisticsEnabled)
         }
-
-        val isStatisticsEnabled = Prefs.enableStatistics
-        FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(isStatisticsEnabled)
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(isStatisticsEnabled)
 
         Prefs.lastKnownAppVersion = BuildConfig.VERSION_CODE
     }

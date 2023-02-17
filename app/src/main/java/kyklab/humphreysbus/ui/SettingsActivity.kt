@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -72,9 +73,17 @@ class SettingsActivity : AppCompatActivity() {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             prefEnableStatistics?.setOnPreferenceChangeListener { preference, newValue ->
                 if (newValue is Boolean) {
-                    FirebaseAnalytics.getInstance(requireContext())
-                        .setAnalyticsCollectionEnabled(newValue)
-                    FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(newValue)
+                    if (BuildConfig.DEBUG) {
+                        Toast.makeText(
+                            requireContext(),
+                            "This preference is ignored in debug mode",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        FirebaseAnalytics.getInstance(requireContext())
+                            .setAnalyticsCollectionEnabled(newValue)
+                        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(newValue)
+                    }
                 }
                 true
             }
