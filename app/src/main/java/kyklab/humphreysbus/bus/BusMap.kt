@@ -53,6 +53,8 @@ class BusMap(
         }
     }
 
+    private val assetMgr = App.context.assets
+    private val assetRootList = assetMgr.list("")
     private var selectionPin: MultiplePinView.Pin? = null // Pin for current selection on bus map
     private val busRouteListHashMap = HashMap<Bus, List<MultiplePinView.Pin>>()
     private val busRouteJobHashMap = HashMap<Bus, Job>()
@@ -137,14 +139,19 @@ class BusMap(
 
     fun showBusRoute(bus: Bus, onFinished: (() -> Unit)? = null) {
         if (bus.busRouteImageCoords.size != bus.busRouteImageFilenames.size) return
+        if (assetRootList == null) return
 
         val list = ArrayList<MultiplePinView.Pin>(bus.busRouteImageCoords.size)
         busRouteListHashMap[bus] = list
-        val assetMgr = App.context.assets
         val job = scope.launch(Dispatchers.Default) {
             for (i in bus.busRouteImageCoords.indices) {
+                val routeImageName = bus.busRouteImageFilenames[i]
+                if (!assetRootList.contains(routeImageName)) {
+                    continue
+                }
+
                 var bitmap: Bitmap
-                assetMgr.open(bus.busRouteImageFilenames[i]).use {
+                assetMgr.open(routeImageName).use {
                     bitmap = BitmapFactory.decodeStream(it)
                 }
                 val pin = MultiplePinView.Pin(
