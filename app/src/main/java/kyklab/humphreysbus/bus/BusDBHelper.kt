@@ -11,12 +11,12 @@ import java.io.IOException
 import java.util.*
 
 object BusDBHelper :
-    SQLiteOpenHelper(App.context, "subway.db", null, 11) {
+    SQLiteOpenHelper(App.context, "subway.db", null, 12) {
 
     private val TAG = BusDBHelper::class.simpleName
     private val DB_DIR: String = App.context.dataDir.toString() + "/databases"
     private const val DB_NAME = "subway.db"
-    private const val DB_VERSION = 11
+    private const val DB_VERSION = 12
 
     const val DB_STOPS_COL_INDEX_ID = 0
     const val DB_STOPS_COL_INDEX_MAPNO = 1
