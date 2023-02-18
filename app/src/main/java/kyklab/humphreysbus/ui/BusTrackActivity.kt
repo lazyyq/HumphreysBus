@@ -206,8 +206,7 @@ class BusTrackActivity : AppCompatActivity() {
             // Sync recyclerview scroll with scrollview
             binding.rv.addOnScrollListener(rvOnScrollListener)
 
-            val emptyTime = MinDateTime()
-            adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it, emptyTime) }
+            adapterItems = bus.stopPoints.map { MyAdapter.MyAdapterItem(it) }
             adapter = MyAdapter(this@BusTrackActivity, bus, adapterItems)
             binding.rv.adapter = adapter
 
@@ -306,13 +305,6 @@ class BusTrackActivity : AppCompatActivity() {
             cleanup()
             curTime = getCurDateTime()
             instances = bus.instances.filter { it.day == BusUtils.getDay() }
-            addInitialBuses()
-            scheduleNextBus()
-
-            val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
-            // Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
-            // Log.e("ANIMATION", "launched init anim")
-            updateInstanceStatus()
 
             // Scroll to highlighted stop
             if (!scrolled && stopToHighlightIndex != null) {
@@ -340,6 +332,18 @@ class BusTrackActivity : AppCompatActivity() {
                 adapterItems[stopToHighlightIndex!!].isHighlighted = true
                 scrolled = true
             }
+
+            if (instances.isEmpty()) {
+                return // No buses available today, do not show bus icons
+            }
+
+            addInitialBuses()
+            scheduleNextBus()
+
+            val secUntilNextMin = (60 - SimpleDateFormat("ss").format(Date()).toInt()) % 60
+            // Log.e("ANIMATION", "secUntilNextMin: $secUntilNextMin")
+            // Log.e("ANIMATION", "launched init anim")
+            updateInstanceStatus()
 
             timer = Timer()
             timer!!.schedule(object : TimerTask() {
@@ -542,7 +546,7 @@ class BusTrackActivity : AppCompatActivity() {
 
         class MyAdapterItem(
             val stop: BusStop,
-            var eta: MinDateTime?,
+            var eta: MinDateTime? = null,
             var isHighlighted: Boolean = false
         )
 
@@ -597,7 +601,8 @@ class BusTrackActivity : AppCompatActivity() {
             val item = items[position]
 
             holder.stopname.text = item.stop.name
-            holder.arrivetime.text = item.eta?.let { "Arriving at ${it.h_m}" } ?: ""
+            holder.arrivetime.text =
+                item.eta?.let { "Arriving at ${it.h_m}" } ?: "No bus available today"
             holder.waypoint.setImageResource(
                 when (position) {
                     0 -> R.drawable.waypoint_start
