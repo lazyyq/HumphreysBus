@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.gms.ads.AdRequest
@@ -306,19 +307,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         moveViewOnDrag(binding.quickCard.btnHandle, binding.quickCard.cardLayout)
-        // TODO: Uncomment and fix this once direction chooser is back
-        /*
+
         lifecycleScope.launch(Dispatchers.Default) {
             BusUtils.onLoadDone {
                 launch(Dispatchers.Main) {
-                    binding.quickCard.rvBusDirectionChooser.adapter = busDirectionsChooserAdapter
-                    binding.quickCard.rvBusDirectionChooser.layoutManager = LinearLayoutManager(this@MainActivity)
+                    binding.busDirectionsChooserLayout.rvBusDirectionChooser.adapter =
+                        busDirectionsChooserAdapter
+                    binding.busDirectionsChooserLayout.rvBusDirectionChooser.layoutManager =
+                        LinearLayoutManager(this@MainActivity)
                 }
             }
         }
 
-        btnBusDirections.setOnClickListener {
-            busDirectionsChooserLayout.apply {
+        binding.quickCard.btnBusDirections.setOnClickListener {
+            binding.busDirectionsChooserLayout.busDirectionsChooserContainer.apply {
                 if (visibility == View.VISIBLE) {
                     visibility = View.GONE
                 } else {
@@ -328,22 +330,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Collapse on click outside of directions chooser
-        busDirectionsChooserLayout.setOnClickListener {
-            busDirectionsChooserLayout.visibility = View.GONE
+        /*
+        binding.busDirectionsChooserLayout.busDirectionsChooserContainer.setOnClickListener {
+            binding.busDirectionsChooserLayout.busDirectionsChooserContainer.visibility = View.GONE
+        }
+        */
+
+        binding.busDirectionsChooserLayout.btnCloseDirectionChooser.setOnClickListener {
+            binding.busDirectionsChooserLayout.busDirectionsChooserContainer.visibility = View.GONE
         }
 
-        binding.btnCloseDirectionChooser.setOnClickListener {
-            binding.busDirectionsChooserLayout.visibility = View.GONE
-        }
-
-        binding.busDirectionsChooserLayout.viewTreeObserver.addOnGlobalLayoutListener(
+        binding.busDirectionsChooserLayout.busDirectionsChooserContainer.viewTreeObserver.addOnGlobalLayoutListener(
             object : ViewTreeObserver.OnGlobalLayoutListener {
                 override fun onGlobalLayout() {
-                    binding.busDirectionsChooserLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    binding.attachViewOnLeft(quickCard, cardBusDirectionChooser)
+                    binding.busDirectionsChooserLayout.busDirectionsChooserContainer.viewTreeObserver.removeOnGlobalLayoutListener(
+                        this
+                    )
+                    attachViewOnLeft(
+                        binding.quickCard.cardLayout,
+                        binding.busDirectionsChooserLayout.cardBusDirectionChooser
+                    )
                 }
             })
-        */
     }
 
     private fun loadAd() {

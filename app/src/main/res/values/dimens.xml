@@ -10,7 +10,7 @@
     <dimen name="map_bus_stop_icon_result_margin">2dp</dimen>
 
     <dimen name="bus_directions_chooser_width">160dp</dimen>
-    <dimen name="bus_directions_chooser_height">160dp</dimen>
+    <dimen name="bus_directions_chooser_height">240dp</dimen>
     <dimen name="stop_info_dialog_bus_list_height">400dp</dimen>
 
     <dimen name="timetable_simple_mode_column_width">108dp</dimen>
