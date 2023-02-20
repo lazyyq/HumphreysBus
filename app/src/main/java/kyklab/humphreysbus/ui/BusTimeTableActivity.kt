@@ -88,14 +88,18 @@ class BusTimeTableActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
 
-        val busName: String
+        val busName: String?
         if (savedInstanceState != null) {
-            busName = savedInstanceState[STATE_BUS_NAME] as String
-            stopToHighlightIndex = savedInstanceState[STATE_HIGHLIGHT_INDEX] as Int
+            busName = savedInstanceState.getString(STATE_BUS_NAME, null)
+            stopToHighlightIndex = savedInstanceState.getInt(STATE_HIGHLIGHT_INDEX, -1)
         } else {
-            busName = intent.extras?.get("busname") as String
-            stopToHighlightIndex = intent.extras?.get("highlightstopindex") as? Int
+            busName = intent.extras?.getString("busname", null)
+            stopToHighlightIndex = intent.extras?.getInt("highlightstopindex", -1)
         }
+        if (stopToHighlightIndex == -1) {
+            stopToHighlightIndex = null
+        }
+
         when (val found = BusUtils.buses.find { b -> b.name == busName }) {
             null -> {
                 toast("Bus not found")
