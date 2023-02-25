@@ -361,7 +361,7 @@ fun Spinner.setTextColor(@ColorInt color: Int) {
     onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
             origListener?.onItemSelected(parent, view, position, id)
-            (parent?.getChildAt(0) as TextView)?.setTextColor(color)
+            (parent?.getChildAt(0) as? TextView)?.setTextColor(color)
         }
 
         override fun onNothingSelected(parent: AdapterView<*>?) {
