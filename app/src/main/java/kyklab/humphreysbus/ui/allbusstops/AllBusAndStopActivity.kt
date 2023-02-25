@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import kyklab.humphreysbus.Const
+import kyklab.humphreysbus.bus.BusUtils
 import kyklab.humphreysbus.databinding.ActivityAllBusStopViewBinding
 import kyklab.humphreysbus.utils.lbm
 import kyklab.humphreysbus.utils.reduceDragSensitivity
@@ -28,6 +29,11 @@ class AllBusAndStopActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!BusUtils.isLoadDone) {
+            finish()
+            return
+        }
 
         binding = ActivityAllBusStopViewBinding.inflate(layoutInflater)
         val view = binding.root

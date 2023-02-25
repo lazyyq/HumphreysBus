@@ -82,6 +82,12 @@ class BusTimeTableActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // if (savedInstanceState?.getBoolean(Const.ActivityState.RECREATED) == true) {
+        if (!BusUtils.isLoadDone) {
+            finish()
+            return
+        }
+
         binding = ActivityBusTimetableBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
@@ -90,6 +96,10 @@ class BusTimeTableActivity : AppCompatActivity() {
 
         val busName: String?
         if (savedInstanceState != null) {
+            // This is actually meaningless, since at the time of app recreation
+            // after being killed by Android system, bus list is not loaded yet
+            // and thus cannot use these values to identify a bus. So
+            // TODO: Fix this someday
             busName = savedInstanceState.getString(STATE_BUS_NAME, null)
             stopToHighlightIndex = savedInstanceState.getInt(STATE_HIGHLIGHT_INDEX, -1)
         } else {
@@ -104,6 +114,7 @@ class BusTimeTableActivity : AppCompatActivity() {
             null -> {
                 toast("Bus not found")
                 finish()
+                return
             }
             else -> bus = found
         }
@@ -125,6 +136,8 @@ class BusTimeTableActivity : AppCompatActivity() {
 
         outState.putString(STATE_BUS_NAME, bus.name)
         stopToHighlightIndex?.let { outState.putInt(STATE_HIGHLIGHT_INDEX, it) }
+
+//        outState.putBoolean(Const.ActivityState.RECREATED, true)
     }
 
     override fun onDestroy() {

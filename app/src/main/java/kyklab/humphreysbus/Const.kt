@@ -9,5 +9,9 @@ object Const {
         const val EXTRA_Y_COR = "kyklab.humphreysbus.EXTRA_Y_COR"
         const val EXTRA_STOP_ID = "kyklab.humphreysbus.EXTRA_STOP_ID"
     }
+
+    object ActivityState {
+        const val RECREATED = "state_recreated"
+    }
 }
 
